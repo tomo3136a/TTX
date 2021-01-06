@@ -1,0 +1,107 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+#include "windows.h"
+#include "verinfo.h"
+
+/////////////////////////////////////////////////////////////////////////////
+// 日本語 (日本) resources
+
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+#pragma code_page(932)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_REPORT_DIALOG DIALOGEX 0, 0, 145, 221
+STYLE DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_THICKFRAME
+CAPTION "Report"
+FONT 9, "Tahoma", 400, 0, 0x0
+BEGIN
+    LTEXT           "",IDC_MSG,6,6,132,0
+    EDITTEXT        IDC_LOG,6,12,132,188,ES_MULTILINE | ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,6,204,50,14, NOT WS_TABSTOP
+    LTEXT           "",IDC_STATUS,66,207,72,12
+END
+
+IDD_SETUP_REPORT DIALOGEX 0, 0, 270, 246
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Report Setup"
+FONT 9, "Tahoma", 400, 0, 0x0
+BEGIN
+    LTEXT           "タイトル：",IDC_STATIC,6,9,24,8
+    EDITTEXT        IDC_MSG_NAME,57,6,206,14,ES_AUTOHSCROLL
+    LTEXT           "説明ファイル：",IDC_STATIC,6,27,38,8
+    EDITTEXT        IDC_MSG_PATH,57,25,168,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "選択",IDC_MSG_BTN,232,25,32,14
+    LTEXT           "サイズ：",IDC_STATIC,6,49,30,8
+    EDITTEXT        IDC_WND_W,57,46,26,14,ES_CENTER | ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "×",IDC_STATIC,86,49,8,8
+    EDITTEXT        IDC_WND_H,95,46,26,14,ES_CENTER | ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "配置：",IDC_STATIC,130,49,18,8
+    EDITTEXT        IDC_WND_POS,153,46,26,14,ES_CENTER | ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "Auto Start",IDC_START,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,219,46,54,14
+    LTEXT           "パターンファイル：",IDC_STATIC,6,70,45,8
+    EDITTEXT        IDC_PATH7,57,68,168,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "選択",IDC_BUTTON7,232,68,32,14
+    LTEXT           "クリアパターン：",IDC_STATIC,6,90,51,10
+    EDITTEXT        IDC_CLEAR,57,87,94,14,ES_AUTOHSCROLL
+    LTEXT           "カウントファイル1：",IDC_STATIC,6,116,48,8
+    EDITTEXT        IDC_PATH1,57,114,168,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "選択",IDC_BUTTON1,232,114,32,14
+    LTEXT           "カウントファイル2：",IDC_STATIC,6,135,48,8
+    EDITTEXT        IDC_PATH2,57,133,168,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "選択",IDC_BUTTON2,232,133,32,14
+    LTEXT           "カウントファイル3：",IDC_STATIC,6,154,48,8
+    EDITTEXT        IDC_PATH3,57,152,168,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "選択",IDC_BUTTON3,232,152,32,14
+    LTEXT           "カウントファイル4：",IDC_STATIC,6,173,48,8
+    EDITTEXT        IDC_PATH4,57,171,168,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "選択",IDC_BUTTON4,232,171,32,14
+    LTEXT           "記録ファイル：",IDC_STATIC,6,204,38,8
+    EDITTEXT        IDC_PATH6,57,202,171,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "選択",IDC_BUTTON6,232,201,32,14
+    DEFPUSHBUTTON   "OK",IDOK,159,228,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,214,228,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION TTX_FILE_VERSION
+ PRODUCTVERSION TTX_PRODUCT_VERSION
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName", "tomo3136a"
+            VALUE "FileDescription", "Tera Term Report View Extension"
+            VALUE "FileVersion", TTX_FILE_VERSION_TEXT
+            VALUE "InternalName", "TTXREPORT"
+            VALUE "LegalCopyright", "(C) 2021 tomo3136a"
+            VALUE "OriginalFilename", "TTXREPORT.DLL"
+            VALUE "ProductName", "TTX"
+            VALUE "ProductVersion", TTX_PRODUCT_VERSION_TEXT
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END

@@ -1,0 +1,202 @@
+[key code]
+F1=59
+F2=60
+F3=61
+F4=62
+F5=63
+F6=64
+F7=65
+F8=66
+F9=67
+F10=68
+F11=87
+F12=88
+
+[menu]
+50110=[File] New connection
+50111=[File] Duplicate session
+50112=[File] Cygwin connection
+
+50120=[File] Log
+50121=[File] Comment to Log
+50122=[File] View Log
+50123=[File] Show Log dialog
+
+50130=[File] Send file
+
+50141=[File] Transfer/Kermit/Receive
+50142=[File] Transfer/Kermit/Get
+50143=[File] Transfer/Kermit/Send
+50144=[File] Transfer/Kermit/Finish
+50145=[File] Transfer/XMODEM/Receive
+50146=[File] Transfer/XMODEM/Send
+
+50157=[File] Transfer/YMODEM/Receive
+50158=[File] Transfer/YMODEM/Send
+
+50151=[File] Transfer/ZMODEM/Receive
+50152=[File] Transfer/ZMODEM/Send
+50153=[File] Transfer/B-Plus/Receive
+50154=[File] Transfer/B-Plus/Send
+50155=[File] Transfer/Quick-VAN/Receive
+50156=[File] Transfer/Quick-VAN/Send
+
+50170=[File] Change dir
+50171=[File] Replay Log
+50172=[File] LogMeTT
+
+50180=[File] Print
+
+50190=[File] Disconnect
+50199=[File] Exit
+50200=[File] Exit All
+
+50210=[Edit] Copy
+50220=[Edit] Copy table
+50230=[Edit] Paste
+50240=[Edit] PasteCR
+50250=[Edit] Clear screen
+50260=[Edit] Clear buffer
+50270=[Edit] Cancel selection
+50280=[Edit] Select screen
+50290=[Edit] Select all
+
+50310=[Setup] Terminal
+50320=[Setup] Window
+50330=[Setup] Font
+50340=[Setup] Keyboard
+50350=[Setup] Serial port
+50360=[Setup] TCPIP
+50370=[Setup] General
+50375=[Setup] Additional settings
+50380=[Setup] Save setup
+50390=[Setup] Restore setup
+50391=[Setup] Setup directory
+50395=[Setup] Load key map
+
+50410=[Control] Reset terminal
+50420=[Control] Are you there
+50430=[Control] Send break
+50440=[Control] Reset port
+50445=[Control] Broadcast command
+50450=[Control] Open TEK
+50460=[Control] Close TEK
+50470=[Control] Macro
+50480=[Control] Show Macro Window
+
+50810=[Window] Window
+50811=[Window] Minimize All
+50812=[Window] Restore All
+50813=[Window] Cascade
+50814=[Window] Stacked
+50815=[Window] Side by Side
+50816=[Window] Undo - XXX
+
+50910=[Help] Index
+50990=[Help] About Tera Term
+
+52310=[Setup] SSH
+52320=[Setup] SSH Authentication
+52330=[Setup] SSH Forwarding
+52340=[Setup] SSH KeyGenerator
+
+52910=[Help] About TTSSH
+53310=[Setup] Proxy
+53910=[Help] About TTProxy
+
+54010=[KanjiCode] Recv: Shift_JIS
+54011=[KanjiCode] Recv: EUC-JP
+54012=[KanjiCode] Recv: JIS
+54013=[KanjiCode] Recv: UTF-8
+54014=[KanjiCode] Recv: UTF-8m
+54110=[KanjiCode] Send: Shift_JIS
+54111=[KanjiCode] Send: EUC-JP
+54112=[KanjiCode] Send: JIS
+54113=[KanjiCode] Send: UTF-8
+54200=[KanjiCode] Use one setting
+
+55000=[Control] Always on top
+55001=[Control] SetWindowPos(HWND_TOP)
+55002=[Control] SetWindowPos(HWND_BOTTOM)
+55003=[Control] SetWindowPos(HWND_TOPMOST)
+55004=[Control] SetWindowPos(HWND_NOTOPMOST)
+
+55101=[Resize] Menu(1)
+55102=[Resize] Menu(2)
+55103=[Resize] Menu(3)
+55104=[Resize] Menu(4)
+55105=[Resize] Menu(5)
+55106=[Resize] Menu(6)
+55107=[Resize] Menu(7)
+55108=[Resize] Menu(8)
+55109=[Resize] Menu(9)
+55110=[Resize] Menu(10)
+55111=[Resize] Menu(11)
+55112=[Resize] Menu(12)
+55113=[Resize] Menu(13)
+55114=[Resize] Menu(14)
+55115=[Resize] Menu(15)
+55116=[Resize] Menu(16)
+55117=[Resize] Menu(17)
+55118=[Resize] Menu(18)
+55119=[Resize] Menu(19)
+55120=[Resize] Menu(20)
+
+55200=[Setup] ViewMode password
+55210=[Control] View mode
+
+55301=[File] TTY Record
+55302=[File] TTY Replay
+
+55500=[Setup] Recurring Command
+55501=[Control] Recurring Command
+55502=Enable Recurring Command
+55503=Disable Recurring Command
+
+51110=[File] Print
+51190=[File] Exit
+51210=[Edit] Copy
+51220=[Edit] Copy screen
+51230=[Edit] Paste
+51240=[Edit] PasteCR
+51250=[Edit] Clear screen
+51310=[Setup] Window
+51320=[Setup] Font
+51410=[VTWin]
+51810=[Window] Window
+51910=[HELP] Index
+51990=[HELP] About Tera Term
+
+56000=[HELP] TTTSet mismatch test
+56001=[HELP] TTX list
+
+56010=[File] Make shortcut
+56015=[File] Environment Package
+56020=[Setup] UserKey setup
+
+56030=[File] reconnect
+56031=[File] reconnect(+message)
+
+56040=[ENV] Environment root
+56041=[ENV] Environment(1)
+56042=[ENV] Environment(2)
+56043=[ENV] Environment(3)
+56044=[ENV] Environment(4)
+56045=[ENV] Environment(5)
+56046=[ENV] Environment(6)
+56047=[ENV] Environment more...
+56049=[ENV] Environment copy
+
+56060=[Control] View Report
+56061=[Control] Clear Report
+56062=[Control] Edit Test Pattern
+56063=[Setup] Report setup
+
+56070=Duration Timer On/Off
+56071=[Duration] Connent start timer
+56072=[Duration] Disconnent stop timer
+56073=[Duration] Reset start timer
+56074=[Duration] Now time mode
+56075=[Duration] Timer Menu On/Off
+56076=[Duration] Clear timer
+56079=[Control] Duration
