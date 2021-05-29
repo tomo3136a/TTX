@@ -31,7 +31,6 @@ typedef struct
 {
 	PTTSet ts;
 	PComVar cv;
-	int menuoffset;
 
 	//menu
 	HMENU SetupMenu;
@@ -709,11 +708,10 @@ static void PASCAL TTXModifyMenu(HMENU menu)
 	LPSTR s;
 
 	lang = UILang(pvar->ts->UILanguageFile);
-	pvar->menuoffset = MenuOffset(INISECTION, ID_MENUITEM, 0);
 
 	pvar->SetupMenu = GetSubMenu(menu, ID_SETUP);
 	s = (lang == 2) ? "ユーザーキー(&U)..." : "&UserKey setup...";
-	AppendMenu(pvar->SetupMenu, MF_BYCOMMAND, ID_MENUITEM + pvar->menuoffset, s);
+	AppendMenu(pvar->SetupMenu, MF_BYCOMMAND, TTXMenuID(ID_MENUITEM), s);
 }
 
 // static void PASCAL TTXModifyPopupMenu(HMENU menu)
@@ -723,7 +721,7 @@ static void PASCAL TTXModifyMenu(HMENU menu)
 
 static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 {
-	switch (cmd + pvar->menuoffset)
+	switch (TTXMenuOrgID(cmd))
 	{
 	case ID_MENUITEM:
 		switch (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_USERKEY),

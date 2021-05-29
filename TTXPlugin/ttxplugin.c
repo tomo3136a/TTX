@@ -21,12 +21,8 @@
 #define ORDER 6001
 
 #define INISECTION "TTXPlugin"
-#define LOADSECTION "Load"
-#define MENUSECTION "Menu"
 
 #define ID_MENUITEM 56001
-
-#define CONTROLFILE ".\\ttx.txt"
 
 static HANDLE hInst; /* Instance handle of TTX*.DLL */
 
@@ -34,7 +30,6 @@ typedef struct
 {
 	PTTSet ts;
 	PComVar cv;
-	int menuoffset;
 
 	//menu
 	HMENU HelpMenu;
@@ -205,10 +200,12 @@ void LoadListView(HWND dlg, UINT uid, PCHAR fn)
 	char buf[256];
 	UINT lang;
 	int i;
+	char *p;
 
 	lang = UILang(pvar->ts->UILanguageFile);
 
 	hWnd = GetDlgItem(dlg, uid);
+	memset(&lvcol, 0, sizeof(LVCOLUMN));
 	lvcol.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 	lvcol.fmt = LVCFMT_LEFT;
 	lvcol.cx = 130;
@@ -219,16 +216,18 @@ void LoadListView(HWND dlg, UINT uid, PCHAR fn)
 	lvcol.pszText = (lang == 2) ? "バージョン" : "version";
 	lvcol.iSubItem = 1;
 	ListView_InsertColumn(hWnd, 1, &lvcol);
-	lvcol.cx = 40;
-	lvcol.pszText = (lang == 2) ? "設定" : "On/Off";
-	lvcol.iSubItem = 2;
-	ListView_InsertColumn(hWnd, 2, &lvcol);
-	lvcol.cx = 50;
-	lvcol.pszText = (lang == 2) ? "メニュー" : "Menu";
-	lvcol.iSubItem = 3;
-	ListView_InsertColumn(hWnd, 3, &lvcol);
 	lvcol.cx = 250;
 	lvcol.pszText = (lang == 2) ? "説明" : "information";
+	lvcol.iSubItem = 2;
+	ListView_InsertColumn(hWnd, 2, &lvcol);
+	lvcol.fmt = LVCFMT_CENTER;
+	lvcol.cx = 40;
+	lvcol.pszText = (lang == 2) ? "設定" : "On/Off";
+	lvcol.iSubItem = 3;
+	ListView_InsertColumn(hWnd, 3, &lvcol);
+	lvcol.fmt = LVCFMT_RIGHT;
+	lvcol.cx = 50;
+	lvcol.pszText = "#";
 	lvcol.iSubItem = 4;
 	ListView_InsertColumn(hWnd, 4, &lvcol);
 
@@ -242,6 +241,7 @@ void LoadListView(HWND dlg, UINT uid, PCHAR fn)
 				continue;
 			strcpy_s(name, sizeof(name), win32fd.cFileName);
 			RemoveFileExt(name);
+			memset(&item, 0, sizeof(LVITEM));
 			item.mask = LVIF_TEXT;
 			item.iItem = i;
 			item.pszText = name;
@@ -254,18 +254,22 @@ void LoadListView(HWND dlg, UINT uid, PCHAR fn)
 				item.iSubItem = 1;
 				ListView_SetItem(hWnd, &item);
 			}
-			ListView_SetItem(hWnd, &item);
-			GetPrivateProfileString(LOADSECTION, name, "on", buf, sizeof(buf), fn);
-			item.pszText = buf;
-			item.iSubItem = 2;
-			ListView_SetItem(hWnd, &item);
-			GetPrivateProfileString(MENUSECTION, name, "", buf, sizeof(buf), fn);
-			item.pszText = buf;
-			item.iSubItem = 3;
-			ListView_SetItem(hWnd, &item);
 			if (GetModuleDescription(buf, sizeof(buf), ent))
 			{
 				item.pszText = buf;
+				item.iSubItem = 2;
+				ListView_SetItem(hWnd, &item);
+			}
+			GetPrivateProfileString(INISECTION, name, "on", buf, sizeof(buf), fn);
+			p = strchr(buf, ',');
+			if (NULL != p)
+				*p = 0;
+			item.pszText = buf;
+			item.iSubItem = 3;
+			ListView_SetItem(hWnd, &item);
+			if (NULL != p)
+			{
+				item.pszText = p + 1;
 				item.iSubItem = 4;
 				ListView_SetItem(hWnd, &item);
 			}
@@ -278,105 +282,50 @@ void LoadListView(HWND dlg, UINT uid, PCHAR fn)
 void SaveListView(HWND dlg, UINT uid, PCHAR fn)
 {
 	HWND hWnd;
-	char name[64];
-	char buf[16];
+	char buf1[16];
+	char buf2[64];
 	int i, cnt;
 
 	hWnd = GetDlgItem(dlg, uid);
 	cnt = ListView_GetItemCount(hWnd);
 	for (i = 0; i < cnt; i++)
 	{
-		ListView_GetItemText(hWnd, i, 0, name, sizeof(name));
-		ListView_GetItemText(hWnd, i, 2, buf, sizeof(buf));
-		WritePrivateProfileString(LOADSECTION, name, buf, fn);
-		ListView_GetItemText(hWnd, i, 3, buf, sizeof(buf));
-		WritePrivateProfileString(MENUSECTION, name, (buf[0] ? buf : NULL), fn);
+		ListView_GetItemText(hWnd, i, 3, buf1, sizeof(buf1));
+		ListView_GetItemText(hWnd, i, 4, buf2, sizeof(buf2));
+		if (buf2[0] && (buf2[0] != '0'))
+		{
+			strcat_s(buf1, sizeof(buf1), ",");
+			strcat_s(buf1, sizeof(buf1), buf2);
+		}
+		ListView_GetItemText(hWnd, i, 0, buf2, sizeof(buf2));
+		WritePrivateProfileString(INISECTION, buf2, buf1, fn);
 	}
 }
 
-BOOL GetListViewIgnore(HWND dlg, UINT uid, int idx)
+void UpdateListView(HWND dlg, UINT uid, int idx)
 {
-	char buf[16];
-
-	ListView_GetItemText(GetDlgItem(dlg, uid), idx, 2, buf, sizeof(buf));
-	return (strchr(buf, '-') != NULL);
-}
-
-BOOL GetListViewOnOff(HWND dlg, UINT uid, int idx)
-{
-	char buf[16];
-
-	ListView_GetItemText(GetDlgItem(dlg, uid), idx, 2, buf, sizeof(buf));
-	return (_strnicmp(buf, "on", 2) == 0);
-}
-
-void UpdateListView(HWND dlg, UINT uid, int idx, BOOL b)
-{
-	HWND hWnd;
-	LVITEM item;
-
-	hWnd = GetDlgItem(dlg, uid);
-	item.mask = LVIF_TEXT;
-	item.iSubItem = 0;
-	item.iItem = idx;
-	item.pszText = b ? "on" : "off";
-	item.cchTextMax = 3;
-	item.iSubItem = 2;
-	ListView_SetItem(hWnd, &item);
-	ListView_SetItemState(hWnd, idx, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
-	ListView_EnsureVisible(hWnd, idx, TRUE);
-}
-
-void DrawListViewItem(LPDRAWITEMSTRUCT lpDraw)
-{
-	HDC hdc;
 	HWND hwnd;
-	UINT uid;
-	RECT rcItem, rcSubItem;
-	HBRUSH hbr, hbr2;
-	char buf[256];
-	UINT flg;
+	LVITEM item;
+	char buf[64];
 	int i;
 
-	hdc = lpDraw->hDC;
-	SaveDC(hdc);
+	hwnd = GetDlgItem(dlg, uid);
 
-	hwnd = lpDraw->hwndItem;
-	uid = lpDraw->itemID;
+	memset(&item, 0, sizeof(LVITEM));
+	item.mask = LVIF_TEXT;
+	item.iItem = idx;
+	item.iSubItem = 3;
+	item.cchTextMax = 3;
 
-	ListView_GetItemRect(hwnd, uid, &rcItem, LVIR_LABEL);
-	ListView_GetItemText(hwnd, uid, 0, buf, sizeof(buf) / sizeof(buf[0]));
-	if (lpDraw->itemState & ODS_SELECTED)
-		hbr = CreateSolidBrush(GetSysColor(COLOR_HIGHLIGHT));
-	else
-		hbr = CreateSolidBrush(GetSysColor(COLOR_WINDOW));
-	FillRect(hdc, &rcItem, hbr);
-	SetBkMode(hdc, TRANSPARENT);
-	DrawText(hdc, buf, -1, &rcItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
-
-	hbr2 = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
-	for (i = 1; i < 5; i++)
+	for (i = 0; i < 5; i++)
 	{
-		ListView_GetSubItemRect(hwnd, uid, i, LVIR_LABEL, &rcSubItem);
-		ListView_GetItemText(hwnd, uid, i, buf, sizeof(buf) / sizeof(buf[0]));
-		if (i == 2 && _strnicmp(buf, "off", 3) == 0)
-		{
-			FillRect(hdc, &rcSubItem, hbr2);
-		}
-
-		flg = DT_VCENTER | DT_SINGLELINE;
-		flg |= (i == 1 || i == 2 || i == 3) ? DT_CENTER : DT_LEFT;
-		DrawText(hdc, buf, -1, &rcSubItem, flg);
+		ListView_GetItemText(hwnd, idx, i, buf, sizeof(buf) / sizeof(buf[0]));
+		item.iSubItem = i;
+		item.pszText = buf;
+		if ((3 == i) && ('o' == buf[0]))
+			item.pszText = (0 == _strnicmp(buf, "on", 2)) ? "off" : "on";
+		ListView_SetItem(hwnd, &item);
 	}
-
-	rcItem.right = rcSubItem.right;
-	if (lpDraw->itemState & ODS_FOCUS)
-		DrawFocusRect(hdc, &rcItem);
-
-	DeleteObject(hbr2);
-	DeleteObject(hbr);
-
-	RestoreDC(hdc, -1);
 }
 
 //
@@ -384,19 +333,15 @@ void DrawListViewItem(LPDRAWITEMSTRUCT lpDraw)
 //
 static LRESULT CALLBACK SettingProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+	static BOOL bUpdate = FALSE;
 	LV_HITTESTINFO lvinfo;
-	int i;
-	BOOL b;
 
 	switch (msg)
 	{
 	case WM_INITDIALOG:
-		LoadListView(dlg, IDC_LISTVIEW, CONTROLFILE);
+		bUpdate = FALSE;
+		LoadListView(dlg, IDC_LISTVIEW, pvar->ts->SetupFName);
 		MoveParentCenter(dlg);
-		return TRUE;
-
-	case WM_DRAWITEM:
-		DrawListViewItem((LPDRAWITEMSTRUCT)lParam);
 		return TRUE;
 
 	case WM_NOTIFY:
@@ -409,13 +354,10 @@ static LRESULT CALLBACK SettingProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 				GetCursorPos((LPPOINT)&lvinfo.pt);
 				ScreenToClient(((LPNMLISTVIEW)lParam)->hdr.hwndFrom, &lvinfo.pt);
 				ListView_HitTest(((LPNMLISTVIEW)lParam)->hdr.hwndFrom, &lvinfo);
-				if ((lvinfo.flags & LVHT_ONITEM) != 0)
+				if (lvinfo.flags & LVHT_ONITEM)
 				{
-					i = lvinfo.iItem;
-					if (GetListViewIgnore(dlg, IDC_LISTVIEW, i))
-						break;
-					b = GetListViewOnOff(dlg, IDC_LISTVIEW, i);
-					UpdateListView(dlg, IDC_LISTVIEW, i, !b);
+					UpdateListView(dlg, IDC_LISTVIEW, lvinfo.iItem);
+					bUpdate = TRUE;
 				}
 				break;
 			}
@@ -427,10 +369,12 @@ static LRESULT CALLBACK SettingProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 		switch (LOWORD(wParam))
 		{
 		case IDOK:
-			SaveListView(dlg, IDC_LISTVIEW, CONTROLFILE);
-			EndDialog(dlg, IDOK);
-			return TRUE;
-
+			if (bUpdate)
+			{
+				SaveListView(dlg, IDC_LISTVIEW, pvar->ts->SetupFName);
+				EndDialog(dlg, IDOK);
+				return TRUE;
+			}
 		case IDCANCEL:
 			EndDialog(dlg, IDCANCEL);
 			return TRUE;
@@ -450,13 +394,12 @@ static void PASCAL TTXModifyMenu(HMENU menu)
 	int idx;
 
 	lang = UILang(pvar->ts->UILanguageFile);
-	pvar->menuoffset = MenuOffset(INISECTION, ID_MENUITEM, 0);
 
 	idx = GetMenuItemCount(menu) - 1;
 	pvar->HelpMenu = GetSubMenu(menu, idx);
 
 	s = (lang == 2) ? "TTX 機能一覧(&L)" : "TTX &list";
-	InsertMenu(pvar->HelpMenu, 2, MF_BYPOSITION, ID_MENUITEM + pvar->menuoffset, s);
+	InsertMenu(pvar->HelpMenu, 2, MF_BYPOSITION, TTXMenuID(ID_MENUITEM), s);
 }
 
 // static void PASCAL TTXModifyPopupMenu(HMENU menu)
@@ -466,7 +409,7 @@ static void PASCAL TTXModifyMenu(HMENU menu)
 
 static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 {
-	switch (cmd + pvar->menuoffset)
+	switch (TTXMenuOrgID(cmd))
 	{
 	case ID_MENUITEM:
 		switch (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_PLUGIN),

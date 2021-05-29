@@ -31,7 +31,6 @@ typedef struct
 {
 	PTTSet ts;
 	PComVar cv;
-	int menuoffset;
 
 	//menu
 	HMENU HelpMenu;
@@ -190,12 +189,10 @@ static void PASCAL TTXModifyMenu(HMENU menu)
 	LPSTR s;
 	int idx;
 	
-	pvar->menuoffset = MenuOffset(INISECTION, ID_MENUITEM, 0);
-
 	idx = GetMenuItemCount(menu) - 1;
 	pvar->HelpMenu = GetSubMenu(menu, idx);
 	s = "Estimate of structure mismatch in TTSet...";
-	InsertMenu(pvar->HelpMenu, 2, MF_BYPOSITION, ID_MENUITEM + pvar->menuoffset, s);
+	InsertMenu(pvar->HelpMenu, 2, MF_BYPOSITION, TTXMenuID(ID_MENUITEM), s);
 }
 
 // static void PASCAL TTXModifyPopupMenu(HMENU menu)
@@ -205,7 +202,7 @@ static void PASCAL TTXModifyMenu(HMENU menu)
 
 static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 {
-	switch (cmd)
+	switch (TTXMenuOrgID(cmd))
 	{
 	case ID_MENUITEM:
 		DisplayTTTSet(hWin);

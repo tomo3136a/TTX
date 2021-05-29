@@ -41,7 +41,6 @@ typedef struct
 	PTTSet ts;
 	PComVar cv;
 	BOOL skip;
-	int menuoffset;
 
 	//menu
 	HMENU DurationMenu;
@@ -378,13 +377,12 @@ static void UpdateMenuBar(HMENU hmenu, UINT uid, BOOL enable)
 	LPSTR s;
 
 	lang = UILang(pvar->ts->UILanguageFile);
-	pvar->menuoffset = MenuOffset(INISECTION, ID_MENUITEM, 0);
 
 	RemoveMenu(hmenu, uid, MF_BYCOMMAND);
 	if (pvar->enableOnOff)
 	{
 		s = (lang == 2) ? "タイマ(&T)" : "&Timer";
-		AppendMenu(hmenu, MF_BYPOSITION, ID_MENUITEM + pvar->menuoffset, s);
+		AppendMenu(hmenu, MF_BYPOSITION, TTXMenuID(ID_MENUITEM), s);
 	}
 }
 
@@ -402,27 +400,27 @@ static void PASCAL TTXModifyMenu(HMENU menu)
 	pvar->DurationMenu = CreatePopupMenu();
 	mii.hSubMenu = pvar->DurationMenu;
 	mii.fMask = MIIM_ID | MIIM_STRING | MIIM_SUBMENU;
-	mii.wID = ID_MENUITEM9 + pvar->menuoffset;
+	mii.wID = TTXMenuID(ID_MENUITEM9);
 	s = (lang == 2) ? "経過時間(&D)" : "&Duration";
 	mii.dwTypeData = s;
 	InsertMenuItem(GetSubMenu(menu, ID_CONTROL), ID_CONTROL_MACRO, FALSE, &mii);
 
 	flag = MF_BYCOMMAND | MF_STRING | MF_ENABLED;
 	s = (lang == 2) ? "タイマ接続開始(&C)" : "&Connent start timer";
-	AppendMenu(pvar->DurationMenu, flag, ID_MENUITEM1 + pvar->menuoffset, s);
+	AppendMenu(pvar->DurationMenu, flag, TTXMenuID(ID_MENUITEM1), s);
 	s = (lang == 2) ? "タイマ切断停止(&D)" : "&Disconnent stop timer";
-	AppendMenu(pvar->DurationMenu, flag, ID_MENUITEM2 + pvar->menuoffset, s);
+	AppendMenu(pvar->DurationMenu, flag, TTXMenuID(ID_MENUITEM2), s);
 	s = (lang == 2) ? "タイマリセット開始(&R)" : "&Reset start timer";
-	AppendMenu(pvar->DurationMenu, flag, ID_MENUITEM3 + pvar->menuoffset, s);
+	AppendMenu(pvar->DurationMenu, flag, TTXMenuID(ID_MENUITEM3), s);
 	s = (lang == 2) ? "時刻表示(&M)" : "Now time &mode";
-	AppendMenu(pvar->DurationMenu, flag, ID_MENUITEM4 + pvar->menuoffset, s);
+	AppendMenu(pvar->DurationMenu, flag, TTXMenuID(ID_MENUITEM4), s);
 	s = (lang == 2) ? "開始/停止メニュー(&O)" : "&On/Off Menu";
-	AppendMenu(pvar->DurationMenu, flag, ID_MENUITEM5 + pvar->menuoffset, s);
+	AppendMenu(pvar->DurationMenu, flag, TTXMenuID(ID_MENUITEM5), s);
 	AppendMenu(pvar->DurationMenu, MF_SEPARATOR, 0, NULL);
 	s = (lang == 2) ? "タイマクリア(&C)" : "&Clear timer";
-	AppendMenu(pvar->DurationMenu, flag, ID_MENUITEM6 + pvar->menuoffset, s);
+	AppendMenu(pvar->DurationMenu, flag, TTXMenuID(ID_MENUITEM6), s);
 
-	UpdateMenuBar(menu, ID_MENUITEM + pvar->menuoffset, pvar->enableOnOff);
+	UpdateMenuBar(menu, TTXMenuID(ID_MENUITEM), pvar->enableOnOff);
 }
 
 static void PASCAL TTXModifyPopupMenu(HMENU menu)
@@ -432,21 +430,21 @@ static void PASCAL TTXModifyPopupMenu(HMENU menu)
 	if (menu == pvar->DurationMenu)
 	{
 		flag = (pvar->connectStart) ? MF_CHECKED : 0;
-		CheckMenuItem(menu, ID_MENUITEM1 + pvar->menuoffset, MF_BYCOMMAND | MF_ENABLED | flag);
+		CheckMenuItem(menu, TTXMenuID(ID_MENUITEM1), MF_BYCOMMAND | MF_ENABLED | flag);
 		flag = (pvar->disconnectStop) ? MF_CHECKED : 0;
-		CheckMenuItem(menu, ID_MENUITEM2 + pvar->menuoffset, MF_BYCOMMAND | MF_ENABLED | flag);
+		CheckMenuItem(menu, TTXMenuID(ID_MENUITEM2), MF_BYCOMMAND | MF_ENABLED | flag);
 		flag = (pvar->resetStart) ? MF_CHECKED : 0;
-		CheckMenuItem(menu, ID_MENUITEM3 + pvar->menuoffset, MF_BYCOMMAND | MF_ENABLED | flag);
+		CheckMenuItem(menu, TTXMenuID(ID_MENUITEM3), MF_BYCOMMAND | MF_ENABLED | flag);
 		flag = (pvar->nowTimeMode) ? MF_CHECKED : 0;
-		CheckMenuItem(menu, ID_MENUITEM4 + pvar->menuoffset, MF_BYCOMMAND | MF_ENABLED | flag);
+		CheckMenuItem(menu, TTXMenuID(ID_MENUITEM4), MF_BYCOMMAND | MF_ENABLED | flag);
 		flag = (pvar->enableOnOff) ? MF_CHECKED : 0;
-		CheckMenuItem(menu, ID_MENUITEM5 + pvar->menuoffset, MF_BYCOMMAND | MF_ENABLED | flag);
+		CheckMenuItem(menu, TTXMenuID(ID_MENUITEM5), MF_BYCOMMAND | MF_ENABLED | flag);
 	}
 }
 
 static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 {
-	switch (cmd + pvar->menuoffset)
+	switch (TTXMenuOrgID(cmd))
 	{
 	case ID_MENUITEM:
 		pvar->enable = !pvar->enable;
@@ -476,7 +474,7 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 
 	case ID_MENUITEM5:
 		pvar->enableOnOff = !pvar->enableOnOff;
-		UpdateMenuBar(GetMenu(hWin), ID_MENUITEM + pvar->menuoffset, pvar->enableOnOff);
+		UpdateMenuBar(GetMenu(hWin), TTXMenuID(ID_MENUITEM), pvar->enableOnOff);
 		DrawMenuBar(hWin);
 		return 1;
 

@@ -34,7 +34,6 @@ typedef struct
 	PTTSet ts;
 	PComVar cv;
 	BOOL skip;
-	int menuoffset;
 
 	//menu
 	HMENU SetupMenu;
@@ -525,13 +524,12 @@ static void PASCAL TTXModifyMenu(HMENU menu)
 
 	flag = MF_ENABLED;
 	lang = UILang(pvar->ts->UILanguageFile);
-	pvar->menuoffset = MenuOffset(INISECTION, ID_MENUITEM, 0);
 
 	pvar->SetupMenu = GetSubMenu(menu, ID_SETUP);
 	s = (lang == 2) ? "ŠÂ‹«‚Ì•Û‘¶(&V)..." : "En&vironment copy...";
-	AppendMenu(pvar->SetupMenu, flag, ID_MENUITEM2 + pvar->menuoffset, s);
+	AppendMenu(pvar->SetupMenu, flag, TTXMenuID(ID_MENUITEM2), s);
 	// s = (lang == 2) ? "ŠÂ‹«‚ÌÝ’è(&M)..." : "Environ&ment setup...";
-	// AppendMenu(pvar->SetupMenu, flag, ID_MENUITEM1 + pvar->menuoffset, s);
+	// AppendMenu(pvar->SetupMenu, flag, TTXMenuID(ID_MENUITEM1), s);
 
 	if (pvar->EnvMenu != NULL)
 	{
@@ -569,7 +567,7 @@ static void PASCAL TTXModifyPopupMenu(HMENU menu)
 		{
 		}
 
-		uid = ID_MENUITEM + pvar->menuoffset;
+		uid = TTXMenuID(ID_MENUITEM);
 		uflg = MF_ENABLED | ((_strnicmp(pvar->ts->SetupFName, pvar->SetupFile, MAX_PATH) == 0) ? MF_CHECKED : 0);
 		GetRelatedPath(path, sizeof(path), pvar->SetupFile, pvar->SetupFile, 0);
 		RemoveFileExt(path);
@@ -591,7 +589,7 @@ static void PASCAL TTXModifyPopupMenu(HMENU menu)
 			CombinePath(path, sizeof(path), win32fd.cFileName);
 			if (_strnicmp(path, pvar->SetupFile, MAX_PATH) == 0)
 				continue;
-			if (uid == (ID_MENUITEM + MENUITEM_NUM + pvar->menuoffset))
+			if (uid == (TTXMenuID(ID_MENUITEM + MENUITEM_NUM)))
 			{
 				AppendMenu(menu, MF_ENABLED, uid, "more...");
 				break;
@@ -599,7 +597,7 @@ static void PASCAL TTXModifyPopupMenu(HMENU menu)
 			uflg = MF_ENABLED | ((_strnicmp(pvar->ts->SetupFName, path, MAX_PATH) == 0) ? MF_CHECKED : 0);
 			GetRelatedPath(path, sizeof(path), path, pvar->SetupFile, 0);
 			RemoveFileExt(path);
-			_snprintf_s(name, sizeof(name), _TRUNCATE, "&%d + %s", (uid - ID_MENUITEM - pvar->menuoffset), path);
+			_snprintf_s(name, sizeof(name), _TRUNCATE, "&%d + %s", TTXMenuOrgID(uid - ID_MENUITEM), path);
 			AppendMenu(menu, uflg, uid++, name);
 		} while (FindNextFile(hFind, &win32fd));
 		FindClose(hFind);
@@ -627,7 +625,7 @@ static void PASCAL TTXModifyPopupMenu(HMENU menu)
 					continue;
 				if (win32fd2.cFileName[0] == '_' || win32fd2.cFileName[0] == '.')
 					continue;
-				if (uid == (ID_MENUITEM + MENUITEM_NUM + pvar->menuoffset))
+				if (uid == TTXMenuID(ID_MENUITEM + MENUITEM_NUM))
 				{
 					AppendMenu(menu, MF_ENABLED, uid, "more...");
 					break;
@@ -640,7 +638,7 @@ static void PASCAL TTXModifyPopupMenu(HMENU menu)
 				RemoveFileExt(path);
 				while (p = strchr(path, '\\'))
 					*p = '/';
-				_snprintf_s(name, sizeof(name), _TRUNCATE, "&%d + %s", (uid - ID_MENUITEM - pvar->menuoffset), path);
+				_snprintf_s(name, sizeof(name), _TRUNCATE, "&%d + %s", TTXMenuOrgID(uid - ID_MENUITEM), path);
 				AppendMenu(menu, uflg, uid++, name);
 			} while (FindNextFile(hFind, &win32fd));
 			FindClose(hFind);
@@ -656,7 +654,7 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 	CHAR name[32];
 	PCHAR p;
 
-	switch (cmd + pvar->menuoffset)
+	switch (TTXMenuOrgID(cmd))
 	{
 		// case ID_MENUITEM1:
 		// 	switch (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_SETUP_ENV),
@@ -706,7 +704,7 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 		mii.fMask = MIIM_TYPE;
 		mii.dwTypeData = name;
 		mii.cch = sizeof(name) - 1;
-		GetMenuItemInfo(pvar->EnvMenu, cmd + pvar->menuoffset, FALSE, &mii);
+		GetMenuItemInfo(pvar->EnvMenu, TTXMenuOrgID(cmd), FALSE, &mii);
 		p = strchr(name, '+');
 		if (p)
 		{

@@ -37,7 +37,6 @@ typedef struct
 	PTTSet ts;
 	PComVar cv;
 	BOOL skip;
-	int menuoffset;
 
 	//menu
 	HMENU FileMenu;
@@ -221,12 +220,11 @@ static void PASCAL TTXModifyMenu(HMENU menu)
 	LPSTR s;
 
 	lang = UILang(pvar->ts->UILanguageFile);
-	pvar->menuoffset = MenuOffset(INISECTION, ID_MENUITEM, 0);
 
 	pvar->FileMenu = GetSubMenu(menu, ID_FILE);
 
 	s = (lang == 2) ? "ÄÚ‘±(&F)..." : "reconnect...";
-	InsertMenu(pvar->FileMenu, 3, MF_BYPOSITION, ID_MENUITEM + pvar->menuoffset, s);
+	InsertMenu(pvar->FileMenu, 3, MF_BYPOSITION, TTXMenuID(ID_MENUITEM), s);
 }
 
 // static void PASCAL TTXModifyPopupMenu(HMENU menu)
@@ -236,11 +234,11 @@ static void PASCAL TTXModifyMenu(HMENU menu)
 
 static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 {
-	switch (cmd + pvar->menuoffset)
+	switch (TTXMenuOrgID(cmd))
 	{
 	case ID_MENUITEM:
 	case ID_MENUITEM1:
-		pvar->ConnectMsg = (cmd + pvar->menuoffset == ID_MENUITEM1) ? TRUE : FALSE;
+		pvar->ConnectMsg = (TTXMenuOrgID(cmd) == ID_MENUITEM1) ? TRUE : FALSE;
 		if (pvar->cv->Open)
 		{
 			pvar->Reconnect = TRUE;

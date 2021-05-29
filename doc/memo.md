@@ -68,27 +68,15 @@ BOOL __declspec(dllexport) PASCAL TTXBind(WORD Version, TTXExports *exports)
 メニューアイテムの番号は、56000 以降に割り当てる。
 各プラグイン同士で重複しないように気を付ける。重なってしまったときに対応できるように、メニューアイテム番号オフセットに対応させる。
 
-***pvar->menuoffset*** の設定を追加する。また、メニューアイテムの番号(ID_MENUITEM や ID_MENUITEM1 等)の箇所に " ***+ pvar->menuoffset*** " を追加する。
-
 ```c
-typedef struct
-{
-    PTTSet ts;
-    PComVar cv;
-    BOOL skip;
-    int menuoffset;         // <==追加
-} TInstVar;
-...
-
 static void PASCAL TTXModifyMenu(HMENU menu)
 {
     HMENU submenu;
     UINT menu_id;
 
-    pvar->menuoffset = MenuOffset(INISECTION, ID_MENUITEM, 0);  // <==追加
 
     submenu = GetSubMenu(menu, 0);
-    menu_id = ID_MENUITEM + pvar->menuoffset;                   // <==オフセットを加算
+    menu_id = TTXMenuID(ID_MENUITEM);                   // <==オフセットを加算 TTXMenuID()
     AppendMenu(submenu, MF_ENABLED, menu_id, "item");
     ...
 }
@@ -104,7 +92,7 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 {
     UINT menu_id;
 
-    menu_id  = cmd + pvar->menuoffset;          // <==オフセットを加算
+    menu_id  = TTXMenuOrgID(cmd);                      // <==オフセットを減算 TTXMenuOrgID()
     switch (menu_id)
     {
     case ID_MENUITEM:

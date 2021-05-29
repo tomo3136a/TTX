@@ -29,7 +29,6 @@ typedef struct
 {
 	PTTSet ts;
 	PComVar cv;
-	int menuoffset;
 
 	//menu
 	HMENU FileMenu;
@@ -761,12 +760,11 @@ static void PASCAL TTXModifyMenu(HMENU menu)
 	LPSTR s;
 
 	lang = UILang(pvar->ts->UILanguageFile);
-	pvar->menuoffset = MenuOffset(INISECTION, ID_MENUITEM, 0);
 
 	pvar->FileMenu = GetSubMenu(menu, ID_FILE);
 
 	s = (lang == 2) ? "パッケージ出力(&P)" : "Export &package";
-	InsertMenu(pvar->FileMenu, ID_FILE_PRINT2, MF_BYCOMMAND, ID_MENUITEM + pvar->menuoffset, s);
+	InsertMenu(pvar->FileMenu, ID_FILE_PRINT2, MF_BYCOMMAND, TTXMenuID(ID_MENUITEM), s);
 }
 
 ///////////////////////////////////////////////////////////////
@@ -780,7 +778,7 @@ static void PASCAL TTXModifyMenu(HMENU menu)
 
 static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 {
-	switch (cmd + pvar->menuoffset)
+	switch (TTXMenuOrgID(cmd))
 	{
 	case ID_MENUITEM:
 		switch (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_PACKAGE),

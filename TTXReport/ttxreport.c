@@ -59,7 +59,6 @@ typedef struct
 	PTTSet ts;
 	PComVar cv;
 	BOOL skip;
-	int menuoffset;
 
 	//menu
 	HMENU SetupMenu;
@@ -1002,21 +1001,20 @@ static void PASCAL TTXModifyMenu(HMENU menu)
 
 	flag = MF_ENABLED;
 	lang = UILang(pvar->ts->UILanguageFile);
-	pvar->menuoffset = MenuOffset(INISECTION, ID_MENUITEM, 0);
 
 	pvar->SetupMenu = GetSubMenu(menu, ID_SETUP);
 	AppendMenu(pvar->SetupMenu, MF_SEPARATOR, 0, NULL);
 	s = (lang == 2) ? "受信レポート(&Q)..." : "Report setup...";
-	AppendMenu(pvar->SetupMenu, flag, ID_MENUITEM3 + pvar->menuoffset, s);
+	AppendMenu(pvar->SetupMenu, flag, TTXMenuID(ID_MENUITEM3), s);
 
 	pvar->ControlMenu = GetSubMenu(menu, ID_CONTROL);
 	AppendMenu(pvar->ControlMenu, MF_SEPARATOR, 0, NULL);
 	s = (lang == 2) ? "受信レポート(&V)..." : "&View Report";
-	AppendMenu(pvar->ControlMenu, flag, ID_MENUITEM + pvar->menuoffset, s);
+	AppendMenu(pvar->ControlMenu, flag, TTXMenuID(ID_MENUITEM), s);
 	s = (lang == 2) ? "受信レポートクリア(&L)..." : "C&lear Report";
-	AppendMenu(pvar->ControlMenu, flag, ID_MENUITEM1 + pvar->menuoffset, s);
+	AppendMenu(pvar->ControlMenu, flag, TTXMenuID(ID_MENUITEM1), s);
 	s = (lang == 2) ? "テストパターン編集..." : "Edit &Test Pattern";
-	AppendMenu(pvar->ControlMenu, flag, ID_MENUITEM2 + pvar->menuoffset, s);
+	AppendMenu(pvar->ControlMenu, flag, TTXMenuID(ID_MENUITEM2), s);
 }
 
 static void PASCAL TTXModifyPopupMenu(HMENU menu)
@@ -1025,15 +1023,15 @@ static void PASCAL TTXModifyPopupMenu(HMENU menu)
 	if (menu == pvar->SetupMenu || menu == pvar->ControlMenu)
 	{
 		uflag = MF_BYCOMMAND | (pvar->ChangeReport ? MF_CHECKED : 0);
-		CheckMenuItem(menu, ID_MENUITEM + pvar->menuoffset, uflag);
+		CheckMenuItem(menu, TTXMenuID(ID_MENUITEM), uflag);
 		uflag = MF_BYCOMMAND | (pvar->ChangeReport ? MF_ENABLED : MF_GRAYED);
-		EnableMenuItem(menu, ID_MENUITEM1 + pvar->menuoffset, uflag);
+		EnableMenuItem(menu, TTXMenuID(ID_MENUITEM1), uflag);
 	}
 }
 
 static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 {
-	switch (cmd + pvar->menuoffset)
+	switch (TTXMenuOrgID(cmd))
 	{
 	case ID_MENUITEM: //view report
 		if (pvar->ChangeReport)

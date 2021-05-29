@@ -29,7 +29,8 @@ extern "C"
     UINT UILang(PCHAR lang);
 
     ///get Menu ID offset
-    int MenuOffset(PCHAR name, UINT id, UINT cnt);
+    int TTXMenuID(UINT uid);
+    int TTXMenuOrgID(UINT uid);
 
     /* string */
     ///•¶š—ñ’†‚É•¶š‚ğŒŸõ‚µŸ‚Ìƒ|ƒCƒ“ƒ^‚ğ•Ô‚·

@@ -40,7 +40,6 @@ typedef struct
 	PTTSet ts;
 	PComVar cv;
 	BOOL skip;		//{if use ParseParam hook}
-	int menuoffset; //{if menu}
 
 	//menu
 	HMENU SetupMenu; //{when use Setup menu}
@@ -373,12 +372,11 @@ static void PASCAL TTXModifyMenu(HMENU menu)
 
 	flag = MF_ENABLED;
 	lang = UILang(pvar->ts->UILanguageFile);
-	pvar->menuoffset = MenuOffset(INISECTION, ID_MENUITEM, 0);
 
 	pvar->SetupMenu = GetSubMenu(menu, ID_SETUP);
 	AppendMenu(pvar->SetupMenu, MF_SEPARATOR, 0, NULL);
 	s = (lang == 2) ? "Ý’è(&S)..." : "&setup...";
-	AppendMenu(pvar->SetupMenu, flag, ID_MENUITEM + pvar->menuoffset, s);
+	AppendMenu(pvar->SetupMenu, flag, TTXMenuID(ID_MENUITEM), s);
 
 	//{other menu insert/ppend...}
 
@@ -404,8 +402,7 @@ static void PASCAL TTXModifyPopupMenu(HMENU menu)
 //{when use to call menu process}
 static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 {
-	cmd += pvar->menuoffset;
-	switch (cmd)
+	switch (TTXMenuOrgID(cmd))
 	{
 	case ID_MENUITEM:
  		//setup dialog

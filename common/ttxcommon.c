@@ -14,21 +14,35 @@
 
 #include "ttxcommon.h"
 
+#define TTX_SECTION "TTXPlugin"
+#define INI_FILE ".\\TERATERM.INI"
+
 ///////////////////////////////////////////////////////////////////////////
 
+static int _menu_offset = 0;
 BOOL TTXIgnore(int order, PCHAR name, WORD version)
 {
 	//TODO: test order, test version
 	char buf[16];
-	GetPrivateProfileString("Load", name, "", buf, sizeof(buf), ".\\ttx.txt");
-	return (_strnicmp("off", buf, 3) == 0);
+	char *p;
+
+	GetPrivateProfileString(TTX_SECTION, name, "", buf, sizeof(buf), INI_FILE);
+	if (_strnicmp("off", buf, 3) == 0)
+		return TRUE;
+	p = strchr(buf, ',');
+	_menu_offset = (NULL == p) ? 0 : atoi(1 + p);
+	return FALSE;
 }
 
-//get Menu ID offset
-int MenuOffset(PCHAR name, UINT id, UINT cnt)
+//get offset based Menu ID
+int TTXMenuID(UINT uid)
 {
-	//TODO: cnt
-	return GetPrivateProfileInt("MenuID", name, id, ".\\ttx.txt") - id;
+	return (int)uid + _menu_offset;
+}
+// get original based Menu ID
+int TTXMenuOrgID(UINT uid)
+{
+	return (int)uid - _menu_offset;
 }
 
 //コマンドラインパラメータ解析
@@ -93,15 +107,15 @@ UINT UILang(PCHAR lang)
 	lang += 4;
 	return strstr(lang, "Eng")
 			   ? 1
-			   : strstr(lang, "Jap")
-					 ? 2
-					 : strstr(lang, "Rus")
-						   ? 3
-						   : strstr(lang, "Kor")
-								 ? 4
-								 : strstr(lang, "UTF")
-									   ? 5
-									   : 1;
+		   : strstr(lang, "Jap")
+			   ? 2
+		   : strstr(lang, "Rus")
+			   ? 3
+		   : strstr(lang, "Kor")
+			   ? 4
+		   : strstr(lang, "UTF")
+			   ? 5
+			   : 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////
