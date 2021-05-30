@@ -35,14 +35,14 @@ BOOL TTXIgnore(int order, PCHAR name, WORD version)
 }
 
 //get offset based Menu ID
-int TTXMenuID(UINT uid)
+UINT TTXMenuID(UINT uid)
 {
-	return (int)uid + _menu_offset;
+	return (UINT)(uid + _menu_offset);
 }
 // get original based Menu ID
-int TTXMenuOrgID(UINT uid)
+UINT TTXMenuOrgID(UINT uid)
 {
-	return (int)uid - _menu_offset;
+	return (UINT)(uid - _menu_offset);
 }
 
 //コマンドラインパラメータ解析
