@@ -30,13 +30,25 @@ add_subdirectory(TTXReport)
 set_target_properties(TTXReport PROPERTIES FOLDER TTX)
 
 configure_file(
+  LICENSE
+  data/license/${CMAKE_PROJECT_NAME}-${PROJECT_VERSION}/LICENSE
+  @ONLY
+  )
+configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/Setup/Setup.vdproj.in
   ${CMAKE_CURRENT_SOURCE_DIR}/Setup/Setup.vdproj
   @ONLY
   )
 
-configure_file(
-  LICENSE
-  data/LICENSE
-  @ONLY
-  )
+install(
+  DIRECTORY
+  "${CMAKE_CURRENT_BINARY_DIR}/Release/"
+  "${CMAKE_CURRENT_BINARY_DIR}/data/"
+  DESTINATION .
+)
+set(CPACK_GENERATOR "ZIP")
+set(CPACK_PACKAGE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${PROJECT_VERSION}")
+set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
+set(CPACK_VERBATIM_VARIABLES YES)
+include(CPack)

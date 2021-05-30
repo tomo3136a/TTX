@@ -46,7 +46,7 @@ Tera Term のプラグイン集です。
 * **Visual Studio 2019**
 * **Tera Term ソースコード**
 
-インストーラも作成する場合は、Visual Studio 拡張機能 **「Microsoft Visual Studio Installer Projects」** もインストールします。
+インストーラを作成する場合は、Visual Studio 拡張機能 **「Microsoft Visual Studio Installer Projects」** もインストールします。
 
 ```txt
 cmake version 3.14.0
@@ -80,17 +80,24 @@ More Info
 3. 本ソースコードのフォルダにある **build.bat** を実行します。 
    コマンドラインで行う場合は、**build.bat** があるディレクトリで以下を実行します。
 
+   **build.bat** の内容：
+
     ```bat
     mkdir build
     cd build
     cmake -A Win32 ..
-    cmake --build . --config Release
+    cmake --build . --config Release --target package
     ```
 
-4. **build/Release/** にビルドしたプラグインが生成されます。また、**build/data/** にその他のファイルが生成されます。
+4. build/ フォルダに圧縮ファイル **TTX-x.x.x.zip** が生成されます。
 5. インストーラを作成する場合は、本ソースコードの **Setup/Setup.sln** を Visual Studio で開き、インストーラをビルドしてください。ビルドしたインストーラ(TTXSetup-x.x.x.msi) は、**Setup/Release/** フォルダに生成されます。
 
 ## インストール
+
+### 圧縮ファイルからインストール
+
+圧縮ファイル **TTX-x.x.x.zip** を Tera Term のインストールフォルダ (通常は C:\\Program Files (x86)\\teraterm\\ ) に解凍します。\
+ttermpro.exe と同じフォルダに DLL ファイルが解凍できていれば成功です。
 
 ### インストーラによるインストール
 

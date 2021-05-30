@@ -16,7 +16,6 @@ set(SRC
   ttxplugin.c
   ttxplugin.rc
   readme.md
-  ttx.txt
   )
 
 include_directories(
@@ -47,9 +46,4 @@ configure_file(
   ../common/verinfo.h.in
   verinfo.h
   @ONLY
-  )
-
-configure_file(
-  ttx.txt
-  ${CMAKE_BINARY_DIR}/data/ttx.txt
   )

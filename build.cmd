@@ -5,5 +5,5 @@ mkdir build
 cd build
 del /q /s *
 cmake -A Win32 ..
-cmake --build . --config Release
+cmake --build . --config Release --target package
 pause
