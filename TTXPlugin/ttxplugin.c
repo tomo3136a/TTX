@@ -260,7 +260,8 @@ void LoadListView(HWND dlg, UINT uid, PCHAR fn)
 				item.iSubItem = 2;
 				ListView_SetItem(hWnd, &item);
 			}
-			GetPrivateProfileString(INISECTION, name, "on", buf, sizeof(buf), fn);
+			p = (_strnicmp(name, INISECTION, sizeof(INISECTION)) == 0) ? "-" : "on";
+			GetPrivateProfileString(INISECTION, name, p, buf, sizeof(buf), fn);
 			p = strchr(buf, ',');
 			if (NULL != p)
 				*p = 0;
