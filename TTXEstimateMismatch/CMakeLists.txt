@@ -3,6 +3,8 @@
 project(TTXEstimateMismatch)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/")
+#set(TT_VERSION "4")
+set(TT_VERSION "5")
 
 if(USE_UNICODE_API)
   add_definitions(-DUNICODE -D_UNICODE)
@@ -12,6 +14,7 @@ set(SRC
   ../common/ttxcommon.h
   ../common/ttxcommon.c
   ttxestimatemismatch.c
+  test_v${TT_VERSION}.c
   readme.md
   )
 

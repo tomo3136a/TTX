@@ -3,6 +3,27 @@
  * (C) 2021 tomo3136a
  */
 
+#ifdef _COMPAT95
+#include "compat_w95.h"
+#define TTX_DLL_PROCESS_ATTACH() DoCover_IsDebuggerPresent()
+#else
+#define TTX_DLL_PROCESS_ATTACH()
+#endif /* _COMPAT95 */
+
+#ifdef _UNICODE
+#define TT_TCHAR wchar_t
+#define TT_LPTSTR wchar_t *
+#define TT_LPTCSTR const wchar_t *
+#else
+#define TT_TCHAR CHAR
+#define TT_LPTSTR LPSTR
+#define TT_LPTCSTR LPCSTR
+#endif /* _UNICODE */
+
+//#define TT_TCHAR TCHAR
+//#define TT_LPTSTR LPTSTR
+//#define TT_LPTCSTR LPTCSTR
+
 #include <windows.h>
 
 /* auto resize for dialog compornent by window resize */
@@ -20,10 +41,10 @@ extern "C"
 
     /* ttx support */
     ///TTX load test
-    BOOL TTXIgnore(int order, PCHAR name, WORD version);
+    BOOL TTXIgnore(int order, PTCHAR name, WORD version);
 
     ///token command line parameter
-    PCHAR TTXGetParam(PCHAR buf, int sz, PCHAR param);
+    PTCHAR TTXGetParam(PTCHAR buf, size_t sz, PTCHAR param);
 
     ///get UI language ID(1=English, 2=Japanese)
     UINT UILang(PCHAR lang);
@@ -32,16 +53,50 @@ extern "C"
     int TTXMenuID(UINT uid);
     int TTXMenuOrgID(UINT uid);
 
+    ///get environment string
+    enum {
+        ID_HOMEDIR              = 1,
+        ID_SETUPFNAME           = 2,
+        ID_KEYCNFNM             = 3,
+        ID_LOGFN                = 4,
+        ID_MACROFN              = 5,
+        ID_UILANGUAGEFILE       = 6,
+        ID_UILANGUAGEFILE_INI   = 7,
+        ID_EXEDIR               = 8,
+        ID_LOGDIR               = 9,
+        ID_STRMAX,
+    };
+    //size_t GetEnvPath(PTTSet ts, UINT uid, TCHAR *buf, DWORD dwsz);
+    LPTSTR TTXGetPath(PTTSet ts, UINT uid);
+
     /* string */
+    LPSTR WC2MB(UINT cp, LPWSTR pwzSrc);
+    inline LPSTR WC2ACP(LPWSTR pwzSrc){ return WC2MB(CP_ACP, pwzSrc); }
+    inline LPSTR WC2UTF8(LPWSTR pwzSrc){ return WC2MB(CP_UTF8, pwzSrc); }
+
+    LPWSTR MB2WC(UINT cp, LPSTR pszSrc);
+    inline LPWSTR ACP2WC(LPSTR pszSrc){ return MB2WC(CP_ACP, pszSrc); }
+    inline LPWSTR UTF82WC(LPSTR pszSrc){ return MB2WC(CP_UTF8, pszSrc); }
+
+#ifdef _UNICODE
+    inline LPSTR toMB(LPTSTR pszSrc){ return WC2MB(CP_ACP, pszSrc); }
+    inline LPTSTR toTC(LPSTR pszSrc){ return MB2WC(CP_ACP, pszSrc); }
+#else
+    inline LPSTR toMB(LPCTSTR pszSrc){ return _tcsdup(pszSrc); }
+    inline LPTSTR toTC(LPCSTR pszSrc){ return _tcsdup(pszSrc); }
+#endif /* _UNICODE */
+
+    BOOL TTXFree(LPVOID pBuf);
+
     ///文字列中に文字を検索し次のポインタを返す
-    char *strskip(char *p, char c);
+    PTCHAR strskip(PTCHAR p, TCHAR c);
 
     /* string set */
     ///連結文字列定義
-    typedef char *strset_t;
+    typedef PTCHAR strset_t;
 
     ///連結文字列から順次切り出す
-    char *StrSetTok(strset_t p, strset_t *ctx);
+    PTCHAR StrSetTok(strset_t p, strset_t *ctx);
 
     ///連結文字列のサイズを取得する
     int StrSetSize(strset_t p, int *cnt);
@@ -50,108 +105,89 @@ extern "C"
     int StrSetKeys(strset_t dst, strset_t src);
 
     ///連結文字列からキーワードのインデックス取得
-    int StrSetFindIndex(strset_t p, char *k);
+    int StrSetFindIndex(strset_t p, PTCHAR k);
 
     ///連結文字列からキーワードで検索し文字列取得
-    char *StrSetFindKey(strset_t p, char *k);
+    PTCHAR StrSetFindKey(strset_t p, PTCHAR k);
 
     ///連結文字列から値で検索し文字列取得
-    char *StrSetFindVal(strset_t p, char *v);
+    PTCHAR StrSetFindVal(strset_t p, PTCHAR v);
 
     ///連結文字列からn番目の文字列を取得する
-    char *StrSetAt(strset_t p, int n);
-
-    /* 文字列リスト */
-    //todo: TTXReport でしか使わないので後で移動する
-    typedef struct _TStringList
-    {
-        struct _TStringList *nxt;
-        int len;
-        char str[0];
-    } TStringList, *PStringList, **PPStringList;
-
-    ///文字列リストクリア
-    void ClearStringList(PPStringList p);
-    ///文字列リストに文字列を追加
-    void AddStringList(PPStringList p, PCHAR s);
-    ///ファイルから文字列リストを読み込む(5)
-    BOOL LoadStringList(PPStringList p, PCHAR path);
-    ///ファイルから文字列リストを読み込む(4)
-    BOOL info_test_match(PStringList p, PCHAR buff);
-    ///ファイルから文字列リストを読み込む(1)
-    BOOL info_test_match_head(PStringList p, PCHAR buff);
+    PTCHAR StrSetAt(strset_t p, int n);
 
     /* path */
     // fileapi.h は使わないようなので代替え実装、互換性はない
 
     /* find 型 */
     ///find file name address
-    PCHAR FindFileName(PCHAR path);
+    PTCHAR FindFileName(PTCHAR path);
 
     ///find file extension address
-    PCHAR FindFileExt(PCHAR path);
+    PTCHAR FindFileExt(PTCHAR path);
 
     ///find path component path address
-    PCHAR FindPathNextComponent(PCHAR path);
+    PTCHAR FindPathNextComponent(PTCHAR path);
 
     /* build 型(src to dst) */
     ///get parent path
-    PCHAR GetParentPath(PCHAR dst, int sz, PCHAR src);
+    PTCHAR GetParentPath(PTCHAR dst, int sz, PTCHAR src);
 
     ///get path item name
-    PCHAR GetPathName(PCHAR dst, int sz, PCHAR src);
+    PTCHAR GetPathName(PTCHAR dst, int sz, PTCHAR src);
 
     ///get linearized path
-    PCHAR GetLinearizedPath(PCHAR dst, int sz, PCHAR src);
+    PTCHAR GetLinearizedPath(PTCHAR dst, int sz, PTCHAR src);
 
     ///get absolute path
-    PCHAR GetAbsolutePath(PCHAR dst, int sz, PCHAR src, PCHAR base);
+    PTCHAR GetAbsolutePath(PTCHAR dst, int sz, PTCHAR src, PTCHAR base);
 
     ///get related path
-    PCHAR GetRelatedPath(PCHAR dst, int sz, PCHAR src, PCHAR base, int lv);
+    PTCHAR GetRelatedPath(PTCHAR dst, int sz, PTCHAR src, PTCHAR base, int lv);
 
     /* replase 型 */
     ///remove last slash from path
-    PCHAR RemovePathSlash(PCHAR path);
+    PTCHAR RemovePathSlash(PTCHAR path);
 
     ///remove last slash from path
-    PCHAR RemoveFileName(PCHAR path);
+    PTCHAR RemoveFileName(PTCHAR path);
 
     ///remove last slash from path
-    PCHAR RemoveFileExt(PCHAR path);
+    PTCHAR RemoveFileExt(PTCHAR path);
 
     ///combine path
-    PCHAR CombinePath(PCHAR path, int sz, PCHAR fn);
+    PTCHAR CombinePath(PTCHAR path, int sz, PTCHAR fn);
 
     /* test 型 */
     ///test exist file
-    BOOL FileExists(PCHAR path);
+    BOOL FileExists(PTCHAR path);
 
     /* setting file */
     ///セクション名の連結文字列取得(開放はfree(outp))
-    DWORD GetIniSects(strset_t *outp, DWORD sz, DWORD nsz, char *fn);
+    DWORD GetIniSects(strset_t *outp, DWORD sz, DWORD nsz, LPCTSTR fn);
 
     ///セクション内のキーワード名/値の連結文字列取得(開放はfree(outp))
-    DWORD GetIniStrSet(char *sect, strset_t *outp, DWORD sz, DWORD nsz, char *fn);
+    DWORD GetIniStrSet(LPCTSTR sect, strset_t *outp, DWORD sz, DWORD nsz, LPCTSTR fn);
 
     ///セクション内のキーワード名の連結文字列取得(開放はfree(outp))
-    DWORD GetIniKeys(char *sect, strset_t *outp, DWORD sz, DWORD nsz, char *fn);
+    DWORD GetIniKeys(LPCTSTR sect, strset_t *outp, DWORD sz, DWORD nsz, LPCTSTR fn);
 
     ///ON/OFF 設定を設定ファイルから取得
-    BOOL GetIniOnOff(char *sect, char *name, BOOL bDefault, char *fn);
+    BOOL GetIniOnOff(LPCTSTR sect, LPCTSTR name, BOOL bDefault, LPCTSTR fn);
 
     ///数値設定を設定ファイルから取得
-    UINT GetIniNum(char *sect, char *name, int nDefault, char *fn);
+    UINT GetIniNum(LPCTSTR sect, LPCTSTR name, int nDefault, LPCTSTR fn);
 
     ///文字列を設定ファイルから取得(開放はfree(outp))
-    DWORD GetIniString(char *sect, char *name, char *sDefault,
-                       PCHAR *outp, DWORD sz, DWORD nsz, char *fn);
+    DWORD GetIniString(LPCTSTR sect, LPCTSTR name, LPCTSTR sDefault,
+                       PTCHAR *outp, DWORD sz, DWORD nsz, LPCTSTR fn);
+    LPSTR GetIniStringA(LPCTSTR sect, LPCTSTR name, LPCTSTR sDefault, LPCTSTR fn);
 
     ///OM/OFF 設定を設定ファイルに書き込む
-    BOOL WriteIniOnOff(char *sect, char *name, int bFlag, BOOL bEnable, char *fn);
+    BOOL WriteIniOnOff(LPCTSTR sect, LPCTSTR name, int bFlag, BOOL bEnable, LPCTSTR fn);
 
     ///数値設定を設定ファイルに書き込む
-    BOOL WriteIniNum(char *sect, char *name, int val, BOOL bEnable, char *fn);
+    BOOL WriteIniNum(LPCTSTR sect, LPCTSTR name, int val, BOOL bEnable, LPCTSTR fn);
 
     /* window control */
     ///get right-bottom point from window item
@@ -173,15 +209,15 @@ extern "C"
     VOID MoveParentCenter(HWND hWnd);
 
     ///create dialog font and set to phFont (require to delete item after)
-    VOID SetDlgFont(HWND hWnd, UINT uItem, HFONT *phFont, LONG uH, PCHAR szFont);
+    VOID SetDlgFont(HWND hWnd, UINT uItem, HFONT *phFont, LONG uH, PTCHAR szFont);
 
     /* dialog */
     ///open to file select dialog
-    BOOL OpenFileDlg(HWND hWnd, UINT editCtl, PCHAR szTitle,
-                     PCHAR szFilter, PCHAR szPath, PCHAR fn, int n);
+    BOOL OpenFileDlg(HWND hWnd, UINT editCtl, PTCHAR szTitle,
+                     PTCHAR szFilter, PTCHAR szPath, PTCHAR fn, int n);
 
     ///open to folder select dialog
-    BOOL OpenFolderDlg(HWND hWnd, UINT editCtl, PCHAR szTitle, PCHAR szPath);
+    BOOL OpenFolderDlg(HWND hWnd, UINT editCtl, PTCHAR szTitle, PTCHAR szPath);
 
 #ifdef __cplusplus
 }

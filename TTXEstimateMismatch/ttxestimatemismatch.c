@@ -11,8 +11,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <tchar.h>
 
-#include "compat_w95.h"
 #include "ttxcommon.h"
 
 #if ((TT_VERSION_MAJOR * 10000 + TT_VERSION_MINOR) < 40105)
@@ -96,102 +96,16 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 
 ///////////////////////////////////////////////////////////////
 
-#define BUF_SZ 65536
-#define LINE(buf, nm, s)        \
-	strcat_s(buf, BUF_SZ, nm);  \
-	strcat_s(buf, BUF_SZ, "="); \
-	strcat_s(buf, BUF_SZ, s);   \
-	strcat_s(buf, BUF_SZ, "\r")
-
-void DisplayTTTSet(HWND hWnd)
-{
-	CHAR buf[128];
-	CHAR *msg;
-	PTTSet ts;
-
-	msg = malloc(BUF_SZ);
-	ts = pvar->ts;
-	msg[0] = 0;
-	LINE(msg, "HomeDir", ts->HomeDir);
-	LINE(msg, "SetupFName", ts->SetupFName);
-	LINE(msg, "KeyCnfFN", ts->KeyCnfFN);
-	LINE(msg, "LogFN", ts->LogFN);
-	LINE(msg, "MacroFN", ts->MacroFN);
-	LINE(msg, "HostName", ts->HostName);
-	LINE(msg, "VTFont", ts->VTFont);
-	LINE(msg, "PrnFont", ts->PrnFont);
-	LINE(msg, "PrnDev", ts->PrnDev);
-	LINE(msg, "FileDir", ts->FileDir);
-	LINE(msg, "FileSendFilter", ts->FileSendFilter);
-	LINE(msg, "DelimList", ts->DelimList);
-	LINE(msg, "TEKFont", ts->TEKFont);
-	LINE(msg, "Answerback", ts->Answerback);
-	LINE(msg, "Title", ts->Title);
-	LINE(msg, "TermType", ts->TermType);
-	LINE(msg, "MouseCursorName", ts->MouseCursorName);
-	LINE(msg, "CygwinDirectory", ts->CygwinDirectory);
-	LINE(msg, "Locale", ts->Locale);
-	LINE(msg, "ViewlogEditor", ts->ViewlogEditor);
-	LINE(msg, "LogDefaultName", ts->LogDefaultName);
-	LINE(msg, "LogDefaultPath", ts->LogDefaultPath);
-	LINE(msg, "EtermLookfeel.BGSPIPath", ts->EtermLookfeel.BGSPIPath);
-	LINE(msg, "EtermLookfeel.BGThemeFile", ts->EtermLookfeel.BGThemeFile);
-	LINE(msg, "UILanguageFile", ts->UILanguageFile);
-	LINE(msg, "UIMsg", ts->UIMsg);
-	LINE(msg, "UILanguageFile_ini", ts->UILanguageFile_ini);
-	_snprintf_s(buf, sizeof(buf), _TRUNCATE, "Build:%d.%d, Running:%d",
-				TT_VERSION_MAJOR, TT_VERSION_MINOR, pvar->tt_version);
-	MessageBox(hWnd, msg, buf, MB_OK);
-
-	msg[0] = 0;
-	LINE(msg, "XModemRcvCommand", ts->XModemRcvCommand);
-	LINE(msg, "ZModemRcvCommand", ts->ZModemRcvCommand);
-	LINE(msg, "YModemRcvCommand", ts->YModemRcvCommand);
-	LINE(msg, "ConfirmChangePasteStringFile", ts->ConfirmChangePasteStringFile);
-	strcat_s(msg, BUF_SZ, "---- v4.63 ----\r");
-	strcat_s(msg, BUF_SZ, "---- v4.67 ----\r");
-	LINE(msg, "TerminalUID", ts->TerminalUID);
-	LINE(msg, "ClickableUrlBrowser", ts->ClickableUrlBrowser);
-	LINE(msg, "ClickableUrlBrowserArg", ts->ClickableUrlBrowserArg);
-	LINE(msg, "ScpSendDir", ts->ScpSendDir);
-	LINE(msg, "BGImageFilePath", ts->BGImageFilePath);
-	strcat_s(msg, BUF_SZ, "---- v4.80 ----\r");
-	LINE(msg, "CygtermSettings.term", ts->CygtermSettings.term);
-	LINE(msg, "CygtermSettings.term_type", ts->CygtermSettings.term_type);
-	LINE(msg, "CygtermSettings.port_start", ts->CygtermSettings.port_start);
-	LINE(msg, "CygtermSettings.port_range", ts->CygtermSettings.port_range);
-	LINE(msg, "CygtermSettings.shell", ts->CygtermSettings.shell);
-	LINE(msg, "CygtermSettings.env1", ts->CygtermSettings.env1);
-	LINE(msg, "CygtermSettings.env2", ts->CygtermSettings.env2);
-	LINE(msg, "LogTimestampFormat", ts->LogTimestampFormat);
-	strcat_s(msg, BUF_SZ, "---- v4.96 ----\r");
-	strcat_s(msg, BUF_SZ, "---- v4.98 ----\r");
-	strcat_s(msg, BUF_SZ, "---- v4.100 ----\r");
-	strcat_s(msg, BUF_SZ, "---- v4.102 ----\r");
-	strcat_s(msg, BUF_SZ, "---- v4.104 ----\r");
-	LINE(msg, "DialogFontName", ts->DialogFontName);
-	strcat_s(msg, BUF_SZ, "\r");
-	_snprintf_s(buf, sizeof(buf), _TRUNCATE, "ConfigVersion=%d\r", ts->ConfigVersion);
-	strcat_s(msg, BUF_SZ, buf);
-	_snprintf_s(buf, sizeof(buf), _TRUNCATE, "RunningVersion=%d\r", ts->RunningVersion);
-	strcat_s(msg, BUF_SZ, buf);
-	strcat_s(msg, BUF_SZ, "---- v4.105 ----\r");
-	_snprintf_s(buf, sizeof(buf), _TRUNCATE, "Build:%d.%d, Running:%d",
-				TT_VERSION_MAJOR, TT_VERSION_MINOR, pvar->tt_version);
-	MessageBox(hWnd, msg, buf, MB_OK);
-	free(msg);
-}
-
-///////////////////////////////////////////////////////////////
+void DisplayTTTSet(HWND hWnd, PTTSet ts, WORD tt_version);
 
 static void PASCAL TTXModifyMenu(HMENU menu)
 {
-	LPSTR s;
+	LPTSTR s;
 	int idx;
 	
 	idx = GetMenuItemCount(menu) - 1;
 	pvar->HelpMenu = GetSubMenu(menu, idx);
-	s = "Estimate of structure mismatch in TTSet...";
+	s = _T("Estimate of structure mismatch in TTSet...");
 	InsertMenu(pvar->HelpMenu, 2, MF_BYPOSITION, TTXMenuID(ID_MENUITEM), s);
 }
 
@@ -205,7 +119,7 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 	switch (TTXMenuOrgID(cmd))
 	{
 	case ID_MENUITEM:
-		DisplayTTTSet(hWin);
+		DisplayTTTSet(hWin, pvar->ts, pvar->tt_version);
 		return 1;
 	}
 
@@ -230,7 +144,7 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 static WORD TTRunningVersion()
 {
 //#pragma comment(lib, "version.lib")
-	char szPath[MAX_PATH];
+	TCHAR szPath[MAX_PATH];
 	DWORD dwSize;
 	DWORD dwHandle;
 	LPVOID lpBuf;
@@ -238,7 +152,7 @@ static WORD TTRunningVersion()
 	VS_FIXEDFILEINFO *pFileInfo;
 	int major, minor;
 
-	GetModuleFileName(NULL, szPath, sizeof(szPath) - 1);
+	GetModuleFileName(NULL, szPath, sizeof(szPath)/sizeof(szPath[0]) - 1);
 
 	dwSize = GetFileVersionInfoSize(szPath, &dwHandle);
 	if (dwSize == 0)
@@ -246,14 +160,14 @@ static WORD TTRunningVersion()
 		return 0;
 	}
 
-	lpBuf = malloc(dwSize);
+	lpBuf = malloc(dwSize*sizeof(TCHAR));
 	if (!GetFileVersionInfo(szPath, dwHandle, dwSize, lpBuf))
 	{
 		free(lpBuf);
 		return 0;
 	}
 
-	if (!VerQueryValue(lpBuf, "\\", (LPVOID *)&pFileInfo, &uLen))
+	if (!VerQueryValue(lpBuf, _T("\\"), (LPVOID *)&pFileInfo, &uLen))
 	{
 		free(lpBuf);
 		return 0;
@@ -295,7 +209,7 @@ BOOL __declspec(dllexport) PASCAL FAR TTXBind(WORD Version, TTXExports *exports)
 	/* do version checking if necessary */
 	/* if (Version!=TTVERSION) return FALSE; */
 
-	if (TTXIgnore(ORDER, INISECTION, 0))
+	if (TTXIgnore(ORDER, _T(INISECTION), 0))
 		return TRUE;
 
 	if (size > exports->size)
@@ -322,7 +236,7 @@ BOOL WINAPI DllMain(HANDLE hInstance,
 		break;
 	case DLL_PROCESS_ATTACH:
 		/* do process initialization */
-		DoCover_IsDebuggerPresent();
+		TTX_DLL_PROCESS_ATTACH();
 		hInst = hInstance;
 		pvar = &InstVar;
 		break;

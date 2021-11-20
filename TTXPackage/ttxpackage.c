@@ -12,8 +12,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <shlobj.h>
+#include <tchar.h>
 
-#include "compat_w95.h"
 #include "ttxcommon.h"
 #include "resource.h"
 
@@ -34,7 +34,7 @@ typedef struct
 	HMENU FileMenu;
 
 	//status
-	char UIMsg[256];
+	TCHAR UIMsg[256];
 
 } TInstVar;
 
@@ -92,25 +92,25 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 ///////////////////////////////////////////////////////////////
 
 //convert ini file to template ini file
-static BOOL conv_ini_file(PCHAR path, PCHAR fn)
+static BOOL conv_ini_file(PTCHAR path, PTCHAR fn)
 {
 	strset_t apps, keys;
 	strset_t app_ctx, key_ctx;
-	PCHAR app, key, val, s;
-	PCHAR val_ctx;
-	PCHAR base;
+	PTCHAR app, key, val, s;
+	PTCHAR val_ctx;
+	PTCHAR base;
 	int base_sz;
-	PCHAR buf;
+	PTCHAR buf;
 	int buf_sz;
 	BOOL flg;
 
-	base_sz = strlen(fn) + 1;
-	base = malloc(base_sz);
+	base_sz = _tcslen(fn) + 1;
+	base = (PTCHAR)malloc(base_sz*sizeof(TCHAR));
 	GetParentPath(base, base_sz, fn);
-	base_sz = strlen(base);
+	base_sz = _tcslen(base);
 
 	buf_sz = MAX_PATH;
-	buf = malloc(buf_sz);
+	buf = (PTCHAR)malloc(buf_sz*sizeof(TCHAR));
 
 	apps = keys = val = NULL;
 
@@ -124,26 +124,26 @@ static BOOL conv_ini_file(PCHAR path, PCHAR fn)
 				key = StrSetTok(keys, &key_ctx);
 				while (key)
 				{
-					if (GetIniString(app, key, "", &val, 1024, 1024, path))
+					if (GetIniString(app, key, _T(""), &val, 1024, 1024, path))
 					{
 						buf[0] = 0;
-						s = strtok_s(val, ",", &val_ctx);
+						s = _tcstok_s(val, _T(","), &val_ctx);
 						flg = FALSE;
 						while (s)
 						{
 							if (buf[0])
-								strcat_s(buf, buf_sz, ",");
-							if (_strnicmp(s, base, base_sz) == 0)
+								_tcscat_s(buf, buf_sz, _T(","));
+							if (_tcsnicmp(s, base, base_sz) == 0)
 							{
-								strcat_s(buf, buf_sz, "{BASE}");
-								strcat_s(buf, buf_sz, s + base_sz);
+								_tcscat_s(buf, buf_sz, _T("{BASE}"));
+								_tcscat_s(buf, buf_sz, s + base_sz);
 								flg = TRUE;
 							}
 							else
 							{
-								strcat_s(buf, buf_sz, s);
+								_tcscat_s(buf, buf_sz, s);
 							}
-							s = strtok_s(NULL, ",", &val_ctx);
+							s = _tcstok_s(NULL, _T(","), &val_ctx);
 						}
 						if (flg)
 							WritePrivateProfileString(app, key, buf, path);
@@ -166,13 +166,13 @@ static BOOL conv_ini_file(PCHAR path, PCHAR fn)
 	return TRUE;
 }
 
-static BOOL ConvertFile(PCHAR path, PCHAR fn, BOOL bFailIfExists)
+static BOOL ConvertFile(PTCHAR path, PTCHAR fn, BOOL bFailIfExists)
 {
 	HANDLE hReadFile;
 	DWORD dwReadSize;
 	HANDLE hWriteFile;
 	DWORD dwWriteSize;
-	PCHAR dst;
+	PTCHAR dst;
 	int dst_sz;
 	PCHAR buf;
 	int buf_sz;
@@ -181,27 +181,27 @@ static BOOL ConvertFile(PCHAR path, PCHAR fn, BOOL bFailIfExists)
 						   OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hReadFile == INVALID_HANDLE_VALUE)
 	{
-		MessageBox(0, "ファイルが開けません", NULL, MB_OK);
+		MessageBox(0, _T("ファイルが開けません"), NULL, MB_OK);
 		return FALSE;
 	}
 
-	dst_sz = strlen(path) + 5;
-	dst = malloc(dst_sz);
-	strcpy_s(dst, dst_sz, path);
-	strcat_s(dst, dst_sz, ".in");
+	dst_sz = _tcslen(path) + 5;
+	dst = (PTCHAR)malloc(dst_sz*sizeof(TCHAR));
+	_tcscpy_s(dst, dst_sz, path);
+	_tcscat_s(dst, dst_sz, _T(".in"));
 
 	hWriteFile = CreateFile(dst, GENERIC_WRITE, 0, NULL,
 							CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hWriteFile == INVALID_HANDLE_VALUE)
 	{
-		MessageBox(0, "書き込みファイルが開けません", NULL, MB_OK);
+		MessageBox(0, _T("書き込みファイルが開けません"), NULL, MB_OK);
 		CloseHandle(hReadFile);
 		free(dst);
 		return FALSE;
 	}
 
 	buf_sz = 1024;
-	buf = malloc(buf_sz);
+	buf = (PCHAR)malloc(buf_sz*sizeof(CHAR));
 	while (ReadFile(hReadFile, buf, buf_sz, &dwReadSize, NULL))
 	{
 		if (!dwReadSize)
@@ -218,18 +218,18 @@ static BOOL ConvertFile(PCHAR path, PCHAR fn, BOOL bFailIfExists)
 }
 
 //ディレクトリ削除
-static BOOL DeleteDirectory(PCHAR src)
+static BOOL DeleteDirectory(PTCHAR src)
 {
-	char *path;
+	PTCHAR path;
 	int path_sz, src_sz;
 	WIN32_FIND_DATA win32fd;
 	HANDLE hFind;
 
-	src_sz = strlen(src) + 5;
+	src_sz = _tcslen(src) + 5;
 	path_sz = src_sz;
-	path = malloc(path_sz);
-	strcpy_s(path, path_sz, src);
-	strcat_s(path, path_sz, "\\*.*");
+	path = (PTCHAR)malloc(path_sz*sizeof(TCHAR));
+	_tcscpy_s(path, path_sz, src);
+	_tcscat_s(path, path_sz, _T("\\*.*"));
 
 	hFind = FindFirstFile(path, &win32fd);
 	free(path);
@@ -243,21 +243,21 @@ static BOOL DeleteDirectory(PCHAR src)
 		{
 			if (0 == win32fd.cFileName[0])
 				continue;
-			if ('.' == win32fd.cFileName[0])
+			if (_T('.') == win32fd.cFileName[0])
 			{
 				if (0 == win32fd.cFileName[1])
 					continue;
-				if ('.' == win32fd.cFileName[1])
+				if (_T('.') == win32fd.cFileName[1])
 				{
 					if (0 == win32fd.cFileName[2])
 						continue;
 				}
 			}
-			path_sz = src_sz + strlen(win32fd.cFileName) + 2;
-			path = malloc(path_sz);
-			strcpy_s(path, path_sz, src);
-			strcat_s(path, path_sz, "\\");
-			strcat_s(path, path_sz, win32fd.cFileName);
+			path_sz = src_sz + _tcslen(win32fd.cFileName) + 2;
+			path = (PTCHAR)malloc(path_sz*sizeof(TCHAR));
+			_tcscpy_s(path, path_sz, src);
+			_tcscat_s(path, path_sz, _T("\\"));
+			_tcscat_s(path, path_sz, win32fd.cFileName);
 			if (!DeleteDirectory(path))
 			{
 				FindClose(hFind);
@@ -267,11 +267,11 @@ static BOOL DeleteDirectory(PCHAR src)
 			free(path);
 			continue;
 		}
-		path_sz = src_sz + strlen(win32fd.cFileName) + 2;
-		path = malloc(path_sz);
-		strcpy_s(path, path_sz, src);
-		strcat_s(path, path_sz, "\\");
-		strcat_s(path, path_sz, win32fd.cFileName);
+		path_sz = src_sz + _tcslen(win32fd.cFileName) + 2;
+		path = (PTCHAR)malloc(path_sz*sizeof(TCHAR));
+		_tcscpy_s(path, path_sz, src);
+		_tcscat_s(path, path_sz, _T("\\"));
+		_tcscat_s(path, path_sz, win32fd.cFileName);
 		if (!DeleteFile(path))
 		{
 			FindClose(hFind);
@@ -289,26 +289,26 @@ static BOOL DeleteDirectory(PCHAR src)
 //_setup.cmd を作成
 //path: 作成先のフォルダ
 //shortcut: ディスクトップショートカット作成の有効化
-//ini: ショートカット作成時の ININ ファイル相対パス
-BOOL make_setup_cmd(PCHAR path, BOOL shortcut, PCHAR ini)
+//ini: ショートカット作成時の INI ファイル相対パス
+BOOL make_setup_cmd(PTCHAR path, BOOL shortcut, PTCHAR ini)
 {
-	char *buf;
+	PTCHAR buf;
 	int buf_sz;
 	HANDLE hFile;
 	DWORD dwWriteSize;
 	PCHAR s;
 
-	buf_sz = strlen(path) + 16;
-	buf = malloc(buf_sz);
-	strcpy_s(buf, buf_sz, path);
-	CombinePath(buf, buf_sz, "_setup.cmd");
+	buf_sz = _tcslen(path) + 16;
+	buf = (PTCHAR)malloc(buf_sz*sizeof(TCHAR));
+	_tcscpy_s(buf, buf_sz, path);
+	CombinePath(buf, buf_sz, _T("_setup.cmd"));
 
 	hFile = CreateFile(buf, GENERIC_WRITE, 0, NULL,
 					   CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	free(buf);
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
-		MessageBox(0, "ファイルが開けません", NULL, MB_OK);
+		MessageBox(0, _T("ファイルが開けません"), NULL, MB_OK);
 		return FALSE;
 	}
 
@@ -348,7 +348,9 @@ BOOL make_setup_cmd(PCHAR path, BOOL shortcut, PCHAR ini)
 		{
 			s = "set ini=%base%";
 			WriteFile(hFile, s, strlen(s), &dwWriteSize, NULL);
-			WriteFile(hFile, ini, strlen(ini), &dwWriteSize, NULL);
+			s = WC2ACP(ini);
+			WriteFile(hFile, s, strlen(s), &dwWriteSize, NULL);
+			TTXFree(s);
 			s = "\r\n"
 				"set opt=/F=\"\"\"%ini%\"\"\"\r\n";
 		}
@@ -383,14 +385,15 @@ BOOL make_setup_cmd(PCHAR path, BOOL shortcut, PCHAR ini)
 }
 
 //cabinet ファイルを作成、base64エンコード、バッチファイルを作成
-BOOL make_cabinet(char *name, char *listfile, char *outpath)
+BOOL make_cabinet(PTCHAR name, PTCHAR listfile, PTCHAR outpath)
 {
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
-	char *path;
+	PTCHAR path;
 	int path_sz;
-	char *buf;
+	PTCHAR buf;
 	int buf_sz;
+	PTCHAR st;
 	PCHAR s;
 	HANDLE hWriteFile;
 	DWORD dwWriteSize;
@@ -398,15 +401,15 @@ BOOL make_cabinet(char *name, char *listfile, char *outpath)
 	DWORD dwReadSize;
 
 	path_sz = MAX_PATH;
-	path = malloc(path_sz);
+	path = (PTCHAR)malloc(path_sz*sizeof(TCHAR));
 
 	buf_sz = MAX_PATH;
-	buf = malloc(buf_sz);
+	buf = (PTCHAR)malloc(buf_sz*sizeof(TCHAR));
 
 	//make cabinet file
-	s = "makecab /D CabinetName1=\"%s.cab\" /D DiskDirectoryTemplate=\"%s\" /F \"%s\"";
+	st = _T("makecab /D CabinetName1=\"%s.cab\" /D DiskDirectoryTemplate=\"%s\" /F \"%s\"");
 	GetParentPath(path, path_sz, listfile);
-	_snprintf_s(buf, buf_sz, buf_sz, s, name, path, listfile);
+	_sntprintf_s(buf, buf_sz, buf_sz, st, name, path, listfile);
 	memset(&si, 0, sizeof(STARTUPINFO));
 	memset(&pi, 0, sizeof(PROCESS_INFORMATION));
 	si.cb = sizeof(STARTUPINFO);
@@ -422,8 +425,8 @@ BOOL make_cabinet(char *name, char *listfile, char *outpath)
 	CloseHandle(pi.hThread);
 
 	//encode to b64
-	s = "certutil -encode \"%s.cab\" \"%s.b64\"";
-	_snprintf_s(buf, buf_sz, buf_sz, s, name, name);
+	st = _T("certutil -encode \"%s.cab\" \"%s.b64\"");
+	_sntprintf_s(buf, buf_sz, buf_sz, st, name, name);
 	memset(&si, 0, sizeof(STARTUPINFO));
 	memset(&pi, 0, sizeof(PROCESS_INFORMATION));
 	si.cb = sizeof(STARTUPINFO);
@@ -439,9 +442,9 @@ BOOL make_cabinet(char *name, char *listfile, char *outpath)
 	CloseHandle(pi.hThread);
 
 	//make batch file
-	strcpy_s(path, path_sz, outpath);
+	_tcscpy_s(path, path_sz, outpath);
 	CombinePath(path, path_sz, name);
-	strcat_s(path, path_sz, ".bat");
+	_tcscat_s(path, path_sz, _T(".bat"));
 	hWriteFile = CreateFile(path, GENERIC_WRITE, 0, NULL,
 							CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hWriteFile == INVALID_HANDLE_VALUE)
@@ -467,7 +470,7 @@ BOOL make_cabinet(char *name, char *listfile, char *outpath)
 
 	GetParentPath(path, path_sz, listfile);
 	CombinePath(path, path_sz, name);
-	strcat_s(path, path_sz, ".b64");
+	_tcscat_s(path, path_sz, _T(".b64"));
 
 	hReadFile = CreateFile(path, GENERIC_READ, 0, NULL,
 						   OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -495,21 +498,21 @@ BOOL make_cabinet(char *name, char *listfile, char *outpath)
 }
 
 //ファイルにファイルリストを書き出す
-BOOL write_filelist(HANDLE hFile, PCHAR src, int n)
+BOOL write_filelist(HANDLE hFile, PTCHAR src, int n)
 {
 	HANDLE hFind;
 	WIN32_FIND_DATA win32fd;
-	char *path;
+	PTCHAR path;
 	int path_sz;
 	DWORD dwWriteSize;
-	PCHAR s;
-	PCHAR p;
+	PTCHAR p;
+	PTCHAR s;
 
 	path_sz = MAX_PATH;
-	path = malloc(path_sz);
+	path = (PTCHAR)malloc(path_sz*sizeof(TCHAR));
 
 	//file list
-	_snprintf_s(path, path_sz, _TRUNCATE, "%s\\*.*", src);
+	_sntprintf_s(path, path_sz, _TRUNCATE, _T("%s\\*.*"), src);
 	hFind = FindFirstFile(path, &win32fd);
 	if (hFind == INVALID_HANDLE_VALUE)
 	{
@@ -518,43 +521,43 @@ BOOL write_filelist(HANDLE hFile, PCHAR src, int n)
 	}
 	do
 	{
-		if (win32fd.cFileName[0] == '.' ||
-			win32fd.cFileName[0] == '_' ||
-			win32fd.cFileName[0] == '~' ||
+		if (win32fd.cFileName[0] == _T('.') ||
+			win32fd.cFileName[0] == _T('_') ||
+			win32fd.cFileName[0] == _T('~') ||
 			win32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 			continue;
 
 		p = FindFileExt(win32fd.cFileName);
-		if (_stricmp(p, ".EXE") == 0 ||
-			_stricmp(p, ".DLL") == 0 ||
-			_stricmp(p, ".IN") == 0)
+		if (_tcsicmp(p, _T(".EXE")) == 0 ||
+			_tcsicmp(p, _T(".DLL")) == 0 ||
+			_tcsicmp(p, _T(".IN")) == 0)
 			continue;
 
-		strcpy_s(path, path_sz, src);
+		_tcscpy_s(path, path_sz, src);
 		CombinePath(path, path_sz, win32fd.cFileName);
 
-		if (_stricmp(p, ".INI") == 0 ||
-			_stricmp(p, ".CNF") == 0)
+		if (_tcsicmp(p, _T(".INI")) == 0 ||
+			_tcsicmp(p, _T(".CNF")) == 0)
 		{
-			PCHAR org;
+			PTCHAR org;
 			int org_sz;
 
-			org_sz = strlen(path) + 4;
-			org = malloc(org_sz);
-			strcpy_s(org, org_sz, path);
-			strcat_s(path, path_sz, ".in");
+			org_sz = _tcslen(path) + 4;
+			org = (PTCHAR)malloc(org_sz*sizeof(TCHAR));
+			_tcscpy_s(org, org_sz, path);
+			_tcscat_s(path, path_sz, _T(".in"));
 			CopyFile(org, path, FALSE);
 
-			conv_ini_file(path, pvar->ts->SetupFName);
+			conv_ini_file(path, pvar->ts->SetupFNameW);
 		}
 
 		WriteFile(hFile, path, lstrlen(path), &dwWriteSize, NULL);
-		WriteFile(hFile, "\r\n", 2, &dwWriteSize, NULL);
+		WriteFile(hFile, _T("\r\n"), 2, &dwWriteSize, NULL);
 	} while (FindNextFile(hFind, &win32fd));
 	FindClose(hFind);
 
 	//directory list
-	_snprintf_s(path, path_sz, _TRUNCATE, "%s\\*.*", src);
+	_sntprintf_s(path, path_sz, _TRUNCATE, _T("%s\\*.*"), src);
 	hFind = FindFirstFile(path, &win32fd);
 	if (hFind == INVALID_HANDLE_VALUE)
 	{
@@ -563,20 +566,20 @@ BOOL write_filelist(HANDLE hFile, PCHAR src, int n)
 	}
 	do
 	{
-		if (win32fd.cFileName[0] == '.' ||
-			win32fd.cFileName[0] == '_' ||
-			win32fd.cFileName[0] == '~' ||
+		if (win32fd.cFileName[0] == _T('.') ||
+			win32fd.cFileName[0] == _T('_') ||
+			win32fd.cFileName[0] == _T('~') ||
 			!(win32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 			continue;
 
-		strcpy_s(path, path_sz, src);
+		_tcscpy_s(path, path_sz, src);
 		CombinePath(path, path_sz, win32fd.cFileName);
 
-		p = (lstrlen(path) > n) ? (path + n) : "";
-		s = ".Set DestinationDir=\"";
+		p = (lstrlen(path) > n) ? (path + n) : _T("");
+		s = _T(".Set DestinationDir=\"");
 		WriteFile(hFile, s, lstrlen(s), &dwWriteSize, NULL);
 		WriteFile(hFile, p, lstrlen(p), &dwWriteSize, NULL);
-		s = "\"\r\n";
+		s = _T("\"\r\n");
 		WriteFile(hFile, s, lstrlen(s), &dwWriteSize, NULL);
 		if (!write_filelist(hFile, path, n))
 		{
@@ -595,36 +598,36 @@ BOOL write_filelist(HANDLE hFile, PCHAR src, int n)
 //src: パッケージ化対象のフォルダ
 //dst: パッケージの出力策フォルダ
 //bSetup: _setup.cmd の追加要求
-BOOL make_package(PCHAR name, PCHAR src, PCHAR dst, BOOL bSetup)
+BOOL make_package(PTCHAR name, PTCHAR src, PTCHAR dst, BOOL bSetup)
 {
 	HANDLE hFile;
-	char *tmp;
+	PTCHAR tmp;
 	int tmp_sz;
-	char *lst;
+	PTCHAR lst;
 	int lst_sz;
-	char *path;
+	PTCHAR path;
 	int path_sz;
 	DWORD dwWriteSize;
-	PCHAR s;
+	PTCHAR s;
 
 	//create tempolary folder
 	tmp_sz = MAX_PATH;
-	tmp = malloc(tmp_sz);
+	tmp = (PTCHAR)malloc(tmp_sz*sizeof(TCHAR));
 	GetTempPath(tmp_sz, tmp);
-	strcat_s(tmp, tmp_sz, "tt_");
-	strcat_s(tmp, tmp_sz, name);
+	_tcscat_s(tmp, tmp_sz, _T("tt_"));
+	_tcscat_s(tmp, tmp_sz, name);
 	CreateDirectory(tmp, NULL);
 
 	//build file list
 	lst_sz = MAX_PATH;
-	lst = malloc(lst_sz);
-	strcpy_s(lst, lst_sz, tmp);
-	CombinePath(lst, lst_sz, "files.txt");
+	lst = (PTCHAR)malloc(lst_sz*sizeof(TCHAR));
+	_tcscpy_s(lst, lst_sz, tmp);
+	CombinePath(lst, lst_sz, _T("files.txt"));
 	hFile = CreateFile(lst, GENERIC_WRITE, 0, NULL,
 					   CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
-		s = "ファイルリストが作成できません";
+		s = _T("ファイルリストが作成できません");
 		MessageBox(0, s, NULL, MB_OK);
 		free(lst);
 		free(tmp);
@@ -633,18 +636,18 @@ BOOL make_package(PCHAR name, PCHAR src, PCHAR dst, BOOL bSetup)
 	if (bSetup)
 	{
 		path_sz = MAX_PATH;
-		path = malloc(path_sz);
-		GetRelatedPath(path, path_sz, pvar->ts->SetupFName, pvar->ts->SetupFName, 0);
+		path = (PTCHAR)malloc(path_sz*sizeof(TCHAR));
+		GetRelatedPath(path, path_sz, pvar->ts->SetupFNameW, pvar->ts->SetupFNameW, 0);
 		if (make_setup_cmd(tmp, bSetup, path))
 		{
-			strcpy_s(path, path_sz, tmp);
-			CombinePath(path, path_sz, "_setup.cmd");
-			strcat_s(path, path_sz, "\r\n");
-			WriteFile(hFile, path, strlen(path), &dwWriteSize, NULL);
+			_tcscpy_s(path, path_sz, tmp);
+			CombinePath(path, path_sz, _T("_setup.cmd"));
+			_tcscat_s(path, path_sz, _T("\r\n"));
+			WriteFile(hFile, path, _tcslen(path), &dwWriteSize, NULL);
 		}
 		free(path);
 	}
-	write_filelist(hFile, src, strlen(src) + 1);
+	write_filelist(hFile, src, _tcslen(src) + 1);
 	CloseHandle(hFile);
 
 	//make batch file
@@ -668,21 +671,21 @@ BOOL make_package(PCHAR name, PCHAR src, PCHAR dst, BOOL bSetup)
 static LRESULT CALLBACK PackageProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	LPITEMIDLIST pidl;
-	char name[64];
-	char *path;
+	TCHAR name[64];
+	PTCHAR path;
 	int path_sz;
-	char *buf;
+	PTCHAR buf;
 	int buf_sz;
-	char *s;
+	PTCHAR s;
 	BOOL flg;
 
 	switch (msg)
 	{
 	case WM_INITDIALOG:
-		SetDlgItemText(dlg, IDC_NAME, pvar->ts->Title);
+		SetDlgItemTextA(dlg, IDC_NAME, pvar->ts->Title);
 		path_sz = MAX_PATH;
-		path = malloc(path_sz);
-		GetParentPath(path, path_sz, pvar->ts->SetupFName);
+		path = (PTCHAR)malloc(path_sz*sizeof(TCHAR));
+		GetParentPath(path, path_sz, pvar->ts->SetupFNameW);
 		SetDlgItemText(dlg, IDC_PATH1, path);
 		if (SHGetSpecialFolderLocation(NULL, CSIDL_DESKTOP, &pidl) == NOERROR)
 		{
@@ -696,46 +699,46 @@ static LRESULT CALLBACK PackageProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 
 	case WM_COMMAND:
 		path_sz = MAX_PATH;
-		path = malloc(path_sz);
+		path = (PTCHAR)malloc(path_sz*sizeof(TCHAR));
 		switch (LOWORD(wParam))
 		{
 		case IDC_BUTTON1:
 			GetDlgItemText(dlg, IDC_PATH1, path, MAX_PATH);
-			s = "対象フォルダを選択してください";
+			s = _T("対象フォルダを選択してください");
 			OpenFolderDlg(dlg, IDC_PATH1, s, path);
 			free(path);
 			return TRUE;
 
 		case IDC_BUTTON5:
 			GetDlgItemText(dlg, IDC_PATH5, path, MAX_PATH);
-			s = "出力先を選択してください";
+			s = _T("出力先を選択してください");
 			OpenFolderDlg(dlg, IDC_PATH5, s, path);
 			free(path);
 			return TRUE;
 
 		case IDOK:
 			buf_sz = MAX_PATH;
-			buf = malloc(buf_sz);
-			GetDlgItemText(dlg, IDC_NAME, name, sizeof(name));
+			buf = (PTCHAR)malloc(buf_sz*sizeof(TCHAR));
+			GetDlgItemText(dlg, IDC_NAME, name, sizeof(name)/sizeof(name[0]));
 			GetDlgItemText(dlg, IDC_PATH1, path, path_sz);
 			GetDlgItemText(dlg, IDC_PATH5, buf, buf_sz);
 			flg = (IsDlgButtonChecked(dlg, IDC_CHECK2) == BST_CHECKED);
 			flg = make_package(name, path, buf, flg);
 			free(buf);
 			GetTempPath(path_sz, path);
-			strcat_s(path, path_sz, "tt_");
-			strcat_s(path, path_sz, name);
+			_tcscat_s(path, path_sz, _T("tt_"));
+			_tcscat_s(path, path_sz, name);
 			if (flg)
 			{
-				s = "パッケージ %s を作成しました。\n\n作成先： %s\n";
-				_snprintf_s(pvar->UIMsg, sizeof(pvar->UIMsg), _TRUNCATE, s, name, path);
+				s = _T("パッケージ %s を作成しました。\n\n作成先： %s\n");
+				_sntprintf_s(pvar->UIMsg, sizeof(pvar->UIMsg)/sizeof(pvar->UIMsg[0]), _TRUNCATE, s, name, path);
 				free(path);
 			}
 			else
 			{
-				s = "パッケージ %s を作成出来ませんでした。\n\n作成先： %s\n";
-				_snprintf_s(pvar->UIMsg, sizeof(pvar->UIMsg), _TRUNCATE, s, name, path);
-				MessageBox(dlg, pvar->UIMsg, "Tera Term", MB_OK | MB_ICONEXCLAMATION);
+				s = _T("パッケージ %s を作成出来ませんでした。\n\n作成先： %s\n");
+				_sntprintf_s(pvar->UIMsg, sizeof(pvar->UIMsg)/sizeof(pvar->UIMsg[0]), _TRUNCATE, s, name, path);
+				MessageBox(dlg, pvar->UIMsg, _T("Tera Term"), MB_OK | MB_ICONEXCLAMATION);
 				free(path);
 				return TRUE;
 			}
@@ -757,13 +760,13 @@ static LRESULT CALLBACK PackageProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 static void PASCAL TTXModifyMenu(HMENU menu)
 {
 	UINT lang;
-	LPSTR s;
+	LPTSTR s;
 
 	lang = UILang(pvar->ts->UILanguageFile);
 
 	pvar->FileMenu = GetSubMenu(menu, ID_FILE);
 
-	s = (lang == 2) ? "パッケージ出力(&P)" : "Export &package";
+	s = (lang == 2) ? _T("パッケージ出力(&P)") : _T("Export &package");
 	InsertMenu(pvar->FileMenu, ID_FILE_PRINT2, MF_BYCOMMAND, TTXMenuID(ID_MENUITEM), s);
 }
 
@@ -785,13 +788,13 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 							   hWin, PackageProc, (LPARAM)NULL))
 		{
 		case IDOK:
-			MessageBox(hWin, pvar->UIMsg, "Tera Term", MB_OK | MB_ICONINFORMATION);
+			MessageBox(hWin, pvar->UIMsg, _T("Tera Term"), MB_OK | MB_ICONINFORMATION);
 			pvar->UIMsg[0] = 0;
 			break;
 		case IDCANCEL:
 			break;
 		case -1:
-			MessageBox(hWin, "Error", "Can't display dialog box.",
+			MessageBox(hWin, _T("Error"), _T("Can't display dialog box."),
 					   MB_OK | MB_ICONEXCLAMATION);
 			break;
 		}
@@ -808,7 +811,7 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 // 	 printf("TTXEnd %d\n", ORDER);
 // }
 
-// static void PASCAL TTXSetCommandLine(PCHAR cmd, int cmdlen, PGetHNRec rec)
+// static void PASCAL TTXSetCommandLine(PTCHAR cmd, int cmdlen, PGetHNRec rec)
 // {
 // 	 printf("TTXSetCommandLine %d\n", ORDER);
 // }
@@ -843,7 +846,7 @@ BOOL __declspec(dllexport) PASCAL FAR TTXBind(WORD Version, TTXExports *exports)
 	/* do version checking if necessary */
 	/* if (Version!=TTVERSION) return FALSE; */
 
-	if (TTXIgnore(ORDER, INISECTION, 0))
+	if (TTXIgnore(ORDER, _T(INISECTION), 0))
 		return TRUE;
 
 	if (size > exports->size)
@@ -870,7 +873,7 @@ BOOL WINAPI DllMain(HANDLE hInstance,
 		break;
 	case DLL_PROCESS_ATTACH:
 		/* do process initialization */
-		DoCover_IsDebuggerPresent();
+		TTX_DLL_PROCESS_ATTACH();
 		hInst = hInstance;
 		pvar = &InstVar;
 		break;

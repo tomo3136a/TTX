@@ -13,8 +13,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <commctrl.h>
+#include <tchar.h>
 
-#include "compat_w95.h"
 #include "ttxcommon.h"
 #include "resource.h"
 
@@ -92,19 +92,19 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 
 ///////////////////////////////////////////////////////////////
 
-static void TrimVersion(char *ver)
+static void TrimVersion(LPTSTR ver)
 {
-	LPSTR p, q;
+	LPTSTR p, q;
 
-	p = ver + strlen(ver);
+	p = ver + _tcslen(ver);
 	while (ver < p)
 	{
-		if (*p == '.')
+		if (*p == _T('.'))
 		{
 			q = p + 1;
 			while (*q)
 			{
-				if (*q != '0')
+				if (*q != _T('0'))
 					return;
 				q++;
 			}
@@ -114,7 +114,7 @@ static void TrimVersion(char *ver)
 	}
 }
 
-static BOOL GetModuleVersion(char *buf, int sz, char *fn)
+static BOOL GetModuleVersion(LPTSTR buf, int sz, LPTSTR fn)
 {
 	//#pragma comment(lib, "version.lib")
 	DWORD dwSize;
@@ -137,12 +137,12 @@ static BOOL GetModuleVersion(char *buf, int sz, char *fn)
 		return FALSE;
 	}
 
-	if (!VerQueryValue(lpBuf, "\\", (LPVOID *)&pFileInfo, &uLen))
+	if (!VerQueryValue(lpBuf, _T("\\"), (LPVOID *)&pFileInfo, &uLen))
 	{
 		free(lpBuf);
 		return FALSE;
 	}
-	_snprintf_s(buf, sz, _TRUNCATE, "%d.%d.%d.%d",
+	_sntprintf_s(buf, sz, _TRUNCATE, _T("%d.%d.%d.%d"),
 				HIWORD(pFileInfo->dwFileVersionMS), LOWORD(pFileInfo->dwFileVersionMS),
 				HIWORD(pFileInfo->dwFileVersionLS), LOWORD(pFileInfo->dwFileVersionLS));
 
@@ -152,15 +152,15 @@ static BOOL GetModuleVersion(char *buf, int sz, char *fn)
 	return TRUE;
 }
 
-static BOOL GetModuleDescription(char *buf, int sz, char *fn)
+static BOOL GetModuleDescription(PTCHAR buf, int sz, PTCHAR fn)
 {
 	//#pragma comment(lib, "version.lib")
 	DWORD dwSize;
 	DWORD dwHandle;
 	LPVOID lpBuf;
 	UINT uLen;
-	LPSTR s;
-	LPSTR p;
+	LPTSTR s;
+	LPTSTR p;
 
 	dwSize = GetFileVersionInfoSize(fn, &dwHandle);
 	if (dwSize == 0)
@@ -176,31 +176,32 @@ static BOOL GetModuleDescription(char *buf, int sz, char *fn)
 		return FALSE;
 	}
 
-	s = "\\StringFileInfo\\040904b0\\FileDescription";
+	s = _T("\\StringFileInfo\\040904b0\\FileDescription");
 	if (!VerQueryValue(lpBuf, s, (LPVOID *)&p, &uLen))
 	{
 		free(lpBuf);
 		return FALSE;
 	}
-	strcpy_s(buf, sz, (0 < uLen) ? p : "");
+	_tcscpy_s(buf, sz, (0 < uLen) ? p : _T(""));
 
 	free(lpBuf);
 	return TRUE;
 }
 
-void LoadListView(HWND dlg, UINT uid, PCHAR fn)
+void LoadListView(HWND dlg, UINT uid, LPTSTR fn)
 {
 	HWND hWnd;
 	LVCOLUMN lvcol;
 	LVITEM item;
 	WIN32_FIND_DATA win32fd;
 	HANDLE hFind;
-	char name[64];
-	char ent[70];
-	char buf[256];
+	TCHAR name[64];
+	// TCHAR ent[70];
+	TCHAR buf[256];
 	UINT lang;
 	int i;
-	char *p;
+	TCHAR path[MAX_PATH];
+	PTCHAR p;
 
 	lang = UILang(pvar->ts->UILanguageFile);
 
@@ -209,29 +210,34 @@ void LoadListView(HWND dlg, UINT uid, PCHAR fn)
 	lvcol.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 	lvcol.fmt = LVCFMT_LEFT;
 	lvcol.cx = 130;
-	lvcol.pszText = (lang == 2) ? "名前" : "name";
+	lvcol.pszText = (lang == 2) ? _T("名前") : _T("name");
 	lvcol.iSubItem = 0;
 	ListView_InsertColumn(hWnd, 0, &lvcol);
 	lvcol.cx = 70;
-	lvcol.pszText = (lang == 2) ? "バージョン" : "version";
+	lvcol.pszText = (lang == 2) ? _T("バージョン") : _T("version");
 	lvcol.iSubItem = 1;
 	ListView_InsertColumn(hWnd, 1, &lvcol);
 	lvcol.cx = 250;
-	lvcol.pszText = (lang == 2) ? "説明" : "information";
+	lvcol.pszText = (lang == 2) ? _T("説明") : _T("information");
 	lvcol.iSubItem = 2;
 	ListView_InsertColumn(hWnd, 2, &lvcol);
 	lvcol.fmt = LVCFMT_CENTER;
 	lvcol.cx = 40;
-	lvcol.pszText = (lang == 2) ? "設定" : "On/Off";
+	lvcol.pszText = (lang == 2) ? _T("設定") : _T("On/Off");
 	lvcol.iSubItem = 3;
 	ListView_InsertColumn(hWnd, 3, &lvcol);
 	lvcol.fmt = LVCFMT_RIGHT;
 	lvcol.cx = 50;
-	lvcol.pszText = "#";
+	lvcol.pszText = _T("#");
 	lvcol.iSubItem = 4;
 	ListView_InsertColumn(hWnd, 4, &lvcol);
 
-	hFind = FindFirstFile(".\\TTX*.DLL", &win32fd);
+	memset(path, 0, sizeof(path));
+	GetModuleFileName(NULL, path, sizeof(path)/sizeof(path[0]) - 1);
+    RemoveFileName(path);
+	CombinePath(path, sizeof(path)/sizeof(path[0]), _T("TTX*.DLL"));
+
+	hFind = FindFirstFile(path, &win32fd);
 	if (INVALID_HANDLE_VALUE != hFind)
 	{
 		i = 0;
@@ -239,7 +245,7 @@ void LoadListView(HWND dlg, UINT uid, PCHAR fn)
 		{
 			if (FILE_ATTRIBUTE_DIRECTORY & win32fd.dwFileAttributes)
 				continue;
-			strcpy_s(name, sizeof(name), win32fd.cFileName);
+			_tcscpy_s(name, sizeof(name)/sizeof(name[0]), win32fd.cFileName);
 			RemoveFileExt(name);
 			memset(&item, 0, sizeof(LVITEM));
 			item.mask = LVIF_TEXT;
@@ -247,21 +253,23 @@ void LoadListView(HWND dlg, UINT uid, PCHAR fn)
 			item.pszText = name;
 			item.iSubItem = 0;
 			ListView_InsertItem(hWnd, &item);
-			_snprintf_s(ent, sizeof(ent), _TRUNCATE, ".\\%s", win32fd.cFileName);
-			if (GetModuleVersion(buf, sizeof(buf), ent))
+			//_sntprintf_s(ent, sizeof(ent), _TRUNCATE, _T(".\\%s"), win32fd.cFileName);
+		    RemoveFileName(path);
+			CombinePath(path, sizeof(path)/sizeof(path[0]), win32fd.cFileName);
+			if (GetModuleVersion(buf, sizeof(buf)/sizeof(buf[0]), path))
 			{
 				item.pszText = buf;
 				item.iSubItem = 1;
 				ListView_SetItem(hWnd, &item);
 			}
-			if (GetModuleDescription(buf, sizeof(buf), ent))
+			if (GetModuleDescription(buf, sizeof(buf)/sizeof(buf[0]), path))
 			{
 				item.pszText = buf;
 				item.iSubItem = 2;
 				ListView_SetItem(hWnd, &item);
 			}
-			GetPrivateProfileString(INISECTION, name, "on", buf, sizeof(buf), fn);
-			p = strchr(buf, ',');
+			GetPrivateProfileString(_T(INISECTION), name, _T("on"), buf, sizeof(buf)/sizeof(buf[0]), fn);
+			p = _tcschr(buf, _T(','));
 			if (NULL != p)
 				*p = 0;
 			item.pszText = buf;
@@ -279,26 +287,26 @@ void LoadListView(HWND dlg, UINT uid, PCHAR fn)
 	FindClose(hFind);
 }
 
-void SaveListView(HWND dlg, UINT uid, PCHAR fn)
+void SaveListView(HWND dlg, UINT uid, PTCHAR fn)
 {
 	HWND hWnd;
-	char buf1[16];
-	char buf2[64];
+	TCHAR buf1[16];
+	TCHAR buf2[64];
 	int i, cnt;
 
 	hWnd = GetDlgItem(dlg, uid);
 	cnt = ListView_GetItemCount(hWnd);
 	for (i = 0; i < cnt; i++)
 	{
-		ListView_GetItemText(hWnd, i, 3, buf1, sizeof(buf1));
-		ListView_GetItemText(hWnd, i, 4, buf2, sizeof(buf2));
-		if (buf2[0] && (buf2[0] != '0'))
+		ListView_GetItemText(hWnd, i, 3, buf1, sizeof(buf1)/sizeof(buf1[0]));
+		ListView_GetItemText(hWnd, i, 4, buf2, sizeof(buf2)/sizeof(buf2[0]));
+		if (buf2[0] && (buf2[0] != _T('0')))
 		{
-			strcat_s(buf1, sizeof(buf1), ",");
-			strcat_s(buf1, sizeof(buf1), buf2);
+			_tcscat_s(buf1, sizeof(buf1), _T(","));
+			_tcscat_s(buf1, sizeof(buf1), buf2);
 		}
-		ListView_GetItemText(hWnd, i, 0, buf2, sizeof(buf2));
-		WritePrivateProfileString(INISECTION, buf2, buf1, fn);
+		ListView_GetItemText(hWnd, i, 0, buf2, sizeof(buf2)/sizeof(buf2[0]));
+		WritePrivateProfileString(_T(INISECTION), buf2, buf1, fn);
 	}
 }
 
@@ -306,7 +314,7 @@ void UpdateListView(HWND dlg, UINT uid, int idx)
 {
 	HWND hwnd;
 	LVITEM item;
-	char buf[64];
+	TCHAR buf[64];
 	int i;
 
 	hwnd = GetDlgItem(dlg, uid);
@@ -322,8 +330,8 @@ void UpdateListView(HWND dlg, UINT uid, int idx)
 		ListView_GetItemText(hwnd, idx, i, buf, sizeof(buf) / sizeof(buf[0]));
 		item.iSubItem = i;
 		item.pszText = buf;
-		if ((3 == i) && ('o' == buf[0]))
-			item.pszText = (0 == _strnicmp(buf, "on", 2)) ? "off" : "on";
+		if ((3 == i) && (_T('o') == buf[0]))
+			item.pszText = (0 == _tcsnicmp(buf, _T("on"), 2)) ? _T("off") : _T("on");
 		ListView_SetItem(hwnd, &item);
 	}
 }
@@ -340,7 +348,7 @@ static LRESULT CALLBACK SettingProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 	{
 	case WM_INITDIALOG:
 		bUpdate = FALSE;
-		LoadListView(dlg, IDC_LISTVIEW, pvar->ts->SetupFName);
+		LoadListView(dlg, IDC_LISTVIEW, pvar->ts->SetupFNameW);
 		MoveParentCenter(dlg);
 		return TRUE;
 
@@ -371,7 +379,7 @@ static LRESULT CALLBACK SettingProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 		case IDOK:
 			if (bUpdate)
 			{
-				SaveListView(dlg, IDC_LISTVIEW, pvar->ts->SetupFName);
+				SaveListView(dlg, IDC_LISTVIEW, pvar->ts->SetupFNameW);
 				EndDialog(dlg, IDOK);
 				return TRUE;
 			}
@@ -390,7 +398,7 @@ static LRESULT CALLBACK SettingProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 static void PASCAL TTXModifyMenu(HMENU menu)
 {
 	UINT lang;
-	LPSTR s;
+	LPTSTR s;
 	int idx;
 
 	lang = UILang(pvar->ts->UILanguageFile);
@@ -398,7 +406,7 @@ static void PASCAL TTXModifyMenu(HMENU menu)
 	idx = GetMenuItemCount(menu) - 1;
 	pvar->HelpMenu = GetSubMenu(menu, idx);
 
-	s = (lang == 2) ? "TTX 機能一覧(&L)" : "TTX &list";
+	s = (lang == 2) ? _T("TTX 機能一覧(&L)") : _T("TTX &list");
 	InsertMenu(pvar->HelpMenu, 2, MF_BYPOSITION, TTXMenuID(ID_MENUITEM), s);
 }
 
@@ -416,13 +424,13 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 							   hWin, SettingProc, (LPARAM)NULL))
 		{
 		case IDOK:
-			MessageBox(hWin, "Please exit Tera Term.", "Tera Term",
+			MessageBox(hWin, _T("Please exit Tera Term."), _T("Tera Term"),
 					   MB_OK | MB_ICONINFORMATION);
 			break;
 		case IDCANCEL:
 			break;
 		case -1:
-			MessageBox(hWin, "Error", "Can't display dialog box.",
+			MessageBox(hWin, _T("Error"), _T("Can't display dialog box."),
 					   MB_OK | MB_ICONEXCLAMATION);
 			break;
 		}
@@ -439,7 +447,7 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 // 	 printf("TTXEnd %d\n", ORDER);
 // }
 
-// static void PASCAL TTXSetCommandLine(PCHAR cmd, int cmdlen, PGetHNRec rec)
+// static void PASCAL TTXSetCommandLine(TT_LPTSTR cmd, int cmdlen, PGetHNRec rec)
 // {
 // 	 printf("TTXSetCommandLine %d\n", ORDER);
 // }
@@ -474,7 +482,7 @@ BOOL __declspec(dllexport) PASCAL FAR TTXBind(WORD Version, TTXExports *exports)
 	/* do version checking if necessary */
 	/* if (Version!=TTVERSION) return FALSE; */
 
-	if (TTXIgnore(ORDER, INISECTION, 0))
+	if (TTXIgnore(ORDER, _T(INISECTION), 0))
 		return TRUE;
 
 	if (size > exports->size)
@@ -501,7 +509,7 @@ BOOL WINAPI DllMain(HANDLE hInstance,
 		break;
 	case DLL_PROCESS_ATTACH:
 		/* do process initialization */
-		DoCover_IsDebuggerPresent();
+		TTX_DLL_PROCESS_ATTACH();
 		hInst = hInstance;
 		pvar = &InstVar;
 		break;

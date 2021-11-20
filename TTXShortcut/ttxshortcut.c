@@ -12,8 +12,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <shlobj.h>
+#include <tchar.h>
 
-#include "compat_w95.h"
 #include "ttxcommon.h"
 #include "resource.h"
 
@@ -34,7 +34,7 @@ typedef struct
 	HMENU FileMenu;
 
 	//status
-	char UIMsg[256];
+	TCHAR UIMsg[256];
 
 } TInstVar;
 
@@ -100,19 +100,22 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 											(sizeof((obj) - (type **)(obj))) - \
 											(sizeof((obj) - (type **)(obj))))
 
-BOOL MakeShortcut(const char *name, const char *params, WORD wKey, const char *lnk)
+BOOL MakeShortcut(const PTCHAR name, const PTCHAR params, WORD wKey, const PTCHAR lnk)
 {
-	char *tt_path;
+	PTCHAR tt_path;
 	int tt_path_sz;
-	char *app_path, *app_args;
+	PTCHAR app_path;
+	PTCHAR app_args;
 	IShellLink *pSL;
 	IPersistFile *pPF;
 	HRESULT res;
 	int sz;
+#ifndef _UNICODE
 	wchar_t *ws;
+#endif
 
 	tt_path_sz = MAX_PATH;
-	tt_path = malloc(tt_path_sz);
+	tt_path = malloc(tt_path_sz*sizeof(TCHAR));
 	if (!tt_path)
 		return FALSE;
 
@@ -130,7 +133,7 @@ BOOL MakeShortcut(const char *name, const char *params, WORD wKey, const char *l
 	}
 
 	/* Set path, parameters and icon. */
-	app_path = _strdup(tt_path);
+	app_path = _tcsdup(tt_path);
 	res = pSL->lpVtbl->SetPath(pSL, app_path);
 	if (res != S_OK)
 	{
@@ -140,7 +143,7 @@ BOOL MakeShortcut(const char *name, const char *params, WORD wKey, const char *l
 		return FALSE;
 	}
 
-	app_args = _strdup(params);
+	app_args = _tcsdup(params);
 	res = pSL->lpVtbl->SetArguments(pSL, app_args);
 	free(app_args);
 	if (res != S_OK)
@@ -174,11 +177,15 @@ BOOL MakeShortcut(const char *name, const char *params, WORD wKey, const char *l
 
 	if (SUCCEEDED(pSL->lpVtbl->QueryInterface(pSL, COMPTR(IPersistFile, &pPF))))
 	{
-		sz = strlen(lnk) + 1;
+		sz = _tcslen(lnk) + 1;
+#ifdef _UNICODE
+		res = pPF->lpVtbl->Save(pPF, lnk, TRUE);
+#else
 		ws = (wchar_t *)malloc(sizeof(wchar_t) * (sz + 1));
 		res = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, lnk, sz, ws, sz + 1);
 		res = pPF->lpVtbl->Save(pPF, ws, TRUE);
 		free(ws);
+#endif /* _UNICODE */
 		pPF->lpVtbl->Release(pPF);
 		if (res != S_OK)
 		{
@@ -203,28 +210,30 @@ BOOL MakeShortcut(const char *name, const char *params, WORD wKey, const char *l
 static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	LPITEMIDLIST pidl;
-	char *path;
+	PTCHAR path;
 	int path_sz;
-	char *buf;
+	PTCHAR buf;
 	int buf_sz;
-	char name[64];
+	LPTSTR p;
+	TCHAR name[64];
 	UINT wKey;
-	char *s;
+	PCHAR s;
+	PTCHAR ws;
 
 	switch (msg)
 	{
 	case WM_INITDIALOG:
-		SetDlgItemText(dlg, IDC_NAME, pvar->ts->Title);
+		SetDlgItemTextA(dlg, IDC_NAME, pvar->ts->Title);
 		CheckDlgButton(dlg, IDC_CHECK1, BST_CHECKED);
-		SetDlgItemText(dlg, IDC_PATH1, pvar->ts->SetupFName);
+		SetDlgItemTextA(dlg, IDC_PATH1, pvar->ts->SetupFName);
 		//CheckDlgButton(dlg, IDC_CHECK2, BST_CHECKED);
-		SetDlgItemText(dlg, IDC_PATH2, pvar->ts->KeyCnfFN);
+		SetDlgItemTextA(dlg, IDC_PATH2, pvar->ts->KeyCnfFN);
 		//CheckDlgButton(dlg, IDC_CHECK3, BST_CHECKED);
-		SetDlgItemText(dlg, IDC_PATH3, pvar->ts->LogFN);
+		SetDlgItemTextA(dlg, IDC_PATH3, pvar->ts->LogFN);
 		//CheckDlgButton(dlg, IDC_CHECK4, BST_CHECKED);
-		SetDlgItemText(dlg, IDC_PATH4, pvar->ts->MacroFN);
+		SetDlgItemTextA(dlg, IDC_PATH4, pvar->ts->MacroFN);
 		path_sz = MAX_PATH;
-		path = malloc(path_sz);
+		path = (PTCHAR)malloc(path_sz*sizeof(TCHAR));
 		if (path)
 		{
 			if (SHGetSpecialFolderLocation(NULL, CSIDL_DESKTOP, &pidl) == NOERROR)
@@ -243,80 +252,80 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 		{
 		case IDC_CHECK1:
 			s = (IsDlgButtonChecked(dlg, IDC_CHECK1) == BST_CHECKED) ? pvar->ts->SetupFName : "";
-			SetDlgItemText(dlg, IDC_PATH1, s);
+			SetDlgItemTextA(dlg, IDC_PATH1, s);
 			return TRUE;
 
 		case IDC_CHECK2:
 			s = (IsDlgButtonChecked(dlg, IDC_CHECK2) == BST_CHECKED) ? pvar->ts->KeyCnfFN : "";
-			SetDlgItemText(dlg, IDC_PATH2, s);
+			SetDlgItemTextA(dlg, IDC_PATH2, s);
 			return TRUE;
 
 		case IDC_CHECK3:
 			s = (IsDlgButtonChecked(dlg, IDC_CHECK3) == BST_CHECKED) ? pvar->ts->LogFN : "";
-			SetDlgItemText(dlg, IDC_PATH3, s);
+			SetDlgItemTextA(dlg, IDC_PATH3, s);
 			return TRUE;
 
 		case IDC_CHECK4:
 			s = (IsDlgButtonChecked(dlg, IDC_CHECK4) == BST_CHECKED) ? pvar->ts->MacroFN : "";
-			SetDlgItemText(dlg, IDC_PATH4, s);
+			SetDlgItemTextA(dlg, IDC_PATH4, s);
 			return TRUE;
 
 		case IDC_BUTTON2:
 			path_sz = MAX_PATH;
-			path = malloc(path_sz);
+			path = (PTCHAR)malloc(path_sz*sizeof(TCHAR));
 			if (path)
 			{
 				GetDlgItemText(dlg, IDC_PATH2, path, path_sz);
-				s = "キーマップファイルを選択してください";
-				OpenFileDlg(dlg, IDC_PATH2, s, "KeyMap(*.CNF)\0*.CNF\0", path, NULL, 0);
+				ws = _T("キーマップファイルを選択してください");
+				OpenFileDlg(dlg, IDC_PATH2, ws, _T("KeyMap(*.CNF)\0*.CNF\0"), path, NULL, 0);
 				free(path);
 			}
 			return TRUE;
 
 		case IDC_BUTTON3:
 			path_sz = MAX_PATH;
-			path = malloc(path_sz);
+			path = (PTCHAR)malloc(path_sz*sizeof(TCHAR));
 			if (path)
 			{
 				GetDlgItemText(dlg, IDC_PATH3, path, path_sz);
-				s = "ログファイルを選択してください";
-				OpenFileDlg(dlg, IDC_PATH3, s, "Log(*.LOG)\0*.LOG\0", path, NULL, 0);
+				ws = _T("ログファイルを選択してください");
+				OpenFileDlg(dlg, IDC_PATH3, ws, _T("Log(*.LOG)\0*.LOG\0"), path, NULL, 0);
 				free(path);
 			}
 			return TRUE;
 
 		case IDC_BUTTON4:
 			path_sz = MAX_PATH;
-			path = malloc(path_sz);
+			path = (PTCHAR)malloc(path_sz*sizeof(TCHAR));
 			if (path)
 			{
 				GetDlgItemText(dlg, IDC_PATH4, path, path_sz);
-				s = "マクロファイルを選択してください";
-				OpenFileDlg(dlg, IDC_PATH4, s, "Macro(*.TTTL)\0*.TTL\0", path, NULL, 0);
+				ws = _T("マクロファイルを選択してください");
+				OpenFileDlg(dlg, IDC_PATH4, ws, _T("Macro(*.TTTL)\0*.TTL\0"), path, NULL, 0);
 				free(path);
 			}
 			return TRUE;
 
 		case IDC_BUTTON5:
 			path_sz = MAX_PATH;
-			path = malloc(path_sz);
+			path = (PTCHAR)malloc(path_sz*sizeof(TCHAR));
 			if (path)
 			{
 				GetDlgItemText(dlg, IDC_PATH5, path, path_sz);
-				s = "出力先を選択してください";
-				OpenFolderDlg(dlg, IDC_PATH5, s, path);
+				ws = _T("出力先を選択してください");
+				OpenFolderDlg(dlg, IDC_PATH5, ws, path);
 				free(path);
 			}
 			return TRUE;
 
 		case IDOK:
 			path_sz = MAX_PATH;
-			path = malloc(path_sz);
+			path = (PTCHAR)malloc(path_sz*sizeof(TCHAR));
 			if (!path)
 				return FALSE;
 
 			buf_sz = MAX_PATH;
-			buf = malloc(buf_sz);
+			buf = (PTCHAR)malloc(buf_sz*sizeof(TCHAR));
 			if (!buf)
 			{
 				free(path);
@@ -328,17 +337,19 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 			GetDlgItemText(dlg, IDC_OPTS, buf, buf_sz);
 			if (buf[0])
 			{
-				strcat_s(buf, buf_sz, " ");
+				_tcscat_s(buf, buf_sz, _T(" "));
 			}
 			/* command line options(/F=setup file) */
 			if (IsDlgButtonChecked(dlg, IDC_CHECK1) == BST_CHECKED)
 			{
-				if (pvar->ts->SetupFName[0])
+				p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+				if (p[0])
 				{
-					strcat_s(buf, buf_sz, "/F=\"");
-					strcat_s(buf, buf_sz, pvar->ts->SetupFName);
-					strcat_s(buf, buf_sz, "\" ");
+					_tcscat_s(buf, buf_sz, _T("/F=\""));
+					_tcscat_s(buf, buf_sz, p);
+					_tcscat_s(buf, buf_sz, _T("\" "));
 				}
+				TTXFree(p);
 			}
 			/* command line options(/K=keymap file) */
 			if (IsDlgButtonChecked(dlg, IDC_CHECK2) == BST_CHECKED)
@@ -346,9 +357,9 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 				GetDlgItemText(dlg, IDC_PATH2, path, path_sz);
 				if (path[0])
 				{
-					strcat_s(buf, buf_sz, "/K=\"");
-					strcat_s(buf, buf_sz, path);
-					strcat_s(buf, buf_sz, "\" ");
+					_tcscat_s(buf, buf_sz, _T("/K=\""));
+					_tcscat_s(buf, buf_sz, path);
+					_tcscat_s(buf, buf_sz, _T("\" "));
 				}
 			}
 			/* command line options(/L=log file) */
@@ -357,9 +368,9 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 				GetDlgItemText(dlg, IDC_PATH3, path, path_sz);
 				if (path[0])
 				{
-					strcat_s(buf, buf_sz, "/L=\"");
-					strcat_s(buf, buf_sz, path);
-					strcat_s(buf, buf_sz, "\" ");
+					_tcscat_s(buf, buf_sz, _T("/L=\""));
+					_tcscat_s(buf, buf_sz, path);
+					_tcscat_s(buf, buf_sz, _T("\" "));
 				}
 			}
 			/* command line options(/M=macro file) */
@@ -368,9 +379,9 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 				GetDlgItemText(dlg, IDC_PATH4, path, path_sz);
 				if (path[0])
 				{
-					strcat_s(buf, buf_sz, "/M=\"");
-					strcat_s(buf, buf_sz, path);
-					strcat_s(buf, buf_sz, "\" ");
+					_tcscat_s(buf, buf_sz, _T("/M=\""));
+					_tcscat_s(buf, buf_sz, path);
+					_tcscat_s(buf, buf_sz, _T("\" "));
 				}
 			}
 			/* output folder */
@@ -379,8 +390,8 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 			GetDlgItemText(dlg, IDC_NAME, name, sizeof(name));
 			if (!name[0])
 			{
-				s = "名前がありません。";
-				MessageBox(dlg, s, "Tera Term", MB_OK | MB_ICONEXCLAMATION);
+				ws = _T("名前がありません。");
+				MessageBox(dlg, ws, _T("Tera Term"), MB_OK | MB_ICONEXCLAMATION);
 				free(buf);
 				free(path);
 				return TRUE;
@@ -389,11 +400,11 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 			wKey = 0;
 
 			CombinePath(path, path_sz, name);
-			strcat_s(path, path_sz, ".lnk");
+			_tcscat_s(path, path_sz, _T(".lnk"));
 			if ((IsDlgButtonChecked(dlg, IDC_CHECK5) != BST_CHECKED) && FileExists(path))
 			{
-				s = "既にファイルが存在しています。";
-				MessageBox(dlg, s, "Tera Term", MB_OK | MB_ICONEXCLAMATION);
+				ws = _T("既にファイルが存在しています。");
+				MessageBox(dlg, ws, _T("Tera Term"), MB_OK | MB_ICONEXCLAMATION);
 				free(buf);
 				free(path);
 				return TRUE;
@@ -401,14 +412,16 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 
 			if (MakeShortcut(name, buf, wKey, path))
 			{
-				s = "ショートカット %s を作成しました。\n\n作成先： %s\n";
-				_snprintf_s(pvar->UIMsg, sizeof(pvar->UIMsg), _TRUNCATE, s, name, path);
+				ws = _T("ショートカット %s を作成しました。\n\n作成先： %s\n");
+				_sntprintf_s(pvar->UIMsg, sizeof(pvar->UIMsg)/sizeof(pvar->UIMsg[0]), 
+					_TRUNCATE, ws, name, path);
 			}
 			else
 			{
-				s = "ショートカット %s を作成出来ませんでした。";
-				_snprintf_s(pvar->UIMsg, sizeof(pvar->UIMsg), _TRUNCATE, s, name);
-				MessageBox(dlg, pvar->UIMsg, "Tera Term", MB_OK | MB_ICONEXCLAMATION);
+				ws = _T("ショートカット %s を作成出来ませんでした。");
+				_sntprintf_s(pvar->UIMsg, sizeof(pvar->UIMsg)/sizeof(pvar->UIMsg[0]), 
+					_TRUNCATE, ws, name);
+				MessageBox(dlg, pvar->UIMsg, _T("Tera Term"), MB_OK | MB_ICONEXCLAMATION);
 				free(buf);
 				free(path);
 				return TRUE;
@@ -434,13 +447,13 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 static void PASCAL TTXModifyMenu(HMENU menu)
 {
 	UINT lang;
-	LPSTR s;
+	LPTSTR s;
 
 	lang = UILang(pvar->ts->UILanguageFile);
 
 	pvar->FileMenu = GetSubMenu(menu, ID_FILE);
 
-	s = (lang == 2) ? "ショートカット作成(&M)..." : "&Make shortcut...";
+	s = (lang == 2) ? _T("ショートカット作成(&M)...") : _T("&Make shortcut...");
 	InsertMenu(pvar->FileMenu, ID_FILE_PRINT2, MF_BYCOMMAND, TTXMenuID(ID_MENUITEM), s);
 }
 
@@ -462,13 +475,13 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 							   hWin, ShortcutProc, (LPARAM)NULL))
 		{
 		case IDOK:
-			MessageBox(hWin, pvar->UIMsg, "Tera Term", MB_OK | MB_ICONINFORMATION);
+			MessageBox(hWin, pvar->UIMsg, _T("Tera Term"), MB_OK | MB_ICONINFORMATION);
 			pvar->UIMsg[0] = 0;
 			break;
 		case IDCANCEL:
 			break;
 		case -1:
-			MessageBox(hWin, "Error", "Can't display dialog box.",
+			MessageBox(hWin, _T("Error"), _T("Can't display dialog box."),
 					   MB_OK | MB_ICONEXCLAMATION);
 			break;
 		}
@@ -520,7 +533,7 @@ BOOL __declspec(dllexport) PASCAL FAR TTXBind(WORD Version, TTXExports *exports)
 	/* do version checking if necessary */
 	/* if (Version!=TTVERSION) return FALSE; */
 
-	if (TTXIgnore(ORDER, INISECTION, 0))
+	if (TTXIgnore(ORDER, _T(INISECTION), 0))
 		return TRUE;
 
 	if (size > exports->size)
@@ -547,7 +560,7 @@ BOOL WINAPI DllMain(HANDLE hInstance,
 		break;
 	case DLL_PROCESS_ATTACH:
 		/* do process initialization */
-		DoCover_IsDebuggerPresent();
+		TTX_DLL_PROCESS_ATTACH();
 		hInst = hInstance;
 		pvar = &InstVar;
 		break;

@@ -11,14 +11,15 @@
 #include <stdio.h>
 #include <string.h>
 #include <commctrl.h>
+#include <tchar.h>
 
-#include "compat_w95.h"
 #include "ttxcommon.h"
 #include "resource.h"
 
 #define ORDER 6020
 
 #define INISECTION "TTXUserKey"
+#define DBFILE "userkey.db"
 
 #define ID_MENUITEM 56020
 
@@ -96,17 +97,17 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 
 ///////////////////////////////////////////////////////////////
 
-const char *userkeytype_en[] = {"String", "Convert", "Macro file", "Menu ID"};
-const char *userkeytype_ja[] = {"文字列", "変換文字列", "マクロ", "メニュー"};
-const char **userkeytype = userkeytype_en;
+const PTCHAR userkeytype_en[] = {_T("String"), _T("Convert"), _T("Macro file"), _T("Menu ID")};
+const PTCHAR userkeytype_ja[] = {_T("文字列"), _T("変換文字列"), _T("マクロ"), _T("メニュー")};
+const PTCHAR *userkeytype = userkeytype_en;
 #define USERKEYTYPE_CNT (sizeof(userkeytype_en) / sizeof(userkeytype_en[0]))
 
-void InitKeyListDlg(HWND hWnd, char *fn)
+void InitKeyListDlg(HWND hWnd, PTCHAR fn)
 {
 	HWND hCombo;
-	char name[32];
+	TCHAR name[32];
 	strset_t ctx;
-	char *p;
+	PTCHAR p;
 	int i;
 	UINT lang;
 
@@ -114,13 +115,14 @@ void InitKeyListDlg(HWND hWnd, char *fn)
 	userkeytype = (lang == 2) ? userkeytype_ja : userkeytype_en;
 
 	hCombo = GetDlgItem(hWnd, IDC_COMBO_KEY);
-	GetIniStrSet("key code", &(pvar->codeset), 64, 64, fn);
+	GetIniStrSet(_T("key code"), &(pvar->codeset), 64, 64, fn);
 	if (pvar->codeset)
 	{
 		p = StrSetTok(pvar->codeset, &ctx);
 		while (p)
 		{
-			strncpy_s(name, sizeof(name), p, (int)(strchr(p, '=') - p));
+			i = (int)(_tcschr(p, _T('=')) - p);
+			_tcsncpy_s(name, sizeof(name)/sizeof(name[0]), p, i);
 			SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)name);
 			p = StrSetTok(NULL, &ctx);
 		}
@@ -133,30 +135,32 @@ void InitKeyListDlg(HWND hWnd, char *fn)
 	}
 
 	hCombo = GetDlgItem(hWnd, IDC_COMBO_CMD);
-	GetIniStrSet("menu", &(pvar->menuset), 64, 64, fn);
+	GetIniStrSet(_T("menu"), &(pvar->menuset), 64, 64, fn);
 	if (pvar->menuset)
 	{
 		p = StrSetTok(pvar->menuset, &ctx);
 		while (p)
 		{
-			strncpy_s(name, sizeof(name), p, (int)(strchr(p, '=') - p));
+			i = (int)(_tcschr(p, _T('=')) - p);
+			_tcsncpy_s(name, sizeof(name)/sizeof(name[0]), p, i);
 			SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)name);
 			p = StrSetTok(NULL, &ctx);
 		}
 	}
 }
 
-void LoadKeyList(HWND hWnd, UINT uid, LPSTR fn)
+void LoadKeyList(HWND hWnd, UINT uid, LPTSTR fn)
 {
 	LVCOLUMN lvcol;
 	LVITEM item;
 	HWND hList;
-	char name[32];
-	char *buf;
+	TCHAR name[32];
+	PTCHAR buf;
 	int buf_sz;
 	int i, j;
-	char *ctx;
-	char *p, *p2;
+	PTCHAR ctx;
+	PTCHAR p;
+	PTCHAR p2;
 	UINT lang;
 
 	lang = UILang(pvar->ts->UILanguageFile);
@@ -165,36 +169,38 @@ void LoadKeyList(HWND hWnd, UINT uid, LPSTR fn)
 	lvcol.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 	lvcol.fmt = LVCFMT_LEFT;
 	lvcol.cx = 40;
-	lvcol.pszText = (lang == 2) ? "キー" : "key";
+	lvcol.pszText = (lang == 2) ? _T("キー") : _T("key");
 	lvcol.iSubItem = 0;
 	ListView_InsertColumn(hList, 0, &lvcol);
 	lvcol.cx = 80;
-	lvcol.pszText = (lang == 2) ? "タイプ" : "type";
+	lvcol.pszText = (lang == 2) ? _T("タイプ") : _T("type");
 	lvcol.iSubItem = 1;
 	ListView_InsertColumn(hList, 1, &lvcol);
 	lvcol.cx = 300;
-	lvcol.pszText = (lang == 2) ? "値" : "value";
+	lvcol.pszText = (lang == 2) ? _T("値") : _T("value");
 	lvcol.iSubItem = 2;
 	ListView_InsertColumn(hList, 2, &lvcol);
 
 	buf_sz = 1024;
-	buf = malloc(buf_sz);
+	buf = (PTCHAR)malloc(buf_sz*sizeof(TCHAR));
 	if (!buf)
 		return;
 
 	for (i = 0; i < USERKEY_MAX; i++)
 	{
-		_snprintf_s(name, sizeof(name), _TRUNCATE, "User%d", i + 1);
-		GetPrivateProfileString("User keys", name, "", buf, buf_sz, fn);
+		_sntprintf_s(name, sizeof(name)/sizeof(name[0]), 
+			_TRUNCATE, _T("User%d"), i + 1);
+		GetPrivateProfileString(_T("User keys"), name, _T(""), 
+			buf, buf_sz, fn);
 		if (buf[0])
 		{
-			p = strtok_s(buf, ",", &ctx);
-			strcpy_s(name, sizeof(name), p);
+			p = _tcstok_s(buf, _T(","), &ctx);
+			_tcscpy_s(name, sizeof(name)/sizeof(name[0]), p);
 			p = StrSetFindVal(pvar->codeset, name);
 			if (*p)
 			{
-				strcpy_s(name, sizeof(name), p);
-				p = strchr(name, '=');
+				_tcscpy_s(name, sizeof(name)/sizeof(name[0]), p);
+				p = _tcschr(name, _T('='));
 				if (p)
 				{
 					*p = 0;
@@ -205,16 +211,17 @@ void LoadKeyList(HWND hWnd, UINT uid, LPSTR fn)
 			item.pszText = name;
 			item.iSubItem = 0;
 			ListView_InsertItem(hList, &item);
-			p = strtok_s(NULL, ",", &ctx);
-			j = atoi(p);
-			item.pszText = (char *)userkeytype[j];
+			p = _tcstok_s(NULL, _T(","), &ctx);
+			j = _tstoi(p);
+			item.pszText = (PTCHAR)userkeytype[j];
 			item.iSubItem = 1;
 			ListView_SetItem(hList, &item);
-			p = strtok_s(NULL, ",", &ctx);
+			p = _tcstok_s(NULL, _T(","), &ctx);
 			if (j == 3)
 			{
-				j = atoi(p);
-				_snprintf_s(name, sizeof(name), _TRUNCATE, "%d", j);
+				j = _tstoi(p);
+				_sntprintf_s(name, sizeof(name)/sizeof(name[0]), 
+					_TRUNCATE, _T("%d"), j);
 				p2 = StrSetFindKey(pvar->menuset, name);
 				if (p2 && *p2)
 				{
@@ -229,18 +236,19 @@ void LoadKeyList(HWND hWnd, UINT uid, LPSTR fn)
 	free(buf);
 }
 
-void SetKeyMapOff(UINT code, LPSTR fn)
+void SetKeyMapOff(UINT code, LPTSTR fn)
 {
 	strset_t apps, keys;
 	strset_t app_ctx, keys_ctx;
-	char *app, *key;
+	PTCHAR app;
+	PTCHAR key;
 
 	apps = keys = NULL;
 	GetIniSects(&apps, 64, 64, fn);
 	app = StrSetTok(apps, &app_ctx);
 	while (app)
 	{
-		if (_strcmpi(app, "User Keys") != 0)
+		if (_tcsicmp(app, _T("User Keys")) != 0)
 		{
 			GetIniKeys(app, &keys, 64, 64, fn);
 			key = StrSetTok(keys, &keys_ctx);
@@ -248,7 +256,7 @@ void SetKeyMapOff(UINT code, LPSTR fn)
 			{
 				if (GetIniNum(app, key, 0, fn) == code)
 				{
-					WritePrivateProfileString(app, key, "off", fn);
+					WritePrivateProfileString(app, key, _T("off"), fn);
 				}
 				key = StrSetTok(NULL, &keys_ctx);
 			}
@@ -259,19 +267,19 @@ void SetKeyMapOff(UINT code, LPSTR fn)
 	free(apps);
 }
 
-void SaveKeyList(HWND hWnd, UINT uid, LPSTR fn)
+void SaveKeyList(HWND hWnd, UINT uid, LPTSTR fn)
 {
 	LVITEM item;
 	HWND hList;
-	char name[32];
-	char *buf;
+	TCHAR name[32];
+	PTCHAR buf;
 	int buf_sz;
 	int code;
 	int i, j, cnt;
-	char *p;
+	PTCHAR p;
 
 	buf_sz = 1024;
-	buf = malloc(buf_sz);
+	buf = (PTCHAR)malloc(buf_sz*sizeof(TCHAR));
 	if (!buf)
 		return;
 
@@ -279,60 +287,60 @@ void SaveKeyList(HWND hWnd, UINT uid, LPSTR fn)
 	cnt = ListView_GetItemCount(hList);
 	item.mask = LVIF_TEXT;
 	item.pszText = name;
-	item.cchTextMax = sizeof(name);
+	item.cchTextMax = sizeof(name)/sizeof(name[0]);
 	for (i = 0; i < cnt; i++)
 	{
 		item.iItem = i;
 		item.iSubItem = 0;
 		ListView_GetItem(hList, &item);
 		p = StrSetFindKey(pvar->codeset, name);
-		p = strskip(p, '=');
+		p = strskip(p, _T('='));
 		if (!(*p))
 		{
 			p = name;
 		}
-		code = atoi(p);
-		_snprintf_s(buf, buf_sz, _TRUNCATE, "%s,", p);
+		code = _tstoi(p);
+		_sntprintf_s(buf, buf_sz, _TRUNCATE, _T("%s,"), p);
 
 		item.iSubItem = 1;
 		ListView_GetItem(hList, &item);
 		for (j = 0; j < USERKEYTYPE_CNT; j++)
 		{
-			if (strncmp(userkeytype[j], name, sizeof(name)) == 0)
+			if (_tcsncmp(userkeytype[j], name, sizeof(name)/sizeof(name[0])) == 0)
 			{
 				break;
 			}
 		}
-		_snprintf_s(name, sizeof(name), _TRUNCATE, "%d,", j);
-		strcat_s(buf, buf_sz, name);
+		_sntprintf_s(name, sizeof(name)/sizeof(name[0]), _TRUNCATE, _T("%d,"), j);
+		_tcscat_s(buf, buf_sz, name);
 
 		item.iSubItem = 2;
 		ListView_GetItem(hList, &item);
 		if (j == 3)
 		{
-			j = atoi(name);
-			_snprintf_s(name, sizeof(name), _TRUNCATE, "%d", j);
+			j = _tstoi(name);
+			_sntprintf_s(name, sizeof(name)/sizeof(name[0]), _TRUNCATE, _T("%d"), j);
 		}
-		strcat_s(buf, buf_sz, name);
+		_tcscat_s(buf, buf_sz, name);
 		SetKeyMapOff(code, fn);
-		_snprintf_s(name, sizeof(name), _TRUNCATE, "User%d", i + 1);
-		WritePrivateProfileString("User keys", name, buf, fn);
+		_sntprintf_s(name, sizeof(name)/sizeof(name[0]), _TRUNCATE, _T("User%d"), i + 1);
+		WritePrivateProfileString(_T("User keys"), name, buf, fn);
 	}
 	free(buf);
 
 	for (i = cnt; i < USERKEY_MAX; i++)
 	{
-		_snprintf_s(name, sizeof(name), _TRUNCATE, "User%d", i + 1);
-		WritePrivateProfileString("User keys", name, NULL, fn);
+		_sntprintf_s(name, sizeof(name)/sizeof(name[0]), _TRUNCATE, _T("User%d"), i + 1);
+		WritePrivateProfileString(_T("User keys"), name, NULL, fn);
 	}
 }
 
 ///////////////////////////////////////////////////////////////
 
-void AddKeyListItem(HWND hWnd, char *k, int type, char *s)
+void AddKeyListItem(HWND hWnd, PTCHAR k, int type, PTCHAR s)
 {
 	LVITEM item;
-	char name[32];
+	TCHAR name[32];
 	int i, cnt;
 
 	if (!(k[0]) || type < 0 || type >= 4)
@@ -347,16 +355,16 @@ void AddKeyListItem(HWND hWnd, char *k, int type, char *s)
 	{
 		item.iItem = i;
 		ListView_GetItem(hWnd, &item);
-		if (_strcmpi(name, k) == 0)
+		if (_tcsicmp(name, k) == 0)
 			break;
 	}
 	if (i >= cnt)
 	{
 		item.iItem = i;
-		_snprintf_s(name, sizeof(name), _TRUNCATE, k);
+		_sntprintf_s(name, sizeof(name)/sizeof(name[0]), _TRUNCATE, k);
 		ListView_InsertItem(hWnd, &item);
 	}
-	item.pszText = (char *)userkeytype[type];
+	item.pszText = (PTCHAR)userkeytype[type];
 	item.iSubItem = 1;
 	ListView_SetItem(hWnd, &item);
 	item.pszText = s;
@@ -388,12 +396,12 @@ void DeleteKeyListItem(HWND hWnd)
 void MoveKeyListItemPrior(HWND hWnd)
 {
 	LVITEM item;
-	char *buf;
+	PTCHAR buf;
 	int buf_sz;
 	int i, cnt;
 
 	buf_sz = 1024;
-	buf = malloc(buf_sz);
+	buf = (PTCHAR)malloc(buf_sz*sizeof(TCHAR));
 	if (!buf)
 		return;
 
@@ -429,12 +437,12 @@ void MoveKeyListItemPrior(HWND hWnd)
 void MoveKeyListItemNext(HWND hWnd)
 {
 	LVITEM item;
-	char *buf;
+	PTCHAR buf;
 	int buf_sz;
 	int i, cnt;
 
 	buf_sz = 1024;
-	buf = malloc(buf_sz);
+	buf = (PTCHAR)malloc(buf_sz*sizeof(TCHAR));
 	if (!buf)
 		return;
 
@@ -472,13 +480,13 @@ void UpdateKeyListItem(HWND dlg, int idx)
 	HWND hWnd;
 	HWND hListView;
 	LVITEM item;
-	char name[32];
-	char *buf;
+	TCHAR name[32];
+	PTCHAR buf;
 	int buf_sz;
 	int i;
 
 	buf_sz = 1024;
-	buf = malloc(buf_sz);
+	buf = (PTCHAR)malloc(buf_sz*sizeof(TCHAR));
 	if (!buf)
 		return;
 
@@ -516,8 +524,8 @@ void UpdateKeyListItem(HWND dlg, int idx)
 	name[0] = 0;
 	if (i == 3)
 	{
-		i = atoi(buf);
-		_snprintf_s(name, sizeof(name), _TRUNCATE, "%d", i);
+		i = _tstoi(buf);
+		_sntprintf_s(name, sizeof(name)/sizeof(name[0]), _TRUNCATE, _T("%d"), i);
 	}
 	SetDlgItemText(dlg, IDC_COMBO_CMD, name);
 	free(buf);
@@ -573,18 +581,26 @@ static LRESULT CALLBACK KeyListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
 static LRESULT CALLBACK UserKeySettingProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	LV_HITTESTINFO lvinfo;
-	char name[32];
-	char *buf;
+	TCHAR path[MAX_PATH];
+	TCHAR name[32];
+	PTCHAR buf;
 	int buf_sz;
 	int i;
-	LPSTR p;
+	LPTSTR p;
 
 	switch (msg)
 	{
 	case WM_INITDIALOG:
-		SetDlgItemText(dlg, IDC_PATH, pvar->ts->KeyCnfFN);
-		InitKeyListDlg(dlg, ".\\userkey.txt");
-		LoadKeyList(dlg, IDC_KEYLIST, pvar->ts->KeyCnfFN);
+		memset(path, 0, sizeof(path));
+		GetModuleFileName(NULL, path, sizeof(path)/sizeof(path[0]) - 1);
+    	RemoveFileName(path);
+		CombinePath(path, sizeof(path)/sizeof(path[0]), _T(DBFILE));
+		InitKeyListDlg(dlg, path);
+
+		p = TTXGetPath(pvar->ts, ID_KEYCNFNM);
+		SetDlgItemText(dlg, IDC_PATH, p);
+		LoadKeyList(dlg, IDC_KEYLIST, p);
+		TTXFree(p);
 		KeyListProcOld = (WNDPROC)SetWindowLong(
 			GetDlgItem(dlg, IDC_KEYLIST), GWLP_WNDPROC, (LONG)KeyListProc);
 		MoveParentCenter(dlg);
@@ -633,22 +649,22 @@ static LRESULT CALLBACK UserKeySettingProc(HWND dlg, UINT msg, WPARAM wParam, LP
 			case CBN_SELCHANGE:
 			case CBN_EDITCHANGE:
 				buf_sz = MAX_PATH;
-				buf = malloc(buf_sz);
+				buf = (PTCHAR)malloc(buf_sz*sizeof(TCHAR));
 				if (!buf)
 					return FALSE;
 				i = SendMessage(GetDlgItem(dlg, IDC_COMBO_CMD), CB_GETCURSEL, 0, 0);
 				if (i < 0)
 				{
 					GetDlgItemText(dlg, IDC_COMBO_CMD, name, sizeof(name));
-					strcpy_s(buf, buf_sz, StrSetFindKey(pvar->menuset, name));
+					_tcscpy_s(buf, buf_sz, StrSetFindKey(pvar->menuset, name));
 					if (!buf[0])
 					{
-						strcpy_s(buf, buf_sz, name);
+						_tcscpy_s(buf, buf_sz, name);
 					}
 				}
 				else
 				{
-					strcpy_s(buf, buf_sz, StrSetAt(pvar->menuset, i));
+					_tcscpy_s(buf, buf_sz, StrSetAt(pvar->menuset, i));
 				}
 				SetDlgItemText(dlg, IDC_EDIT_STR, buf);
 				free(buf);
@@ -658,21 +674,21 @@ static LRESULT CALLBACK UserKeySettingProc(HWND dlg, UINT msg, WPARAM wParam, LP
 
 		case IDC_BUTTON_SEL:
 			buf_sz = MAX_PATH;
-			buf = malloc(buf_sz);
+			buf = (PTCHAR)malloc(buf_sz*sizeof(TCHAR));
 			if (!buf)
 				return FALSE;
 			GetDlgItemText(dlg, IDC_EDIT_STR, buf, buf_sz);
-			p = "マクロファイル(*.ttl)\0*.ttl\0\0";
-			OpenFileDlg(dlg, IDC_EDIT_STR, "マクロファイルを選択してください", p, buf, NULL, 1);
+			p = _T("マクロファイル(*.ttl)\0*.ttl\0\0");
+			OpenFileDlg(dlg, IDC_EDIT_STR, _T("マクロファイルを選択してください"), p, buf, NULL, 1);
 			free(buf);
 			return TRUE;
 
 		case IDC_BUTTON_ADD:
 			buf_sz = MAX_PATH;
-			buf = malloc(buf_sz);
+			buf = (PTCHAR)malloc(buf_sz*sizeof(TCHAR));
 			if (!buf)
 				return FALSE;
-			GetDlgItemText(dlg, IDC_COMBO_KEY, name, sizeof(name));
+			GetDlgItemText(dlg, IDC_COMBO_KEY, name, sizeof(name)/sizeof(name[0]));
 			GetDlgItemText(dlg, IDC_EDIT_STR, buf, buf_sz);
 			i = SendMessage(GetDlgItem(dlg, IDC_COMBO_TYPE), CB_GETCURSEL, 0, 0);
 			AddKeyListItem(GetDlgItem(dlg, IDC_KEYLIST), name, i, buf);
@@ -686,7 +702,10 @@ static LRESULT CALLBACK UserKeySettingProc(HWND dlg, UINT msg, WPARAM wParam, LP
 			return TRUE;
 
 		case IDOK:
-			SaveKeyList(dlg, IDC_KEYLIST, pvar->ts->KeyCnfFN);
+			p = TTXGetPath(pvar->ts, ID_KEYCNFNM);
+			SetDlgItemText(dlg, IDC_PATH, p);
+			SaveKeyList(dlg, IDC_KEYLIST, p);
+			TTXFree(p);
 			EndDialog(dlg, IDOK);
 			return TRUE;
 
@@ -705,12 +724,12 @@ static LRESULT CALLBACK UserKeySettingProc(HWND dlg, UINT msg, WPARAM wParam, LP
 static void PASCAL TTXModifyMenu(HMENU menu)
 {
 	UINT lang;
-	LPSTR s;
+	LPTSTR s;
 
 	lang = UILang(pvar->ts->UILanguageFile);
 
 	pvar->SetupMenu = GetSubMenu(menu, ID_SETUP);
-	s = (lang == 2) ? "ユーザーキー(&U)..." : "&UserKey setup...";
+	s = (lang == 2) ? _T("ユーザーキー(&U)...") : _T("&UserKey setup...");
 	AppendMenu(pvar->SetupMenu, MF_BYCOMMAND, TTXMenuID(ID_MENUITEM), s);
 }
 
@@ -732,7 +751,7 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 		case IDCANCEL:
 			break;
 		case -1:
-			MessageBox(hWin, "Error", "Can't display dialog box.",
+			MessageBox(hWin, _T("Error"), _T("Can't display dialog box."),
 					   MB_OK | MB_ICONEXCLAMATION);
 			break;
 		}
@@ -749,7 +768,7 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 // 	 printf("TTXEnd %d\n", ORDER);
 // }
 
-// static void PASCAL TTXSetCommandLine(PCHAR cmd, int cmdlen, PGetHNRec rec)
+// static void PASCAL TTXSetCommandLine(TT_LPTSTR cmd, int cmdlen, PGetHNRec rec)
 // {
 // 	 printf("TTXSetCommandLine %d\n", ORDER);
 // }
@@ -784,7 +803,7 @@ BOOL __declspec(dllexport) PASCAL FAR TTXBind(WORD Version, TTXExports *exports)
 	/* do version checking if necessary */
 	/* if (Version!=TTVERSION) return FALSE; */
 
-	if (TTXIgnore(ORDER, INISECTION, 0))
+	if (TTXIgnore(ORDER, _T(INISECTION), 0))
 		return TRUE;
 
 	if (size > exports->size)
@@ -811,7 +830,7 @@ BOOL WINAPI DllMain(HANDLE hInstance,
 		break;
 	case DLL_PROCESS_ATTACH:
 		/* do process initialization */
-		DoCover_IsDebuggerPresent();
+		TTX_DLL_PROCESS_ATTACH();
 		hInst = hInstance;
 		pvar = &InstVar;
 		break;

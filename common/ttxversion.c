@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <tchar.h>
 
 #include "ttxversion.h"
 
@@ -17,7 +18,7 @@ WORD tt_version = 0;
 static WORD TTRunningVersion()
 {
 #pragma comment(lib, "version.lib")
-	char szPath[MAX_PATH];
+	TCHAR szPath[MAX_PATH];
 	DWORD dwSize;
 	DWORD dwHandle;
 	LPVOID lpBuf;
@@ -25,7 +26,7 @@ static WORD TTRunningVersion()
 	VS_FIXEDFILEINFO *pFileInfo;
 	int major, minor;
 
-	GetModuleFileName(NULL, szPath, sizeof(szPath) - 1);
+	GetModuleFileName(NULL, szPath, sizeof(szPath)/sizeof(szPath[0]) - 1);
 
 	dwSize = GetFileVersionInfoSize(szPath, &dwHandle);
 	if (dwSize == 0)
@@ -33,14 +34,14 @@ static WORD TTRunningVersion()
 		return 0;
 	}
 
-	lpBuf = malloc(dwSize);
+	lpBuf = malloc(dwSize*sizeof(TCHAR));
 	if (!GetFileVersionInfo(szPath, dwHandle, dwSize, lpBuf))
 	{
 		free(lpBuf);
 		return 0;
 	}
 
-	if (!VerQueryValue(lpBuf, "\\", (LPVOID *)&pFileInfo, &uLen))
+	if (!VerQueryValue(lpBuf, _T("\\"), (LPVOID *)&pFileInfo, &uLen))
 	{
 		free(lpBuf);
 		return 0;

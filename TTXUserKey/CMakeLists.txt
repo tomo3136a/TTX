@@ -47,6 +47,6 @@ configure_file(
   )
 
 configure_file(
-  userkey.txt
-  ${CMAKE_BINARY_DIR}/data/userkey.txt
+  userkey.dat
+  ${CMAKE_BINARY_DIR}/data/userkey.dat
   )

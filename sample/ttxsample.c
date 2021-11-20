@@ -11,9 +11,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <tchar.h>
 //{system_includes here}
 
-#include "compat_w95.h"
 #include "ttxcommon.h"
 #include "resource.h"
 
@@ -96,46 +96,46 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 ///////////////////////////////////////////////////////////////
 
 //{when use ReadIniFile hook}
-static void PASCAL TTXReadIniFile(PCHAR fn, PTTSet ts)
+static void PASCAL TTXReadIniFile(TT_LPTCSTR FName, PTTSet ts)
 {
-	char s[20]; //{use fixed size string}
+	TCHAR s[20]; //{use fixed size string}
 
-	char *buf;	//{use flexible string}
+	LPTSTR buf;	//{use flexible string}
 	int buf_sz; //{use flexible string}
 
-	PCHAR ctx; //{use string parse ","}
-	PCHAR p;
+	LPTSTR ctx; //{use string parse ","}
+	LPTSTR p;
 
 	int seq, nxt, cmd, sub, sz;
 	int i;
 
 	if (!pvar->skip) //{when use ParseParam hook}
-		(pvar->origReadIniFile)(fn, ts);
+		(pvar->origReadIniFile)(FName, ts);
 
 	buf = NULL; //{use flexible string, pointer initialize}
 
 	//on/off setting
-	//pvar->{name} = GetIniOnOff(INISECTION, "{name}", FALSE, fn);
+	//pvar->{name} = GetIniOnOff(_T(INISECTION), _T("{name}"), FALSE, FName);
 
 	//string setting(fixed size)
-	//GetPrivateProfileString(INISECTION, "{name}", {initialze string},
-	//						pvar->{name}, sizeof(pvar->{name}), fn);
+	//GetPrivateProfileString(_T(INISECTION), _T("{name}"), {initialze string},
+	//	pvar->{name}, sizeof(pvar->{name})/sizeof(pvar->{name}[0]), FName);
 
 	//string setting(flexible size)
-	//GetIniString(INISECTION, "{name}", "", &buf, 128, 64, fn);
+	//GetIniString(_T(INISECTION), _T("{name}"), _T(""), &buf, 128, 64, FName);
 
 	//{use string parse with ","}
 	if (buf && buf[0])
 	{
-		p = strtok_s(buf, ", ", &ctx); //{first token}
+		p = _tcstok_s(buf, _T(", "), &ctx); //{first token}
 		//{fixed string}
 		//if (p)
-		//	strcpy_s(pvar->{name}, sizeof(pvar->{name}), p);
+		//	_tcscpy_s(pvar->{name}, sizeof(pvar->{name})/sizeof(pvar->{name}[0]), p);
 
-		p = strtok_s(NULL, ", ", &ctx); //{next tolen}
-										//{number}
-										//if (p)
-										//	pvar->{name} = atoi(p);
+		p = _tcstok_s(NULL, _T(", "), &ctx); //{next tolen}
+											//{number}
+											//if (p)
+											//	pvar->{name} = atoi(p);
 
 		//{...}
 	}
@@ -145,23 +145,23 @@ static void PASCAL TTXReadIniFile(PCHAR fn, PTTSet ts)
 }
 
 //{when use WriteIniFile hook}
-static void PASCAL TTXWriteIniFile(PCHAR fn, PTTSet ts)
+static void PASCAL TTXWriteIniFile(TT_LPTSTR FName, PTTSet ts)
 {
-	char name[20]; //{valiable member name}
+	TCHAR name[20]; //{valiable member name}
 
-	char *buf;	//{use string}
+	LPTSTR buf;	//{use string}
 	int buf_sz; //{use string}
 
-	(pvar->origWriteIniFile)(fn, ts);
+	(pvar->origWriteIniFile)(FName, ts);
 
 	buf_sz = MAX_PATH;
-	buf = malloc(buf_sz);
+	buf = (LPTSTR)malloc(buf_sz*sizeof(TCHAR));
 
 	//{write on/off to setup-file}
-	//WriteIniOnOff(INISECTION, "{name}", pvar->{name}, TRUE, fn);
+	//WriteIniOnOff(_T(INISECTION), _T("{name}"), pvar->{name}, TRUE, FName);
 
 	//{write string to setup-file}
-	//WritePrivateProfileString(INISECTION, "{name}", buf, fn);
+	//WritePrivateProfileString(_T(INISECTION), _T("{name}"), buf, FName);
 
 	//{...}
 
@@ -170,22 +170,22 @@ static void PASCAL TTXWriteIniFile(PCHAR fn, PTTSet ts)
 }
 
 //{when use command-line option and start-up ReadIniFile Hook}
-static void PASCAL TTXParseParam(PCHAR Param, PTTSet ts, PCHAR DDETopic)
+static void PASCAL TTXParseParam(TT_LPTSTR Param, PTTSet ts, PCHAR DDETopic)
 {
-	char *buf;
+	LPTSTR buf;
 	int buf_sz;
-	PCHAR next;
+	LPTSTR next;
 
 	(pvar->origParseParam)(Param, ts, DDETopic);
 
 	buf_sz = 4100;
-	buf = malloc(buf_sz);
+	buf = (LPTSTR)malloc(buf_sz*sizeof(TCHAR));
 	if (buf)
 	{
 		next = Param;
 		while (next = TTXGetParam(buf, buf_sz, next))
 		{
-			if (_strnicmp(buf, "/F=", 3) == 0)
+			if (_tcsnicmp(buf, _T("/F="), 3) == 0)
 			{
 				pvar->skip = TRUE;
 				TTXReadIniFile(&buf[3], ts);
@@ -315,8 +315,9 @@ static void PASCAL TTXCloseFile(TTXFileHooks *hooks)
 //
 static LRESULT CALLBACK SettingProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	char *buf;
+	LPTSTR buf;
 	int buf_sz;
+	LPTSTR path;
 
 	buf_sz = 4100;
 
@@ -332,16 +333,19 @@ static LRESULT CALLBACK SettingProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 		{
 		//{use file selector}
 		case IDC_BUTTON1:
-			buf = malloc(buf_sz);
+			path = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+			buf = (LPTSTR)malloc(buf_sz*siezof(buf[0]));
 			GetDlgItemText(dlg, IDC_PATH1, buf, buf_sz);
-			OpenFileDlg(dlg, IDC_PATH1, "ファイル", "File(*.txt)\0*.txt\0", buf, pvar->ts->SetupFName, 0);
+			OpenFileDlg(dlg, IDC_PATH1, _T("ファイル"), 
+				_T("File(*.txt)\0*.txt\0"), buf, path, 0);
 			free(buf);
+			TTXFree(path);
 			return TRUE;
 
 		//{use folder selector}
 		case IDC_BUTTON2:
-			buf = malloc(buf_sz);
-			OpenFolderDlg(dlg, IDC_PATH2, "フォルダ", buf);
+			buf = (LPTSTR)malloc(buf_sz*sizeof(buf[0]));
+			OpenFolderDlg(dlg, IDC_PATH2, _T("フォルダ"), buf);
 			free(buf);
 			return TRUE;
 
@@ -368,14 +372,14 @@ static void PASCAL TTXModifyMenu(HMENU menu)
 {
 	UINT flag;
 	UINT lang;
-	LPSTR s;
+	LPTSTR s;
 
 	flag = MF_ENABLED;
 	lang = UILang(pvar->ts->UILanguageFile);
 
 	pvar->SetupMenu = GetSubMenu(menu, ID_SETUP);
 	AppendMenu(pvar->SetupMenu, MF_SEPARATOR, 0, NULL);
-	s = (lang == 2) ? "設定(&S)..." : "&setup...";
+	s = (lang == 2) ? _T("設定(&S)...") : _T("&setup...");
 	AppendMenu(pvar->SetupMenu, flag, TTXMenuID(ID_MENUITEM), s);
 
 	//{other menu insert/ppend...}
@@ -414,7 +418,7 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 		case IDCANCEL:
 			break;
 		case -1:
-			MessageBox(hWin, "Error", "Can't display dialog box.",
+			MessageBox(hWin, _T("Error"), _T("Can't display dialog box."),
 					   MB_OK | MB_ICONEXCLAMATION);
 			break;
 		}
@@ -437,7 +441,7 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 //}
 
 //{not use?}
-//static void PASCAL TTXSetCommandLine(PCHAR cmd, int cmdlen, PGetHNRec rec) {
+//static void PASCAL TTXSetCommandLine(TTX_LPTSTR cmd, int cmdlen, PGetHNRec rec) {
 //  printf("TTXSetCommandLine %d\n", ORDER);
 //}
 
@@ -472,7 +476,7 @@ BOOL __declspec(dllexport) PASCAL TTXBind(WORD Version, TTXExports *exports)
 	/* if (Version!=TTVERSION) return FALSE; */
 
 	//{when TTXPlugin support}
-	if (TTXIgnore(ORDER, INISECTION, 0))
+	if (TTXIgnore(ORDER, _T(INISECTION), 0))
 		return TRUE;
 
 	if (size > exports->size)
@@ -499,7 +503,7 @@ BOOL WINAPI DllMain(HANDLE hInstance,
 		break;
 	case DLL_PROCESS_ATTACH:
 		/* do process initialization */
-		DoCover_IsDebuggerPresent();
+		TTX_DLL_PROCESS_ATTACH();
 		hInst = hInstance;
 		pvar = &InstVar;
 		break;

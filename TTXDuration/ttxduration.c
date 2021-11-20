@@ -13,8 +13,8 @@
 #include <string.h>
 #include <time.h>
 #include <shlobj.h>
+#include <tchar.h>
 
-#include "compat_w95.h"
 #include "ttxcommon.h"
 
 #define ORDER 6070
@@ -99,7 +99,7 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 
 ///////////////////////////////////////////////////////////////
 
-static void DrawTextToMenuBarRight(HWND hwnd, PCHAR text, int decoration)
+static void DrawTextToMenuBarRight(HWND hwnd, PTCHAR text, int decoration)
 {
 	MENUBARINFO mbi;
 	RECT rect;
@@ -127,9 +127,9 @@ static void DrawTextToMenuBarRight(HWND hwnd, PCHAR text, int decoration)
 		rect.left = rect.right - 50;
 		rect.top = mbi.rcBar.top - rect.top + 1;
 		rect.bottom = rect.top + 8;
-		DrawText(hDC, "               ", 15, &rect, DT_NOCLIP | DT_RIGHT);
+		DrawText(hDC, _T("               "), 15, &rect, DT_NOCLIP | DT_RIGHT);
 		if (text)
-			DrawText(hDC, text, strlen(text), &rect, DT_NOCLIP | DT_RIGHT);
+			DrawText(hDC, text, _tcslen(text), &rect, DT_NOCLIP | DT_RIGHT);
 		ReleaseDC(hwnd, hDC);
 	}
 }
@@ -138,11 +138,13 @@ static void CALLBACK DurationTimerProc(HWND hwnd, UINT msg, UINT_PTR ev, DWORD n
 {
 	time_t duration;
 	time_t border;
-	CHAR buf[16];
+	TCHAR buf[16];
+	int buf_sz;
 	int h, m, s;
 	int decoration;
 	int i;
 
+	buf_sz = sizeof(buf)/sizeof(buf[0]);
 	duration = time(NULL) + pvar->duration - pvar->base;
 
 	border = 0;
@@ -160,7 +162,7 @@ static void CALLBACK DurationTimerProc(HWND hwnd, UINT msg, UINT_PTR ev, DWORD n
 		struct tm t;
 		duration -= pvar->duration - pvar->base;
 		localtime_s(&t, &duration);
-		strftime(buf, sizeof(buf), "%r", &t);
+		_tcsftime(buf, buf_sz, _T("%r"), &t);
 	}
 	else
 	{
@@ -169,19 +171,19 @@ static void CALLBACK DurationTimerProc(HWND hwnd, UINT msg, UINT_PTR ev, DWORD n
 		h = (((duration - s) / 60 - m) / 60) % 1000;
 		if (h)
 		{
-			_snprintf_s(buf, sizeof(buf), _TRUNCATE, "%3d:%02d:%02d ", h, m, s);
+			_sntprintf_s(buf, buf_sz, _TRUNCATE, _T("%3d:%02d:%02d "), h, m, s);
 		}
 		else if (m)
 		{
-			_snprintf_s(buf, sizeof(buf), _TRUNCATE, "%4s%2d:%02d ", "", m, s);
+			_sntprintf_s(buf, buf_sz, _TRUNCATE, _T("%4s%2d:%02d "), _T(""), m, s);
 		}
 		else if (s)
 		{
-			_snprintf_s(buf, sizeof(buf), _TRUNCATE, "%7s%2d ", "", s);
+			_sntprintf_s(buf, buf_sz, _TRUNCATE, _T("%7s%2d "), _T(""), s);
 		}
 		else
 		{
-			_snprintf_s(buf, sizeof(buf), _TRUNCATE, "%9s ", "");
+			_sntprintf_s(buf, buf_sz, _TRUNCATE, _T("%9s "), _T(""));
 		}
 	}
 
@@ -297,50 +299,50 @@ static void PASCAL TTXCloseFile(TTXFileHooks *hooks)
 
 ///////////////////////////////////////////////////////////////
 
-static void PASCAL TTXReadIniFile(PCHAR fn, PTTSet ts)
+static void PASCAL TTXReadIniFile(TT_LPTCSTR fn, PTTSet ts)
 {
 	if (!pvar->skip)
 		(pvar->origReadIniFile)(fn, ts);
 
-	pvar->enableOnOff = GetIniOnOff(INISECTION, "EnableOnOff", FALSE, fn);
-	pvar->nowTimeMode = GetIniOnOff(INISECTION, "NowTimeMode", FALSE, fn);
-	pvar->resetStart = GetIniOnOff(INISECTION, "ResetStart", FALSE, fn);
-	pvar->connectStart = GetIniOnOff(INISECTION, "ConnectStart", FALSE, fn);
-	pvar->disconnectStop = GetIniOnOff(INISECTION, "DisconnectStop", FALSE, fn);
+	pvar->enableOnOff = GetIniOnOff(_T(INISECTION), _T("EnableOnOff"), FALSE, (PTCHAR)fn);
+	pvar->nowTimeMode = GetIniOnOff(_T(INISECTION), _T("NowTimeMode"), FALSE, (PTCHAR)fn);
+	pvar->resetStart = GetIniOnOff(_T(INISECTION), _T("ResetStart"), FALSE, (PTCHAR)fn);
+	pvar->connectStart = GetIniOnOff(_T(INISECTION), _T("ConnectStart"), FALSE, (PTCHAR)fn);
+	pvar->disconnectStop = GetIniOnOff(_T(INISECTION), _T("DisconnectStop"), FALSE, (PTCHAR)fn);
 
-	pvar->border[0] = GetIniNum(INISECTION, "Border1", 30, fn);
-	pvar->border[1] = GetIniNum(INISECTION, "Border2", 20, fn);
-	pvar->border[2] = GetIniNum(INISECTION, "Border3", 10, fn);
-	pvar->border[3] = GetIniNum(INISECTION, "Border4", 0, fn);
+	pvar->border[0] = GetIniNum(_T(INISECTION), _T("Border1"), 30, (PTCHAR)fn);
+	pvar->border[1] = GetIniNum(_T(INISECTION), _T("Border2"), 20, (PTCHAR)fn);
+	pvar->border[2] = GetIniNum(_T(INISECTION), _T("Border3"), 10, (PTCHAR)fn);
+	pvar->border[3] = GetIniNum(_T(INISECTION), _T("Border4"), 0, (PTCHAR)fn);
 }
 
-static void PASCAL TTXWriteIniFile(PCHAR fn, PTTSet ts)
+static void PASCAL TTXWriteIniFile(TT_LPTCSTR fn, PTTSet ts)
 {
 	(pvar->origWriteIniFile)(fn, ts);
 
-	WriteIniOnOff(INISECTION, "EnableOnOff", pvar->enableOnOff, FALSE, fn);
-	WriteIniOnOff(INISECTION, "NowTimeMode", pvar->nowTimeMode, FALSE, fn);
-	WriteIniOnOff(INISECTION, "ResetStart", pvar->resetStart, FALSE, fn);
-	WriteIniOnOff(INISECTION, "ConnectStart", pvar->connectStart, FALSE, fn);
-	WriteIniOnOff(INISECTION, "DisconnectStop", pvar->disconnectStop, FALSE, fn);
+	WriteIniOnOff(_T(INISECTION), _T("EnableOnOff"), pvar->enableOnOff, FALSE, (PTCHAR)fn);
+	WriteIniOnOff(_T(INISECTION), _T("NowTimeMode"), pvar->nowTimeMode, FALSE, (PTCHAR)fn);
+	WriteIniOnOff(_T(INISECTION), _T("ResetStart"), pvar->resetStart, FALSE, (PTCHAR)fn);
+	WriteIniOnOff(_T(INISECTION), _T("ConnectStart"), pvar->connectStart, FALSE, (PTCHAR)fn);
+	WriteIniOnOff(_T(INISECTION), _T("DisconnectStop"), pvar->disconnectStop, FALSE, (PTCHAR)fn);
 
-	WriteIniNum(INISECTION, "Border1", pvar->border[0], FALSE, fn);
-	WriteIniNum(INISECTION, "Border2", pvar->border[1], FALSE, fn);
-	WriteIniNum(INISECTION, "Border3", pvar->border[2], FALSE, fn);
-	WriteIniNum(INISECTION, "Border4", pvar->border[3], FALSE, fn);
+	WriteIniNum(_T(INISECTION), _T("Border1"), pvar->border[0], FALSE, (PTCHAR)fn);
+	WriteIniNum(_T(INISECTION), _T("Border2"), pvar->border[1], FALSE, (PTCHAR)fn);
+	WriteIniNum(_T(INISECTION), _T("Border3"), pvar->border[2], FALSE, (PTCHAR)fn);
+	WriteIniNum(_T(INISECTION), _T("Border4"), pvar->border[3], FALSE, (PTCHAR)fn);
 }
 
-static void PASCAL TTXParseParam(PCHAR Param, PTTSet ts, PCHAR DDETopic)
+static void PASCAL TTXParseParam(TT_LPTSTR Param, PTTSet ts, PCHAR DDETopic)
 {
-	char buf[MAX_PATH + 20];
-	PCHAR next;
+	TCHAR buf[MAX_PATH + 20];
+	PTCHAR next;
 
 	(pvar->origParseParam)(Param, ts, DDETopic);
 
 	next = Param;
-	while (next = TTXGetParam(buf, sizeof(buf), next))
+	while (next = TTXGetParam(buf, sizeof(buf)/sizeof(buf[0]), next))
 	{
-		if (_strnicmp(buf, "/F=", 3) == 0)
+		if (_tcsnicmp(buf, _T("/F="), 3) == 0)
 		{
 			pvar->skip = TRUE;
 			TTXReadIniFile(&buf[3], ts);
@@ -374,14 +376,14 @@ static void PASCAL TTXGetSetupHooks(TTXSetupHooks *hooks)
 static void UpdateMenuBar(HMENU hmenu, UINT uid, BOOL enable)
 {
 	UINT lang;
-	LPSTR s;
+	LPTSTR s;
 
 	lang = UILang(pvar->ts->UILanguageFile);
 
 	RemoveMenu(hmenu, uid, MF_BYCOMMAND);
 	if (pvar->enableOnOff)
 	{
-		s = (lang == 2) ? "タイマ(&T)" : "&Timer";
+		s = (lang == 2) ? _T("タイマ(&T)") : _T("&Timer");
 		AppendMenu(hmenu, MF_BYPOSITION, TTXMenuID(ID_MENUITEM), s);
 	}
 }
@@ -391,7 +393,7 @@ static void PASCAL TTXModifyMenu(HMENU menu)
 	MENUITEMINFO mii;
 	UINT flag;
 	UINT lang;
-	LPSTR s;
+	LPTSTR s;
 
 	lang = UILang(pvar->ts->UILanguageFile);
 
@@ -401,23 +403,23 @@ static void PASCAL TTXModifyMenu(HMENU menu)
 	mii.hSubMenu = pvar->DurationMenu;
 	mii.fMask = MIIM_ID | MIIM_STRING | MIIM_SUBMENU;
 	mii.wID = TTXMenuID(ID_MENUITEM9);
-	s = (lang == 2) ? "経過時間(&D)" : "&Duration";
+	s = (lang == 2) ? _T("経過時間(&D)") : _T("&Duration");
 	mii.dwTypeData = s;
 	InsertMenuItem(GetSubMenu(menu, ID_CONTROL), ID_CONTROL_MACRO, FALSE, &mii);
 
 	flag = MF_BYCOMMAND | MF_STRING | MF_ENABLED;
-	s = (lang == 2) ? "タイマ接続開始(&C)" : "&Connent start timer";
+	s = (lang == 2) ? _T("タイマ接続開始(&C)") : _T("&Connent start timer");
 	AppendMenu(pvar->DurationMenu, flag, TTXMenuID(ID_MENUITEM1), s);
-	s = (lang == 2) ? "タイマ切断停止(&D)" : "&Disconnent stop timer";
+	s = (lang == 2) ? _T("タイマ切断停止(&D)") : _T("&Disconnent stop timer");
 	AppendMenu(pvar->DurationMenu, flag, TTXMenuID(ID_MENUITEM2), s);
-	s = (lang == 2) ? "タイマリセット開始(&R)" : "&Reset start timer";
+	s = (lang == 2) ? _T("タイマリセット開始(&R)") : _T("&Reset start timer");
 	AppendMenu(pvar->DurationMenu, flag, TTXMenuID(ID_MENUITEM3), s);
-	s = (lang == 2) ? "時刻表示(&M)" : "Now time &mode";
+	s = (lang == 2) ? _T("時刻表示(&M)") : _T("Now time &mode");
 	AppendMenu(pvar->DurationMenu, flag, TTXMenuID(ID_MENUITEM4), s);
-	s = (lang == 2) ? "開始/停止メニュー(&O)" : "&On/Off Menu";
+	s = (lang == 2) ? _T("開始/停止メニュー(&O)") : _T("&On/Off Menu");
 	AppendMenu(pvar->DurationMenu, flag, TTXMenuID(ID_MENUITEM5), s);
 	AppendMenu(pvar->DurationMenu, MF_SEPARATOR, 0, NULL);
-	s = (lang == 2) ? "タイマクリア(&C)" : "&Clear timer";
+	s = (lang == 2) ? _T("タイマクリア(&C)") : _T("&Clear timer");
 	AppendMenu(pvar->DurationMenu, flag, TTXMenuID(ID_MENUITEM6), s);
 
 	UpdateMenuBar(menu, TTXMenuID(ID_MENUITEM), pvar->enableOnOff);
@@ -536,7 +538,7 @@ BOOL __declspec(dllexport) PASCAL FAR TTXBind(WORD Version, TTXExports *exports)
 	/* do version checking if necessary */
 	/* if (Version!=TTVERSION) return FALSE; */
 
-	if (TTXIgnore(ORDER, INISECTION, 0))
+	if (TTXIgnore(ORDER, _T(INISECTION), 0))
 		return TRUE;
 
 	if (size > exports->size)
@@ -563,7 +565,7 @@ BOOL WINAPI DllMain(HANDLE hInstance,
 		break;
 	case DLL_PROCESS_ATTACH:
 		/* do process initialization */
-		DoCover_IsDebuggerPresent();
+		TTX_DLL_PROCESS_ATTACH();
 		hInst = hInstance;
 		pvar = &InstVar;
 		break;

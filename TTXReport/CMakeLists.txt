@@ -12,6 +12,8 @@ set(SRC
   resource.h
   ../common/ttxcommon.h
   ../common/ttxcommon.c
+  ../common/stringlist.h
+  ../common/stringlist.c
   verinfo.h
   ttxreport.c
   ttxreport.rc

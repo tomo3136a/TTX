@@ -10,8 +10,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <tchar.h>
 
-#include "compat_w95.h"
 #include "ttxcommon.h"
 
 #define _TTX_VERSION_SUPPORT
@@ -82,28 +82,29 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 
 ///////////////////////////////////////////////////////////////
 
-static void PASCAL TTXReadIniFile(PCHAR fn, PTTSet ts)
+static void PASCAL TTXReadIniFile(TT_LPTCSTR fn, PTTSet ts)
 {
-	char buf[16];
+	TCHAR buf[16];
 
 	if (!pvar->skip)
 		(pvar->origReadIniFile)(fn, ts);
 
-	GetPrivateProfileString(INISECTION, "ReconnectWait", "", buf, sizeof(buf), fn);
-	pvar->ReconnectWait = atoi(buf);
+	GetPrivateProfileString(_T(INISECTION), _T("ReconnectWait"), _T(""), 
+		buf, sizeof(buf)/sizeof(buf[0]), fn);
+	pvar->ReconnectWait = _tstoi(buf);
 }
 
-static void PASCAL TTXParseParam(PCHAR Param, PTTSet ts, PCHAR DDETopic)
+static void PASCAL TTXParseParam(PTCHAR Param, PTTSet ts, PCHAR DDETopic)
 {
-	char buf[MAX_PATH + 20];
-	PCHAR next;
+	TCHAR buf[MAX_PATH + 20];
+	PTCHAR next;
 
 	(pvar->origParseParam)(Param, ts, DDETopic);
 
 	next = Param;
-	while (next = TTXGetParam(buf, sizeof(buf), next))
+	while (next = TTXGetParam(buf, sizeof(buf)/sizeof(buf[0]), next))
 	{
-		if (_strnicmp(buf, "/F=", 3) == 0)
+		if (_tcsnicmp(buf, _T("/F="), 3) == 0)
 		{
 			pvar->skip = TRUE;
 			TTXReadIniFile(&buf[3], ts);
@@ -150,7 +151,7 @@ void DisplayReconnect()
 		_snprintf_s(buf, sizeof(buf), _TRUNCATE, "%s", pvar->ts->HostName);
 	}
 	s = (lang == 2) ? "ÄÚ‘±" : "reconnect";
-	MessageBox(pvar->cv->HWin, buf, s, MB_OK);
+	MessageBoxA(pvar->cv->HWin, buf, s, MB_OK);
 }
 
 static void PASCAL TTXOpenTCP(TTXSockHooks *hooks)
@@ -217,13 +218,13 @@ static void PASCAL TTXCloseFile(TTXFileHooks *hooks)
 static void PASCAL TTXModifyMenu(HMENU menu)
 {
 	UINT lang;
-	LPSTR s;
+	LPTSTR s;
 
 	lang = UILang(pvar->ts->UILanguageFile);
 
 	pvar->FileMenu = GetSubMenu(menu, ID_FILE);
 
-	s = (lang == 2) ? "ÄÚ‘±(&F)..." : "reconnect...";
+	s = (lang == 2) ? _T("ÄÚ‘±(&F)...") : _T("reconnect...");
 	InsertMenu(pvar->FileMenu, 3, MF_BYPOSITION, TTXMenuID(ID_MENUITEM), s);
 }
 
@@ -262,7 +263,7 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 // 	 printf("TTXEnd %d\n", ORDER);
 // }
 
-// static void PASCAL TTXSetCommandLine(PCHAR cmd, int cmdlen, PGetHNRec rec)
+// static void PASCAL TTXSetCommandLine(TT_LPTSTR cmd, int cmdlen, PGetHNRec rec)
 // {
 // 	 printf("TTXSetCommandLine %d\n", ORDER);
 // }
@@ -297,7 +298,7 @@ BOOL __declspec(dllexport) PASCAL FAR TTXBind(WORD Version, TTXExports *exports)
 	/* do version checking if necessary */
 	/* if (Version!=TTVERSION) return FALSE; */
 
-	if (TTXIgnore(ORDER, INISECTION, 0))
+	if (TTXIgnore(ORDER, _T(INISECTION), 0))
 		return TRUE;
 
 	if (size > exports->size)
@@ -324,7 +325,7 @@ BOOL WINAPI DllMain(HANDLE hInstance,
 		break;
 	case DLL_PROCESS_ATTACH:
 		/* do process initialization */
-		DoCover_IsDebuggerPresent();
+		TTX_DLL_PROCESS_ATTACH();
 		hInst = hInstance;
 		pvar = &InstVar;
 		break;

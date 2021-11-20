@@ -13,9 +13,10 @@
 #include <string.h>
 #include <time.h>
 #include <commctrl.h>
+#include <tchar.h>
 
-#include "compat_w95.h"
 #include "ttxcommon.h"
+#include "stringlist.h"
 #include "resource.h"
 
 #define ORDER 6060
@@ -79,27 +80,27 @@ typedef struct
 	int report_win_pos;
 
 	//report font
-	char report_font[LF_FACESIZE];
+	TCHAR report_font[LF_FACESIZE];
 	POINT report_font_size;
 	int report_font_charset;
 
 	//message area
-	char report_title[TitleBuffSize];
-	char report_note_path[MAXPATHLEN];
+	TCHAR report_title[TitleBuffSize];
+	TCHAR report_note_path[MAXPATHLEN];
 
 	//report clear
-	char report_clear[TitleBuffSize];
+	CHAR report_clear[TitleBuffSize];
 	BOOL ClearReq;
 
 	//ピックアップ表示
 	TInfoCmd report_rule[REPORT_RULE_NUM];
 	int report_rule_num;
-	char info_seq;
-	char info_test_path[MAXPATHLEN];
+	TCHAR info_seq;
+	TCHAR info_test_path[MAXPATHLEN];
 	PStringList info_test;
 
 	//テスト表示
-	char test_file[4][MAXPATHLEN];
+	TCHAR test_file[4][MAXPATHLEN];
 	PStringList test[4];
 
 	//マッチカウンタ
@@ -108,7 +109,7 @@ typedef struct
 	int info_cnt_ng;
 
 	//結果出力
-	char result_file[MAXPATHLEN];
+	TCHAR result_file[MAXPATHLEN];
 
 } TInstVar;
 
@@ -180,13 +181,13 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 
 ///////////////////////////////////////////////////////////////
 
-static void PASCAL TTXReadIniFile(PCHAR fn, PTTSet ts)
+static void PASCAL TTXReadIniFile(TT_LPTCSTR fn, PTTSet ts)
 {
-	char name[20];
-	char *buf;
+	TCHAR name[20];
+	LPTSTR buf;
 	int buf_sz;
-	PCHAR ctx;
-	PCHAR p;
+	LPTSTR ctx;
+	LPTSTR p;
 	int seq, nxt, cmd, sub, sz;
 	int i;
 
@@ -196,67 +197,75 @@ static void PASCAL TTXReadIniFile(PCHAR fn, PTTSet ts)
 	buf = NULL;
 
 	//auto start
-	pvar->ReportAutoStart = GetIniOnOff(INISECTION, "ReportAutoStart", FALSE, fn);
+	pvar->ReportAutoStart = GetIniOnOff(_T(INISECTION), _T("ReportAutoStart"), FALSE, fn);
 
 	//report window size
-	GetIniString(INISECTION, "ReportSize", "", &buf, 128, 64, fn);
-	if (buf[0])
+	buf_sz = GetIniString(_T(INISECTION), _T("ReportSize"), _T(""), &buf, 128, 64, fn);
+	if (buf_sz)
 	{
-		p = strtok_s(buf, ", ", &ctx);
+		p = _tcstok_s(buf, _T(", "), &ctx);
 		if (p)
-			pvar->report_win_size.x = atoi(p);
-		p = strtok_s(NULL, ", ", &ctx);
+			pvar->report_win_size.x = _tstoi(p);
+		p = _tcstok_s(NULL, _T(", "), &ctx);
 		if (p)
-			pvar->report_win_size.y = atoi(p);
+			pvar->report_win_size.y = _tstoi(p);
 	}
 	//report window font
-	GetIniString(INISECTION, "ReportFont", "", &buf, 128, 64, fn);
-	if (buf[0])
+	buf_sz = GetIniString(_T(INISECTION), _T("ReportFont"), _T(""), &buf, 128, 64, fn);
+	if (buf_sz)
 	{
-		p = strtok_s(buf, ",", &ctx);
+		p = _tcstok_s(buf, _T(","), &ctx);
 		if (p)
-			strcpy_s(pvar->report_font, LF_FACESIZE, p);
-		p = strtok_s(NULL, ", ", &ctx);
+			_tcscpy_s(pvar->report_font, LF_FACESIZE, p);
+		p = _tcstok_s(NULL, _T(", "), &ctx);
 		if (p)
-			pvar->report_font_size.y = atoi(p);
-		p = strtok_s(NULL, ", ", &ctx);
+			pvar->report_font_size.y = _tstoi(p);
+		p = _tcstok_s(NULL, _T(", "), &ctx);
 		if (p)
-			pvar->report_font_charset = atoi(p);
+			pvar->report_font_charset = _tstoi(p);
 	}
 	//report window title
-	GetPrivateProfileString(INISECTION, "ReportTitle", "",
-							pvar->report_title, sizeof(pvar->report_title), fn);
-	GetPrivateProfileString(INISECTION, "ReportNote", "",
-							pvar->report_note_path, sizeof(pvar->report_note_path), fn);
+	GetPrivateProfileString(_T(INISECTION), _T("ReportTitle"), _T(""),
+							pvar->report_title, sizeof(pvar->report_title)/sizeof(TCHAR), fn);
+	GetPrivateProfileString(_T(INISECTION), _T("ReportNote"), _T(""),
+							pvar->report_note_path, sizeof(pvar->report_note_path)/sizeof(TCHAR), fn);
 	//test pattern
-	GetPrivateProfileString(INISECTION, "ReportClear", "",
-							pvar->report_clear, sizeof(pvar->report_clear), fn);
-	GetPrivateProfileString(INISECTION, "InfoTest", "",
-							pvar->info_test_path, sizeof(pvar->info_test_path), fn);
+	// GetPrivateProfileString(_T(INISECTION), _T("ReportClear"), _T(""),
+	// 						pvar->report_clear, sizeof(pvar->report_clear)/sizeof(TCHAR), fn);
+	buf_sz = GetIniString(_T(INISECTION), _T("ReportClear"), _T(""), &buf, 128, 64, fn);
+	if (buf_sz)
+	{
+		LPSTR p = toMB(buf);
+		strcpy_s(pvar->report_clear, buf_sz, p);
+		TTXFree(p);
+	}
+
+	GetPrivateProfileString(_T(INISECTION), _T("InfoTest"), _T(""),
+							pvar->info_test_path, sizeof(pvar->info_test_path)/sizeof(TCHAR), fn);
 	//test rule
 	pvar->report_rule_num = 0;
 	for (i = 0; i < REPORT_RULE_NUM; i++)
 	{
-		_snprintf_s(name, sizeof(name), _TRUNCATE, "ReportRule%d", i + 1);
-		buf_sz = GetIniString(INISECTION, name, "", &buf, 128, 64, fn);
+		_sntprintf_s(name, sizeof(name)/sizeof(name[0]), _TRUNCATE, _T("ReportRule%d"), i + 1);
+		GetIniString(_T(INISECTION), name, _T(""), &buf, 128, 64, fn);
 		if (!buf[0])
 			continue;
 		seq = nxt = sub = cmd = 0;
-		p = strtok_s(buf, ", ", &ctx);
+		p = _tcstok_s(buf, _T(", "), &ctx);
 		if (p)
-			seq = atoi(p);
-		p = strtok_s(NULL, ", ", &ctx);
+			seq = _tstoi(p);
+		p = _tcstok_s(NULL, _T(", "), &ctx);
 		if (p)
-			nxt = atoi(p);
-		p = strtok_s(NULL, ", ", &ctx);
+			nxt = _tstoi(p);
+		p = _tcstok_s(NULL, _T(", "), &ctx);
 		if (p)
-			sub = atoi(p);
-		p = strtok_s(NULL, ", ", &ctx);
+			sub = _tstoi(p);
+		p = _tcstok_s(NULL, _T(", "), &ctx);
 		if (p)
-			cmd = atoi(p);
+			cmd = _tstoi(p);
 		if (ctx)
 		{
-			sz = strnlen_s(ctx, buf_sz);
+			sz = _tcscnlen(ctx, buf_sz);
 			if (sz > 0)
 			{
 				pvar->report_rule[i].seq = seq;
@@ -269,9 +278,7 @@ static void PASCAL TTXReadIniFile(PCHAR fn, PTTSet ts)
 					pvar->report_rule[i].ptn = NULL;
 				}
 				sz++;
-				pvar->report_rule[i].ptn = (PCHAR)malloc(sz);
-				memset(pvar->report_rule[i].ptn, 0, sz);
-				strcpy_s(pvar->report_rule[i].ptn, sz, ctx);
+				pvar->report_rule[i].ptn = toMB(ctx);
 				pvar->report_rule_num = i + 1;
 			}
 		}
@@ -279,105 +286,111 @@ static void PASCAL TTXReadIniFile(PCHAR fn, PTTSet ts)
 	//pattern file
 	for (i = 0; i < 4; i++)
 	{
-		_snprintf_s(name, sizeof(name), _TRUNCATE, "InfoTest%d", i + 1);
-		GetPrivateProfileString(INISECTION, name, "",
-								pvar->test_file[i], sizeof(pvar->test_file[i]), fn);
+		_sntprintf_s(name, sizeof(name)/sizeof(name[0]), _TRUNCATE, _T("InfoTest%d"), i + 1);
+		GetPrivateProfileString(_T(INISECTION), name, _T(""),
+								pvar->test_file[i], sizeof(pvar->test_file[i])/sizeof(TCHAR), fn);
 	}
 	//結果ファイル
-	GetPrivateProfileString(INISECTION, "InfoResult", "",
-							pvar->result_file, sizeof(pvar->result_file), fn);
+	GetPrivateProfileString(_T(INISECTION), _T("InfoResult"), _T(""),
+							pvar->result_file, sizeof(pvar->result_file)/sizeof(TCHAR), fn);
 
 	if (buf)
 		free(buf);
 }
 
-static void PASCAL TTXWriteIniFile(PCHAR fn, PTTSet ts)
+static void PASCAL TTXWriteIniFile(TT_LPTCSTR fn, PTTSet ts)
 {
-	char name[20];
-	char *buf;
+	TCHAR name[20];
+	PTCHAR buf;
 	int buf_sz;
 	int i;
+	LPTSTR p;
 
 	(pvar->origWriteIniFile)(fn, ts);
 
 	buf_sz = MAX_PATH;
-	buf = malloc(buf_sz);
+	buf = malloc(buf_sz*sizeof(TCHAR));
 
-	WriteIniOnOff(INISECTION, "ReportAutoStart", pvar->ReportAutoStart, TRUE, fn);
+	WriteIniOnOff(_T(INISECTION), _T("ReportAutoStart"), pvar->ReportAutoStart, TRUE, fn);
 
 	if (pvar->report_win_size.x || pvar->report_win_size.y)
 	{
-		_snprintf_s(buf, buf_sz, _TRUNCATE, "%d,%d",
+		_sntprintf_s(buf, buf_sz, _TRUNCATE, _T("%d,%d"),
 					pvar->report_win_size.x,
 					pvar->report_win_size.y);
-		WritePrivateProfileString(INISECTION, "ReportSize", buf, fn);
+		WritePrivateProfileString(_T(INISECTION), _T("ReportSize"), buf, fn);
 	}
 	if (pvar->report_font[0])
 	{
-		_snprintf_s(buf, buf_sz, _TRUNCATE, "%s,%d,%d",
+		_sntprintf_s(buf, buf_sz, _TRUNCATE, _T("%s,%d,%d"),
 					pvar->report_font,
 					pvar->report_font_size.y,
 					pvar->report_font_charset);
-		WritePrivateProfileString(INISECTION, "ReportFont", buf, fn);
+		WritePrivateProfileString(_T(INISECTION), _T("ReportFont"), buf, fn);
 	}
 	if (pvar->report_title[0])
 	{
-		WritePrivateProfileString(INISECTION, "ReportTitle", pvar->report_title, fn);
+		WritePrivateProfileString(_T(INISECTION), _T("ReportTitle"), pvar->report_title, fn);
 	}
 	if (pvar->report_note_path[0])
 	{
-		WritePrivateProfileString(INISECTION, "ReportNote", pvar->report_note_path, fn);
+		WritePrivateProfileString(_T(INISECTION), _T("ReportNote"), pvar->report_note_path, fn);
 	}
 	if (pvar->report_clear[0])
 	{
-		WritePrivateProfileString(INISECTION, "ReportClear", pvar->report_clear, fn);
+		LPTSTR p;
+		p = toTC(pvar->report_clear);
+		WritePrivateProfileString(_T(INISECTION), _T("ReportClear"), p, fn);
+		TTXFree(p);
 	}
 	if (pvar->info_test_path[0])
 	{
-		WritePrivateProfileString(INISECTION, "InfoTest", pvar->info_test_path, fn);
+		WritePrivateProfileString(_T(INISECTION), _T("InfoTest"), pvar->info_test_path, fn);
 	}
 	for (i = 0; i < REPORT_RULE_NUM; i++)
 	{
 		if (pvar->report_rule[i].ptn && pvar->report_rule[i].ptn[0])
 		{
-			_snprintf_s(name, sizeof(name), _TRUNCATE, "ReportRule%d", i + 1);
-			_snprintf_s(buf, buf_sz, _TRUNCATE, "%d,%d,%d,%d,%s",
+			_sntprintf_s(name, sizeof(name)/sizeof(name[0]), _TRUNCATE, _T("ReportRule%d"), i + 1);
+			p = toTC(pvar->report_rule[i].ptn);
+			_sntprintf_s(buf, buf_sz, _TRUNCATE, _T("%d,%d,%d,%d,%s"),
 						pvar->report_rule[i].seq,
 						pvar->report_rule[i].nxt,
 						pvar->report_rule[i].sub,
 						pvar->report_rule[i].cmd,
-						pvar->report_rule[i].ptn);
-			WritePrivateProfileString(INISECTION, name, buf, fn);
+						p);
+			TTXFree(p);
+			WritePrivateProfileString(_T(INISECTION), name, buf, fn);
 		}
 	}
 	for (i = 0; i < 4; i++)
 	{
 		if (pvar->test_file[i][0])
 		{
-			_snprintf_s(name, sizeof(name), _TRUNCATE, "InfoTest%d", i + 1);
-			WritePrivateProfileString(INISECTION, name, pvar->test_file[i], fn);
+			_sntprintf_s(name, sizeof(name)/sizeof(name[0]), _TRUNCATE, _T("InfoTest%d"), i + 1);
+			WritePrivateProfileString(_T(INISECTION), name, pvar->test_file[i], fn);
 		}
 	}
 	if (pvar->result_file[0])
 	{
-		WritePrivateProfileString(INISECTION, "InfoResult", pvar->result_file, fn);
+		WritePrivateProfileString(_T(INISECTION), _T("InfoResult"), pvar->result_file, fn);
 	}
 
 	if (buf)
 		free(buf);
 }
 
-static void PASCAL TTXParseParam(PCHAR Param, PTTSet ts, PCHAR DDETopic)
+static void PASCAL TTXParseParam(TT_LPTSTR Param, PTTSet ts, PCHAR DDETopic)
 {
-	char buf[MAX_PATH + 20];
-	PCHAR next;
+	TCHAR buf[MAX_PATH + 20];
+	PTCHAR next;
 
 	(pvar->origParseParam)(Param, ts, DDETopic);
 
 	next = Param;
-	while (next = TTXGetParam(buf, sizeof(buf), next))
+	while (next = TTXGetParam(buf, sizeof(buf)/sizeof(buf[0]), next))
 	{
-		if (_strnicmp(buf, "/F=", 3) == 0)
+		if (_tcsnicmp(buf, _T("/F="), 3) == 0)
 		{
 			pvar->skip = TRUE;
 			TTXReadIniFile(&buf[3], ts);
@@ -402,7 +415,7 @@ static void PASCAL TTXGetSetupHooks(TTXSetupHooks *hooks)
 ///////////////////////////////////////////////////////////////
 //メッセージ領域
 
-void SetInfoMsg(HWND hWnd, char *szText, DWORD dwSize)
+void SetInfoMsg(HWND hWnd, LPCTSTR szText, DWORD dwSize)
 {
 	WINDOWINFO wi;
 	RECT rcMsg;
@@ -422,7 +435,7 @@ void SetInfoMsg(HWND hWnd, char *szText, DWORD dwSize)
 	PAINTSTRUCT ps;
 	HDC hDC = BeginPaint(hTitle, &ps);
 	hFontOld = SelectObject(hDC, hFont);
-	dy = DrawTextA(hDC, szText, dwSize, &rcMsg,
+	dy = DrawText(hDC, szText, dwSize, &rcMsg,
 				   DT_LEFT | DT_WORDBREAK | DT_NOPREFIX | DT_EXPANDTABS | DT_CALCRECT);
 	SelectObject(hDC, hFontOld);
 	EndPaint(hTitle, &ps);
@@ -448,25 +461,29 @@ void SetInfoMsg(HWND hWnd, char *szText, DWORD dwSize)
 
 VOID UpdateReportMsg(HWND hWnd)
 {
-	char tmp[1024];
-	char path[MAX_PATH];
+	TCHAR tmp[1024];
+	TCHAR path[MAX_PATH];
 	DWORD dwSize;
 	HANDLE hFile;
+	LPTSTR p;
 	int sz;
 
-	memset(tmp, 0, sizeof(tmp) / sizeof(tmp[0]));
+	memset(tmp, 0, sizeof(tmp));
 	if (pvar->report_title[0])
 	{
-		strncpy_s(tmp, 1024, pvar->report_title, _TRUNCATE);
-		strncat_s(tmp, 1024, "\r\n", _TRUNCATE);
+		_tcsncpy_s(tmp, 1024, pvar->report_title, _TRUNCATE);
+		_tcsncat_s(tmp, 1024, _T("\r\n"), _TRUNCATE);
 	}
-	GetAbsolutePath(path, sizeof(path), pvar->report_note_path, pvar->ts->SetupFName);
+	p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+	GetAbsolutePath(path, sizeof(path)/sizeof(path[0]), 
+		pvar->report_note_path, p);
+	TTXFree(p);
 	hFile = CreateFile(path, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
 	if (hFile != INVALID_HANDLE_VALUE)
 	{
-		sz = strnlen_s(tmp, _TRUNCATE);
+		sz = _tcsnlen(tmp, _TRUNCATE);
 		if (ReadFile(hFile, tmp + sz, 1024 - sz, &dwSize, NULL))
-			tmp[sz + dwSize - 1] = '\0';
+			tmp[sz + dwSize - 1] = _T('\0');
 		CloseHandle(hFile);
 	}
 
@@ -490,8 +507,8 @@ VOID LoadInfoTest()
 
 void EditInfoTest()
 {
-	char command[MAX_PATH];
-	char *file;
+	TCHAR command[MAX_PATH];
+	LPTSTR file;
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
 
@@ -503,14 +520,17 @@ void EditInfoTest()
 	GetStartupInfo(&si);
 	memset(&pi, 0, sizeof(pi));
 
-	_snprintf_s(command, sizeof(command), _TRUNCATE, "%s %s", "notepad.exe", file);
+	_sntprintf_s(command, sizeof(command)/sizeof(command[0]), 
+		_TRUNCATE, _T("%s %s"), _T("notepad.exe"), file);
 
 	if (CreateProcess(NULL, command, NULL, NULL, FALSE, 0,
 					  NULL, NULL, &si, &pi) == 0)
 	{
-		char buf[80];
-		_snprintf_s(buf, sizeof(buf), _TRUNCATE, "Can't open test file. (%d)", GetLastError());
-		MessageBox(0, buf, "ERROR", MB_OK | MB_ICONWARNING);
+		TCHAR buf[80];
+		_sntprintf_s(buf, sizeof(buf)/sizeof(buf[0]), 
+			_TRUNCATE, _T("Can't open test file. (%d)"), 
+			GetLastError());
+		MessageBox(0, buf, _T("ERROR"), MB_OK | MB_ICONWARNING);
 	}
 }
 
@@ -519,7 +539,7 @@ void EditInfoTest()
 
 void ClearReportLog()
 {
-	SetDlgItemText(report_dialog, IDC_LOG, "");
+	SetDlgItemText(report_dialog, IDC_LOG, _T(""));
 	pvar->info_seq = 0;
 	pvar->info_cnt = 0;
 	pvar->info_cnt_ok = 0;
@@ -527,7 +547,7 @@ void ClearReportLog()
 	pvar->ClearReq = FALSE;
 }
 
-void SetInfoLog(char *szText, DWORD dwSize)
+void SetInfoLog(LPTSTR szText, DWORD dwSize)
 {
 	HWND hWnd = GetDlgItem(report_dialog, IDC_LOG);
 	if (pvar->ClearReq)
@@ -548,9 +568,9 @@ void SetInfoLog(char *szText, DWORD dwSize)
 	}
 }
 
-void SaveInfoLog(LPSTR szFile)
+void SaveInfoLog(LPTSTR szFile)
 {
-	char buf[1024];
+	TCHAR buf[1024];
 	time_t time_local;
 	struct tm tm_local;
 	HANDLE hFile;
@@ -568,19 +588,21 @@ void SaveInfoLog(LPSTR szFile)
 	SetFilePointer(hFile, 0, NULL, FILE_END);
 
 	GetDlgItemText(report_dialog, IDC_LOG, buf, 1024);
-	sz = strnlen_s(buf, _TRUNCATE);
+	sz = _tcsnlen(buf, _TRUNCATE);
 	if (sz)
 		WriteFile(hFile, buf, sz, &dwSize, NULL);
 
 	GetDlgItemText(report_dialog, IDC_STATUS, buf, 1024);
-	sz = strnlen_s(buf, _TRUNCATE);
+	sz = _tcsnlen(buf, _TRUNCATE);
 	if (sz)
 		WriteFile(hFile, buf, sz, &dwSize, NULL);
 
 	time(&time_local);
 	localtime_s(&tm_local, &time_local);
-	strftime(buf, sizeof(buf), "\r\n%Y-%m-%d %H:%M:%S\r\n\r\n", &tm_local);
-	WriteFile(hFile, buf, strnlen_s(buf, _TRUNCATE), &dwSize, NULL);
+	_tcsftime(buf, sizeof(buf)/sizeof(buf[0]), 
+		_T("\r\n%Y-%m-%d %H:%M:%S\r\n\r\n"), &tm_local);
+	WriteFile(hFile, buf, _tcsnlen(buf, _TRUNCATE), 
+		&dwSize, NULL);
 
 	CloseHandle(hFile);
 }
@@ -590,12 +612,13 @@ void SaveInfoLog(LPSTR szFile)
 
 void SetInfoStatus()
 {
-	char tmp[256];
+	TCHAR tmp[256];
 	if (pvar->ChangeReport)
 	{
 		HWND hWnd = GetDlgItem(report_dialog, IDC_STATUS);
-		_snprintf_s(tmp, sizeof(tmp), _TRUNCATE, "SEQ:%d  CNT:%d  OK:%d  NG:%d",
-					pvar->info_seq, pvar->info_cnt, pvar->info_cnt_ok, pvar->info_cnt_ng);
+		_sntprintf_s(tmp, sizeof(tmp)/sizeof(tmp[0]), _TRUNCATE, 
+			_T("SEQ:%d  CNT:%d  OK:%d  NG:%d"),	
+			pvar->info_seq, pvar->info_cnt, pvar->info_cnt_ok, pvar->info_cnt_ng);
 		SetDlgItemText(report_dialog, IDC_STATUS, tmp);
 	}
 }
@@ -704,6 +727,7 @@ void ttx_recv(char *rstr, int rcnt)
 	static unsigned int blen;
 	int i, j;
 	char ch;
+	LPTSTR p;
 
 	for (i = 0; i < rcnt; i++)
 	{
@@ -753,7 +777,9 @@ void ttx_recv(char *rstr, int rcnt)
 				buff[blen++] = '\r';
 				buff[blen++] = '\n';
 				buff[blen] = '\0';
-				SetInfoLog(buff, blen);
+				p = toTC(buff);
+				SetInfoLog(p, blen);
+				TTXFree(p);
 			}
 			blen = 0;
 			continue;
@@ -808,7 +834,9 @@ void ttx_recv(char *rstr, int rcnt)
 					buff[blen++] = '\r';
 					buff[blen++] = '\n';
 					buff[blen] = '\0';
-					SetInfoLog(buff, blen);
+					p = toTC(buff);
+					SetInfoLog(p, blen);
+					TTXFree(p);
 				}
 
 				if (cmd & INFO_CMD_CLEAR) //clear
@@ -892,8 +920,9 @@ static void PASCAL TTXCloseFile(TTXFileHooks *hooks)
 //
 static LRESULT CALLBACK ReportSettingProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	char *buf;
+	PTCHAR buf;
 	int buf_sz;
+	LPTSTR p;
 
 	buf_sz = MAX_PATH;
 
@@ -907,7 +936,7 @@ static LRESULT CALLBACK ReportSettingProc(HWND dlg, UINT msg, WPARAM wParam, LPA
 		SetDlgItemInt(dlg, IDC_WND_POS, pvar->report_win_pos, FALSE);
 		SendMessage(GetDlgItem(dlg, IDC_START), BM_SETCHECK,
 					pvar->ReportAutoStart ? BST_CHECKED : BST_UNCHECKED, 0);
-		SetDlgItemText(dlg, IDC_CLEAR, pvar->report_clear);
+		SetDlgItemTextA(dlg, IDC_CLEAR, pvar->report_clear);
 		SetDlgItemText(dlg, IDC_PATH7, pvar->info_test_path);
 		SetDlgItemText(dlg, IDC_PATH1, pvar->test_file[0]);
 		SetDlgItemText(dlg, IDC_PATH2, pvar->test_file[1]);
@@ -921,46 +950,60 @@ static LRESULT CALLBACK ReportSettingProc(HWND dlg, UINT msg, WPARAM wParam, LPA
 		switch (LOWORD(wParam))
 		{
 		case IDC_MSG_BTN:
-			buf = malloc(buf_sz);
+			p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+			buf = malloc(buf_sz*sizeof(TCHAR));
 			GetDlgItemText(dlg, IDC_MSG_PATH, buf, buf_sz);
-			OpenFileDlg(dlg, IDC_MSG_PATH, "説明ファイル", "", buf, pvar->ts->SetupFName, 1);
+			OpenFileDlg(dlg, IDC_MSG_PATH, _T("説明ファイル"), _T(""), buf, p, 1);
 			free(buf);
+			TTXFree(p);
 			return TRUE;
 		case IDC_BUTTON7:
-			buf = malloc(buf_sz);
+			p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+			buf = malloc(buf_sz*sizeof(TCHAR));
 			GetDlgItemText(dlg, IDC_PATH7, buf, buf_sz);
-			OpenFileDlg(dlg, IDC_PATH7, "パターンファイル", "", buf, pvar->ts->SetupFName, 1);
+			OpenFileDlg(dlg, IDC_PATH7, _T("パターンファイル"), _T(""), buf, p, 1);
 			free(buf);
+			TTXFree(p);
 			return TRUE;
 		case IDC_BUTTON1:
-			buf = malloc(buf_sz);
+			p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+			buf = malloc(buf_sz*sizeof(TCHAR));
 			GetDlgItemText(dlg, IDC_PATH1, buf, buf_sz);
-			OpenFileDlg(dlg, IDC_PATH1, "パターンファイル1", "", buf, pvar->ts->SetupFName, 1);
+			OpenFileDlg(dlg, IDC_PATH1, _T("パターンファイル1"), _T(""), buf, p, 1);
 			free(buf);
+			TTXFree(p);
 			return TRUE;
 		case IDC_BUTTON2:
-			buf = malloc(buf_sz);
+			p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+			buf = malloc(buf_sz*sizeof(TCHAR));
 			GetDlgItemText(dlg, IDC_PATH2, buf, buf_sz);
-			OpenFileDlg(dlg, IDC_PATH2, "パターンファイル2", "", buf, pvar->ts->SetupFName, 1);
+			OpenFileDlg(dlg, IDC_PATH2, _T("パターンファイル2"), _T(""), buf, p, 1);
 			free(buf);
+			TTXFree(p);
 			return TRUE;
 		case IDC_BUTTON3:
-			buf = malloc(buf_sz);
+			p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+			buf = malloc(buf_sz*sizeof(TCHAR));
 			GetDlgItemText(dlg, IDC_PATH3, buf, buf_sz);
-			OpenFileDlg(dlg, IDC_PATH3, "パターンファイル3", "", buf, pvar->ts->SetupFName, 1);
+			OpenFileDlg(dlg, IDC_PATH3, _T("パターンファイル3"), _T(""), buf, p, 1);
 			free(buf);
+			TTXFree(p);
 			return TRUE;
 		case IDC_BUTTON4:
-			buf = malloc(buf_sz);
+			p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+			buf = malloc(buf_sz*sizeof(TCHAR));
 			GetDlgItemText(dlg, IDC_PATH4, buf, buf_sz);
-			OpenFileDlg(dlg, IDC_PATH4, "パターンファイル4", "", buf, pvar->ts->SetupFName, 1);
+			OpenFileDlg(dlg, IDC_PATH4, _T("パターンファイル4"), _T(""), buf, p, 1);
 			free(buf);
+			TTXFree(p);
 			return TRUE;
 		case IDC_BUTTON6:
-			buf = malloc(buf_sz);
+			p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+			buf = malloc(buf_sz*sizeof(TCHAR));
 			GetDlgItemText(dlg, IDC_PATH6, buf, buf_sz);
-			OpenFileDlg(dlg, IDC_PATH6, "結果出力ファイル", "", buf, pvar->ts->SetupFName, 1);
+			OpenFileDlg(dlg, IDC_PATH6, _T("結果出力ファイル"), _T(""), buf, p, 1);
 			free(buf);
+			TTXFree(p);
 			return TRUE;
 
 		case IDOK:
@@ -973,7 +1016,7 @@ static LRESULT CALLBACK ReportSettingProc(HWND dlg, UINT msg, WPARAM wParam, LPA
 			GetDlgItemText(dlg, IDC_PATH2, pvar->test_file[1], sizeof(pvar->test_file[1]));
 			GetDlgItemText(dlg, IDC_PATH3, pvar->test_file[2], sizeof(pvar->test_file[2]));
 			GetDlgItemText(dlg, IDC_PATH4, pvar->test_file[3], sizeof(pvar->test_file[3]));
-			GetDlgItemText(dlg, IDC_CLEAR, pvar->report_clear, sizeof(pvar->report_clear));
+			GetDlgItemTextA(dlg, IDC_CLEAR, pvar->report_clear, sizeof(pvar->report_clear));
 			pvar->ReportAutoStart = IsDlgButtonChecked(dlg, IDC_START) == BST_CHECKED;
 			GetDlgItemText(dlg, IDC_PATH6, pvar->result_file, sizeof(pvar->result_file));
 			GetDlgItemText(dlg, IDC_PATH7, pvar->info_test_path, sizeof(pvar->info_test_path));
@@ -997,23 +1040,23 @@ static void PASCAL TTXModifyMenu(HMENU menu)
 {
 	UINT flag;
 	UINT lang;
-	LPSTR s;
+	LPTSTR s;
 
 	flag = MF_ENABLED;
 	lang = UILang(pvar->ts->UILanguageFile);
 
 	pvar->SetupMenu = GetSubMenu(menu, ID_SETUP);
 	AppendMenu(pvar->SetupMenu, MF_SEPARATOR, 0, NULL);
-	s = (lang == 2) ? "受信レポート(&Q)..." : "Report setup...";
+	s = (lang == 2) ? _T("受信レポート(&Q)...") : _T("Report setup...");
 	AppendMenu(pvar->SetupMenu, flag, TTXMenuID(ID_MENUITEM3), s);
 
 	pvar->ControlMenu = GetSubMenu(menu, ID_CONTROL);
 	AppendMenu(pvar->ControlMenu, MF_SEPARATOR, 0, NULL);
-	s = (lang == 2) ? "受信レポート(&V)..." : "&View Report";
+	s = (lang == 2) ? _T("受信レポート(&V)...") : _T("&View Report");
 	AppendMenu(pvar->ControlMenu, flag, TTXMenuID(ID_MENUITEM), s);
-	s = (lang == 2) ? "受信レポートクリア(&L)..." : "C&lear Report";
+	s = (lang == 2) ? _T("受信レポートクリア(&L)...") : _T("C&lear Report");
 	AppendMenu(pvar->ControlMenu, flag, TTXMenuID(ID_MENUITEM1), s);
-	s = (lang == 2) ? "テストパターン編集..." : "Edit &Test Pattern";
+	s = (lang == 2) ? _T("テストパターン編集...") : _T("Edit &Test Pattern");
 	AppendMenu(pvar->ControlMenu, flag, TTXMenuID(ID_MENUITEM2), s);
 }
 
@@ -1066,7 +1109,7 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 		case IDCANCEL:
 			break;
 		case -1:
-			MessageBox(hWin, "Error", "Can't display dialog box.",
+			MessageBox(hWin, _T("Error"), _T("Can't display dialog box."),
 					   MB_OK | MB_ICONEXCLAMATION);
 			break;
 		}
@@ -1115,7 +1158,7 @@ BOOL __declspec(dllexport) PASCAL TTXBind(WORD Version, TTXExports *exports)
 	/* do version checking if necessary */
 	/* if (Version!=TTVERSION) return FALSE; */
 
-	if (TTXIgnore(ORDER, INISECTION, 0))
+	if (TTXIgnore(ORDER, _T(INISECTION), 0))
 		return TRUE;
 
 	if (size > exports->size)
@@ -1142,7 +1185,7 @@ BOOL WINAPI DllMain(HANDLE hInstance,
 		break;
 	case DLL_PROCESS_ATTACH:
 		/* do process initialization */
-		DoCover_IsDebuggerPresent();
+		TTX_DLL_PROCESS_ATTACH();
 		hInst = hInstance;
 		pvar = &InstVar;
 		break;

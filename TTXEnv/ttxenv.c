@@ -6,13 +6,14 @@
 #include "teraterm.h"
 #include "tttypes.h"
 #include "ttplugin.h"
+#include "tttypes_key.h"
 #include "tt_res.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <tchar.h>
 
-#include "compat_w95.h"
 #include "ttxcommon.h"
 #include "resource.h"
 
@@ -49,9 +50,9 @@ typedef struct
 	BOOL EnableEnv;
 	BOOL OverEnv;
 	BOOL UseKeyCnf;
-	char SetupFile[MAX_PATH];
-	char SetupDir[MAX_PATH];
-	char ttpath[MAX_PATH];
+	TCHAR SetupFile[MAX_PATH];
+	TCHAR SetupDir[MAX_PATH];
+	TCHAR ttpath[MAX_PATH];
 
 } TInstVar;
 
@@ -105,68 +106,77 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 
 ///////////////////////////////////////////////////////////////
 
-static void PASCAL TTXReadIniFile(PCHAR fn, PTTSet ts)
+static void PASCAL TTXReadIniFile(TT_LPTCSTR fn, PTTSet ts)
 {
-	char buf[MAX_PATH];
+	TCHAR buf[MAX_PATH];
 
 	if (!pvar->skip)
 		(pvar->origReadIniFile)(fn, ts);
 
-	GetPrivateProfileString(INISECTION, "KeyCnf", "", buf, sizeof(buf), fn);
+	GetPrivateProfileString(_T(INISECTION), _T("KeyCnf"), _T(""), 
+		buf, sizeof(buf)/sizeof(buf[0]), (LPCTSTR)fn);
 	pvar->UseKeyCnf = (buf[0]) ? TRUE : FALSE;
 	if (pvar->UseKeyCnf)
 	{
-		GetAbsolutePath(pvar->ts->KeyCnfFN, sizeof(pvar->ts->KeyCnfFN), buf, fn);
+		//GetAbsolutePath(pvar->ts->KeyCnfFN, sizeof(pvar->ts->KeyCnfFN), buf, fn);
+		GetAbsolutePath(
+			(PTCHAR)(pvar->ts->KeyCnfFNW), 
+			_tcslen(pvar->ts->KeyCnfFNW), 
+			buf, 
+			(PTCHAR)fn);
 		PostMessage(pvar->cv->HWin, WM_USER_ACCELCOMMAND, IdCmdLoadKeyMap, 0);
 	}
 
-	pvar->EnableEnv = GetIniOnOff(INISECTION, "EnableEnv", FALSE, fn);
+	pvar->EnableEnv = GetIniOnOff(_T(INISECTION), _T("EnableEnv"), FALSE, (PTCHAR)fn);
 	if (!pvar->OverEnv)
 	{
 		pvar->UseEnv = pvar->EnableEnv;
-		strcpy_s(pvar->SetupFile, sizeof(pvar->SetupFile), fn);
-		GetPrivateProfileString(INISECTION, "SetupDir", "", buf, sizeof(buf), fn);
-		GetAbsolutePath(pvar->SetupDir, sizeof(pvar->SetupDir), buf, fn);
+		_tcscpy_s(pvar->SetupFile, sizeof(pvar->SetupFile), fn);
+		GetPrivateProfileString(_T(INISECTION), _T("SetupDir"), _T(""), 
+			buf, sizeof(buf)/sizeof(buf[0]), (PTCHAR)fn);
+		GetAbsolutePath(pvar->SetupDir, sizeof(pvar->SetupDir), buf, (PTCHAR)fn);
 	}
 	pvar->OverEnv = FALSE;
 }
 
-static void PASCAL TTXWriteIniFile(PCHAR fn, PTTSet ts)
+static void PASCAL TTXWriteIniFile(TT_LPTCSTR fn, PTTSet ts)
 {
-	char buf[MAX_PATH];
-	PCHAR p;
+	TCHAR buf[MAX_PATH];
+	PTCHAR p;
 
 	(pvar->origWriteIniFile)(fn, ts);
 
 	p = NULL;
 	if (pvar->UseKeyCnf)
 	{
-		GetRelatedPath(buf, sizeof(buf), pvar->ts->KeyCnfFN, pvar->ts->SetupFName, 0);
+		GetRelatedPath(buf, sizeof(buf)/sizeof(buf[0]), 
+			pvar->ts->KeyCnfFNW, pvar->ts->SetupFNameW, 0);
 		p = buf;
 	}
-	WritePrivateProfileString(INISECTION, "KeyCnf", p, fn);
+	WritePrivateProfileString(_T(INISECTION), _T("KeyCnf"), p, (PTCHAR)fn);
 
 	p = NULL;
 	if (pvar->EnableEnv)
 	{
-		GetRelatedPath(buf, sizeof(buf), pvar->SetupDir, pvar->ts->SetupFName, 0);
+		GetRelatedPath(buf, sizeof(buf)/sizeof(buf[0]), 
+			pvar->SetupDir, pvar->ts->SetupFNameW, 0);
 		p = buf;
 	}
-	WriteIniOnOff(INISECTION, "EnableEnv", pvar->EnableEnv, pvar->EnableEnv, fn);
-	WritePrivateProfileString(INISECTION, "SetupDir", p, fn);
+	WriteIniOnOff(_T(INISECTION), _T("EnableEnv"), pvar->EnableEnv, pvar->EnableEnv, (PTCHAR)fn);
+	WritePrivateProfileString(_T(INISECTION), _T("SetupDir"), p, fn);
 }
 
-static void PASCAL TTXParseParam(PCHAR Param, PTTSet ts, PCHAR DDETopic)
+static void PASCAL TTXParseParam(TT_LPTSTR Param, PTTSet ts, PCHAR DDETopic)
 {
-	char buf[MAX_PATH + 20];
-	PCHAR next;
+	TCHAR buf[MAX_PATH + 20];
+	PTCHAR next;
 
 	(pvar->origParseParam)(Param, ts, DDETopic);
 
 	next = Param;
-	while (next = TTXGetParam(buf, sizeof(buf), next))
+	while (next = TTXGetParam(buf, sizeof(buf)/sizeof(buf[0]), next))
 	{
-		if (_strnicmp(buf, "/F=", 3) == 0)
+		if (_tcsnicmp(buf, _T("/F="), 3) == 0)
 		{
 			pvar->skip = TRUE;
 			TTXReadIniFile(&buf[3], ts);
@@ -265,24 +275,24 @@ static void PASCAL TTXGetSetupHooks(TTXSetupHooks *hooks)
 
 // src_baseを基準としたsrcのパスをdst_baseのフォルダにコピーする。
 // ファイルコピーしたら TRUE を返す
-BOOL CopyPathEnv(PCHAR dst, int sz, PCHAR src, BOOL force, PCHAR src_base, PCHAR dst_base)
+BOOL CopyPathEnv(PTCHAR dst, int sz, PTCHAR src, BOOL force, PTCHAR src_base, PTCHAR dst_base)
 {
-	char path[MAX_PATH];
-	char tmp[MAX_PATH];
-	char *name;
+	TCHAR path[MAX_PATH];
+	TCHAR tmp[MAX_PATH];
+	PTCHAR name;
 
-	GetAbsolutePath(path, sizeof(path), src, src_base);
+	GetAbsolutePath(path, sizeof(path)/sizeof(path[0]), src, src_base);
 	name = FindFileName(path);
 	GetAbsolutePath(dst, sz, name, dst_base);
-	if (_stricmp(path, dst) != 0)
+	if (_tcsicmp(path, dst) != 0)
 	{
 		if (FileExists(dst) && !force)
 		{
-			const char *s = "ファイルが存在しています。上書きしますか。\r%s";
-			_snprintf_s(tmp, sizeof(tmp), _TRUNCATE, s, name);
-			if (MessageBox(0, tmp, "WARNING", MB_YESNO | MB_ICONWARNING) != IDYES)
+			const PTCHAR s = _T("ファイルが存在しています。上書きしますか。\r%s");
+			_sntprintf_s(tmp, sizeof(tmp)/sizeof(tmp[0]), _TRUNCATE, s, name);
+			if (MessageBox(0, tmp, _T("WARNING"), MB_YESNO | MB_ICONWARNING) != IDYES)
 			{
-				strcpy_s(dst, sz, path);
+				_tcscpy_s(dst, sz, path);
 				return FALSE;
 			}
 		}
@@ -294,30 +304,30 @@ BOOL CopyPathEnv(PCHAR dst, int sz, PCHAR src, BOOL force, PCHAR src_base, PCHAR
 
 //keyconfファイルに定義したユーザーキーがマクロの場合、
 //fnがあるパスに複製しkeyconfファイルの内容も置き換える
-void CopyUserKeyMacro(PCHAR keycnf, PCHAR fn)
+void CopyUserKeyMacro(PTCHAR keycnf, PTCHAR fn)
 {
-	char name[64];
-	char buf[MAX_PATH];
-	char dst[MAX_PATH];
-	char *p;
+	TCHAR name[64];
+	TCHAR buf[MAX_PATH];
+	TCHAR dst[MAX_PATH];
+	PTCHAR p;
 	int i;
 
 	for (i = 1; i < IdUser1; i++)
 	{
-		_snprintf_s(name, sizeof(name), _TRUNCATE, "User%d", i);
-		GetPrivateProfileString("User keys", name, "", buf, sizeof(buf), keycnf);
+		_sntprintf_s(name, sizeof(name)/sizeof(name[0]), _TRUNCATE, _T("User%d"), i);
+		GetPrivateProfileString(_T("User keys"), name, _T(""), buf, sizeof(buf)/sizeof(buf[0]), keycnf);
 		if (!buf[0])
 			break;
-		p = strchr(buf, ',');
-		if (!p || atoi(p + 1) != 2)
+		p = _tcschr(buf, _T(','));
+		if (!p || _tstoi(p + 1) != 2)
 			continue;
-		p = strchr(p + 1, ',');
+		p = _tcschr(p + 1, _T(','));
 		if (!p)
 			continue;
-		if (CopyPathEnv(dst, sizeof(dst), ++p, FALSE, pvar->ttpath, fn))
+		if (CopyPathEnv(dst, sizeof(dst)/sizeof(dst[0]), ++p, FALSE, pvar->ttpath, fn))
 		{
-			GetRelatedPath(p, buf + sizeof(buf) - p, dst, pvar->ttpath, 0);
-			WritePrivateProfileString("User keys", name, buf, keycnf);
+			GetRelatedPath(p, buf + sizeof(buf)/sizeof(buf[0]) - p, dst, pvar->ttpath, 0);
+			WritePrivateProfileString(_T("User keys"), name, buf, keycnf);
 		}
 	}
 }
@@ -327,19 +337,19 @@ void CopyUserKeyMacro(PCHAR keycnf, PCHAR fn)
 //
 static LRESULT CALLBACK EnvCopyProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	char buf[MAX_PATH];
-	char path[MAX_PATH];
-	char fn[MAX_PATH];
-	PCHAR s;
+	TCHAR buf[MAX_PATH];
+	TCHAR path[MAX_PATH];
+	TCHAR fn[MAX_PATH];
+	PTCHAR s;
 
 	switch (msg)
 	{
 	case WM_INITDIALOG:
-		GetAbsolutePath(buf, sizeof(buf), pvar->SetupDir, pvar->SetupFile);
+		GetAbsolutePath(buf, sizeof(buf)/sizeof(buf[0]), pvar->SetupDir, pvar->SetupFile);
 		SetDlgItemText(dlg, IDC_PATH1, buf);
-		GetPathName(buf, sizeof(buf), pvar->ts->SetupFName);
+		GetPathName(buf, sizeof(buf)/sizeof(buf[0]), pvar->ts->SetupFNameW);
 		SetDlgItemText(dlg, IDC_PATH2, buf);
-		GetPathName(buf, sizeof(buf), pvar->ts->KeyCnfFN);
+		GetPathName(buf, sizeof(buf)/sizeof(buf[0]), pvar->ts->KeyCnfFNW);
 		SetDlgItemText(dlg, IDC_PATH3, buf);
 		CheckDlgButton(dlg, IDC_CHECK2, BST_CHECKED);
 		CheckDlgButton(dlg, IDC_CHECK3, BST_CHECKED);
@@ -353,20 +363,20 @@ static LRESULT CALLBACK EnvCopyProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 		case MAKEWPARAM(IDC_NAME, EN_CHANGE):
 			if (IsDlgButtonChecked(dlg, IDC_CHECK1) == BST_CHECKED)
 			{
-				GetDlgItemText(dlg, IDC_NAME, buf, sizeof(buf));
+				GetDlgItemText(dlg, IDC_NAME, buf, sizeof(buf)/sizeof(buf[0]));
 				if (buf[0])
 				{
-					strcat_s(buf, sizeof(buf), ".INI");
+					_tcscat_s(buf, sizeof(buf)/sizeof(buf[0]), _T(".INI"));
 					SetDlgItemText(dlg, IDC_PATH2, buf);
 					RemoveFileExt(buf);
-					strcat_s(buf, sizeof(buf), ".CNF");
+					_tcscat_s(buf, sizeof(buf)/sizeof(buf[0]), _T(".CNF"));
 					SetDlgItemText(dlg, IDC_PATH3, buf);
 				}
 				else
 				{
-					GetPathName(buf, sizeof(buf), pvar->ts->SetupFName);
+					GetPathName(buf, sizeof(buf)/sizeof(buf[0]), pvar->ts->SetupFNameW);
 					SetDlgItemText(dlg, IDC_PATH2, buf);
-					GetPathName(buf, sizeof(buf), pvar->ts->KeyCnfFN);
+					GetPathName(buf, sizeof(buf)/sizeof(buf[0]), pvar->ts->KeyCnfFNW);
 					SetDlgItemText(dlg, IDC_PATH3, buf);
 				}
 			}
@@ -375,28 +385,28 @@ static LRESULT CALLBACK EnvCopyProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 		switch (LOWORD(wParam))
 		{
 		case IDC_BUTTON1:
-			GetDlgItemText(dlg, IDC_PATH1, buf, sizeof(buf));
-			s = "複製先フォルダを選択してください";
+			GetDlgItemText(dlg, IDC_PATH1, buf, sizeof(buf)/sizeof(buf[0]));
+			s = _T("複製先フォルダを選択してください");
 			OpenFolderDlg(dlg, IDC_PATH1, s, buf);
 			return TRUE;
 
 		case IDC_CHECK1:
 			if (IsDlgButtonChecked(dlg, IDC_CHECK1) == BST_CHECKED)
 			{
-				GetDlgItemText(dlg, IDC_NAME, buf, sizeof(buf));
+				GetDlgItemText(dlg, IDC_NAME, buf, sizeof(buf)/sizeof(buf[0]));
 				if (buf[0])
 				{
-					strcat_s(buf, sizeof(buf), ".INI");
+					_tcscat_s(buf, sizeof(buf)/sizeof(buf[0]), _T(".INI"));
 					SetDlgItemText(dlg, IDC_PATH2, buf);
 					RemoveFileExt(buf);
-					strcat_s(buf, sizeof(buf), ".CNF");
+					_tcscat_s(buf, sizeof(buf)/sizeof(buf[0]), _T(".CNF"));
 					SetDlgItemText(dlg, IDC_PATH3, buf);
 				}
 				else
 				{
-					GetPathName(buf, sizeof(buf), pvar->ts->SetupFName);
+					GetPathName(buf, sizeof(buf)/sizeof(buf[0]), pvar->ts->SetupFNameW);
 					SetDlgItemText(dlg, IDC_PATH2, buf);
-					GetPathName(buf, sizeof(buf), pvar->ts->KeyCnfFN);
+					GetPathName(buf, sizeof(buf)/sizeof(buf[0]), pvar->ts->KeyCnfFNW);
 					SetDlgItemText(dlg, IDC_PATH3, buf);
 				}
 				EnableWindow(GetDlgItem(dlg, IDC_PATH2), FALSE);
@@ -410,45 +420,45 @@ static LRESULT CALLBACK EnvCopyProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 			return TRUE;
 
 		case IDOK:
-			GetDlgItemText(dlg, IDC_PATH1, buf, sizeof(buf));
-			GetAbsolutePath(fn, sizeof(fn), buf, pvar->SetupFile);
+			GetDlgItemText(dlg, IDC_PATH1, buf, sizeof(buf)/sizeof(buf[0]));
+			GetAbsolutePath(fn, sizeof(fn)/sizeof(fn[0]), buf, pvar->SetupFile);
 			if (!FileExists(fn))
 			{
 				if (CreateDirectory(fn, NULL) == 0)
 				{
-					s = "設定ファイルを作成できません。";
-					MessageBox(dlg, s, "WARNING", MB_OK | MB_ICONWARNING);
+					s = _T("設定ファイルを作成できません。");
+					MessageBox(dlg, s, _T("WARNING"), MB_OK | MB_ICONWARNING);
 					return FALSE;
 				}
 			}
-			GetDlgItemText(dlg, IDC_PATH2, buf, sizeof(buf));
+			GetDlgItemText(dlg, IDC_PATH2, buf, sizeof(buf)/sizeof(buf[0]));
 			if (!buf[0])
 			{
-				s = "設定ファイルのパスを設定してください。";
-				MessageBox(dlg, s, "WARNING", MB_OK | MB_ICONWARNING);
+				s = _T("設定ファイルのパスを設定してください。");
+				MessageBox(dlg, s, _T("WARNING"), MB_OK | MB_ICONWARNING);
 				return FALSE;
 			}
-			CombinePath(fn, sizeof(fn), buf);
+			CombinePath(fn, sizeof(fn)/sizeof(fn[0]), buf);
 			if (FileExists(fn))
 			{
-				s = "設定ファイルが存在しています。上書きしますか。";
-				if (MessageBox(dlg, s, "WARNING", MB_YESNO | MB_ICONWARNING) != IDYES)
+				s = _T("設定ファイルが存在しています。上書きしますか。");
+				if (MessageBox(dlg, s, _T("WARNING"), MB_YESNO | MB_ICONWARNING) != IDYES)
 				{
 					return FALSE;
 				}
 			}
-			CopyFile(pvar->ts->SetupFName, fn, FALSE);
-			WritePrivateProfileString(INISECTION, "EnableEnv", NULL, fn);
-			WritePrivateProfileString(INISECTION, "SetupDir", NULL, fn);
-			WritePrivateProfileString(INISECTION, "KeyCnf", NULL, fn);
+			CopyFile(pvar->ts->SetupFNameW, fn, FALSE);
+			WritePrivateProfileString(_T(INISECTION), _T("EnableEnv"), NULL, fn);
+			WritePrivateProfileString(_T(INISECTION), _T("SetupDir"), NULL, fn);
+			WritePrivateProfileString(_T(INISECTION), _T("KeyCnf"), NULL, fn);
 
 			// set title
 			if (IsDlgButtonChecked(dlg, IDC_CHECK2) == BST_CHECKED)
 			{
-				GetDlgItemText(dlg, IDC_NAME, buf, sizeof(buf));
+				GetDlgItemText(dlg, IDC_NAME, buf, sizeof(buf)/sizeof(buf[0]));
 				if (buf[0])
 				{
-					WritePrivateProfileString(TTSECTION, "Title", buf, fn);
+					WritePrivateProfileString(_T(TTSECTION), _T("Title"), buf, fn);
 				}
 			}
 
@@ -460,22 +470,22 @@ static LRESULT CALLBACK EnvCopyProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 			// set environment master
 			if (IsDlgButtonChecked(dlg, IDC_CHECK4) == BST_CHECKED)
 			{
-				WriteIniOnOff(INISECTION, "EnableEnv", TRUE, TRUE, fn);
+				WriteIniOnOff(_T(INISECTION), _T("EnableEnv"), TRUE, TRUE, fn);
 				if (pvar->OverEnv)
 				{
 					pvar->EnableEnv = TRUE;
 					pvar->UseEnv = TRUE;
-					strcpy_s(pvar->SetupFile, sizeof(pvar->SetupFile), fn);
+					_tcscpy_s(pvar->SetupFile, sizeof(pvar->SetupFile)/sizeof(TCHAR), fn);
 				}
 			}
 
 			// set startup macro
 			if (pvar->ts->MacroFN[0] &&
 				(IsDlgButtonChecked(dlg, IDC_CHECK3) == BST_CHECKED) &&
-				CopyPathEnv(buf, sizeof(buf), pvar->ts->MacroFN, FALSE, pvar->ttpath, fn))
+				CopyPathEnv(buf, sizeof(buf)/sizeof(buf[0]), pvar->ts->MacroFNW, FALSE, pvar->ttpath, fn))
 			{
-				GetRelatedPath(path, sizeof(path), buf, pvar->ttpath, 0);
-				WritePrivateProfileString(TTSECTION, "StartupMacro", path, fn);
+				GetRelatedPath(path, sizeof(path)/sizeof(path[0]), buf, pvar->ttpath, 0);
+				WritePrivateProfileString(_T(TTSECTION), _T("StartupMacro"), path, fn);
 			}
 
 			// copy keymap file
@@ -483,14 +493,14 @@ static LRESULT CALLBACK EnvCopyProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 			if (buf[0])
 			{
 				GetAbsolutePath(path, sizeof(path), buf, fn);
-				char *s = "キーマップファイルが存在しています。上書きしますか。";
+				PTCHAR s = _T("キーマップファイルが存在しています。上書きしますか。");
 				if (!FileExists(path) ||
-					(MessageBox(dlg, s, "WARNING", MB_YESNO | MB_ICONWARNING) == IDYES))
+					(MessageBox(dlg, s, _T("WARNING"), MB_YESNO | MB_ICONWARNING) == IDYES))
 				{
-					CopyFile(pvar->ts->KeyCnfFN, path, FALSE);
+					CopyFile(pvar->ts->KeyCnfFNW, path, FALSE);
 				}
-				GetRelatedPath(buf, sizeof(buf), path, fn, 2);
-				WritePrivateProfileString(INISECTION, "KeyCnf", buf, fn);
+				GetRelatedPath(buf, sizeof(buf)/sizeof(buf[0]), path, fn, 2);
+				WritePrivateProfileString(_T(INISECTION), _T("KeyCnf"), buf, fn);
 				if (IsDlgButtonChecked(dlg, IDC_CHECK3) == BST_CHECKED)
 				{
 					CopyUserKeyMacro(path, fn);
@@ -498,7 +508,8 @@ static LRESULT CALLBACK EnvCopyProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 			}
 			if (pvar->OverEnv)
 			{
-				strcpy_s(pvar->ts->SetupFName, sizeof(pvar->ts->SetupFName), fn);
+				_tcscpy_s(pvar->ts->SetupFNameW, 
+					sizeof(pvar->ts->SetupFNameW)/sizeof(TCHAR), fn);
 			}
 			EndDialog(dlg, IDOK);
 			return TRUE;
@@ -520,13 +531,13 @@ static void PASCAL TTXModifyMenu(HMENU menu)
 	MENUITEMINFO mi;
 	UINT flag;
 	UINT lang;
-	PCHAR s;
+	PTCHAR s;
 
 	flag = MF_ENABLED;
 	lang = UILang(pvar->ts->UILanguageFile);
 
 	pvar->SetupMenu = GetSubMenu(menu, ID_SETUP);
-	s = (lang == 2) ? "環境の保存(&V)..." : "En&vironment copy...";
+	s = (lang == 2) ? _T("環境の保存(&V)...") : _T("En&vironment copy...");
 	AppendMenu(pvar->SetupMenu, flag, TTXMenuID(ID_MENUITEM2), s);
 	// s = (lang == 2) ? "環境の設定(&M)..." : "Environ&ment setup...";
 	// AppendMenu(pvar->SetupMenu, flag, TTXMenuID(ID_MENUITEM1), s);
@@ -544,7 +555,7 @@ static void PASCAL TTXModifyMenu(HMENU menu)
 		mi.fMask = MIIM_TYPE | MIIM_SUBMENU;
 		mi.fType = MFT_STRING;
 		mi.hSubMenu = pvar->EnvMenu;
-		mi.dwTypeData = (lang == 2) ? "環境(&A)" : "Environment";
+		mi.dwTypeData = (lang == 2) ? _T("環境(&A)") : _T("Environment");
 		InsertMenuItem(menu, ID_HELPMENU, TRUE, &mi);
 	}
 }
@@ -555,11 +566,11 @@ static void PASCAL TTXModifyPopupMenu(HMENU menu)
 	HANDLE hFind2;
 	WIN32_FIND_DATA win32fd;
 	WIN32_FIND_DATA win32fd2;
-	char path[MAX_PATH];
-	char name[32];
+	TCHAR path[MAX_PATH];
+	TCHAR name[32];
 	UINT uflg;
 	UINT uid;
-	PCHAR p;
+	PTCHAR p;
 
 	if (menu == pvar->EnvMenu)
 	{
@@ -568,14 +579,14 @@ static void PASCAL TTXModifyPopupMenu(HMENU menu)
 		}
 
 		uid = TTXMenuID(ID_MENUITEM);
-		uflg = MF_ENABLED | ((_strnicmp(pvar->ts->SetupFName, pvar->SetupFile, MAX_PATH) == 0) ? MF_CHECKED : 0);
-		GetRelatedPath(path, sizeof(path), pvar->SetupFile, pvar->SetupFile, 0);
+		uflg = MF_ENABLED | ((_tcsnicmp(pvar->ts->SetupFNameW, pvar->SetupFile, MAX_PATH) == 0) ? MF_CHECKED : 0);
+		GetRelatedPath(path, sizeof(path)/sizeof(path[0]), pvar->SetupFile, pvar->SetupFile, 0);
 		RemoveFileExt(path);
-		_snprintf_s(name, sizeof(name), _TRUNCATE, "&0 + %s", path);
+		_sntprintf_s(name, sizeof(name)/sizeof(name[0]), _TRUNCATE, _T("&0 + %s"), path);
 		AppendMenu(menu, uflg, uid++, name);
 
-		GetAbsolutePath(path, sizeof(path), pvar->SetupDir, pvar->SetupFile);
-		CombinePath(path, sizeof(path), "*.INI");
+		GetAbsolutePath(path, sizeof(path)/sizeof(path[0]), pvar->SetupDir, pvar->SetupFile);
+		CombinePath(path, sizeof(path)/sizeof(path[0]), _T("*.INI"));
 		hFind = FindFirstFile(path, &win32fd);
 		if (hFind == INVALID_HANDLE_VALUE)
 			return;
@@ -583,27 +594,27 @@ static void PASCAL TTXModifyPopupMenu(HMENU menu)
 		{
 			if (win32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 				continue;
-			if (win32fd.cFileName[0] == '_' || win32fd.cFileName[0] == '.')
+			if (win32fd.cFileName[0] == _T('_') || win32fd.cFileName[0] == _T('.'))
 				continue;
-			GetAbsolutePath(path, sizeof(path), pvar->SetupDir, pvar->SetupFile);
-			CombinePath(path, sizeof(path), win32fd.cFileName);
-			if (_strnicmp(path, pvar->SetupFile, MAX_PATH) == 0)
+			GetAbsolutePath(path, sizeof(path)/sizeof(path[0]), pvar->SetupDir, pvar->SetupFile);
+			CombinePath(path, sizeof(path)/sizeof(path[0]), win32fd.cFileName);
+			if (_tcsnicmp(path, pvar->SetupFile, MAX_PATH) == 0)
 				continue;
 			if (uid == (TTXMenuID(ID_MENUITEM + MENUITEM_NUM)))
 			{
-				AppendMenu(menu, MF_ENABLED, uid, "more...");
+				AppendMenu(menu, MF_ENABLED, uid, _T("more..."));
 				break;
 			}
-			uflg = MF_ENABLED | ((_strnicmp(pvar->ts->SetupFName, path, MAX_PATH) == 0) ? MF_CHECKED : 0);
-			GetRelatedPath(path, sizeof(path), path, pvar->SetupFile, 0);
+			uflg = MF_ENABLED | ((_tcsnicmp(pvar->ts->SetupFNameW, path, MAX_PATH) == 0) ? MF_CHECKED : 0);
+			GetRelatedPath(path, sizeof(path)/sizeof(path[0]), path, pvar->SetupFile, 0);
 			RemoveFileExt(path);
-			_snprintf_s(name, sizeof(name), _TRUNCATE, "&%d + %s", TTXMenuOrgID(uid - ID_MENUITEM), path);
+			_sntprintf_s(name, sizeof(name)/sizeof(name[0]), _TRUNCATE, _T("&%d + %s"), TTXMenuOrgID(uid - ID_MENUITEM), path);
 			AppendMenu(menu, uflg, uid++, name);
 		} while (FindNextFile(hFind, &win32fd));
 		FindClose(hFind);
 
-		GetAbsolutePath(path, sizeof(path), pvar->SetupDir, pvar->SetupFile);
-		CombinePath(path, sizeof(path), "*");
+		GetAbsolutePath(path, sizeof(path)/sizeof(path[0]), pvar->SetupDir, pvar->SetupFile);
+		CombinePath(path, sizeof(path)/sizeof(path[0]), _T("*"));
 		hFind2 = FindFirstFile(path, &win32fd2);
 		if (hFind2 == INVALID_HANDLE_VALUE)
 			return;
@@ -611,11 +622,11 @@ static void PASCAL TTXModifyPopupMenu(HMENU menu)
 		{
 			if (!(win32fd2.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 				continue;
-			if (win32fd2.cFileName[0] == '_' || win32fd2.cFileName[0] == '.')
+			if (win32fd2.cFileName[0] == _T('_') || win32fd2.cFileName[0] == _T('.'))
 				continue;
-			GetAbsolutePath(path, sizeof(path), pvar->SetupDir, pvar->SetupFile);
-			CombinePath(path, sizeof(path), win32fd2.cFileName);
-			CombinePath(path, sizeof(path), "*.INI");
+			GetAbsolutePath(path, sizeof(path)/sizeof(path[0]), pvar->SetupDir, pvar->SetupFile);
+			CombinePath(path, sizeof(path)/sizeof(path[0]), win32fd2.cFileName);
+			CombinePath(path, sizeof(path)/sizeof(path[0]), _T("*.INI"));
 			hFind = FindFirstFile(path, &win32fd);
 			if (hFind == INVALID_HANDLE_VALUE)
 				return;
@@ -623,22 +634,22 @@ static void PASCAL TTXModifyPopupMenu(HMENU menu)
 			{
 				if (win32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 					continue;
-				if (win32fd2.cFileName[0] == '_' || win32fd2.cFileName[0] == '.')
+				if (win32fd2.cFileName[0] == _T('_') || win32fd2.cFileName[0] == _T('.'))
 					continue;
 				if (uid == TTXMenuID(ID_MENUITEM + MENUITEM_NUM))
 				{
-					AppendMenu(menu, MF_ENABLED, uid, "more...");
+					AppendMenu(menu, MF_ENABLED, uid, _T("more..."));
 					break;
 				}
-				GetAbsolutePath(path, sizeof(path), pvar->SetupDir, pvar->SetupFile);
-				CombinePath(path, sizeof(path), win32fd2.cFileName);
-				CombinePath(path, sizeof(path), win32fd.cFileName);
-				uflg = MF_ENABLED | ((_strnicmp(pvar->ts->SetupFName, path, MAX_PATH) == 0) ? MF_CHECKED : 0);
-				GetRelatedPath(path, sizeof(path), path, pvar->SetupFile, 0);
+				GetAbsolutePath(path, sizeof(path)/sizeof(path[0]), pvar->SetupDir, pvar->SetupFile);
+				CombinePath(path, sizeof(path)/sizeof(path[0]), win32fd2.cFileName);
+				CombinePath(path, sizeof(path)/sizeof(path[0]), win32fd.cFileName);
+				uflg = MF_ENABLED | ((_tcsnicmp(pvar->ts->SetupFNameW, path, MAX_PATH) == 0) ? MF_CHECKED : 0);
+				GetRelatedPath(path, sizeof(path)/sizeof(path[0]), path, pvar->SetupFile, 0);
 				RemoveFileExt(path);
-				while (p = strchr(path, '\\'))
-					*p = '/';
-				_snprintf_s(name, sizeof(name), _TRUNCATE, "&%d + %s", TTXMenuOrgID(uid - ID_MENUITEM), path);
+				while (p = _tcschr(path, _T('\\')))
+					*p = _T('/');
+				_sntprintf_s(name, sizeof(name)/sizeof(name[0]), _TRUNCATE, _T("&%d + %s"), TTXMenuOrgID(uid - ID_MENUITEM), path);
 				AppendMenu(menu, uflg, uid++, name);
 			} while (FindNextFile(hFind, &win32fd));
 			FindClose(hFind);
@@ -650,9 +661,9 @@ static void PASCAL TTXModifyPopupMenu(HMENU menu)
 static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 {
 	MENUITEMINFO mii;
-	CHAR path[MAX_PATH];
-	CHAR name[32];
-	PCHAR p;
+	TCHAR path[MAX_PATH];
+	TCHAR name[32];
+	PTCHAR p;
 
 	switch (TTXMenuOrgID(cmd))
 	{
@@ -684,14 +695,14 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 		case IDCANCEL:
 			break;
 		case -1:
-			MessageBox(hWin, "Error", "Can't display dialog box.",
+			MessageBox(hWin, _T("Error"), _T("Can't display dialog box."),
 					   MB_OK | MB_ICONEXCLAMATION);
 			break;
 		}
 		return 1;
 
 	case ID_MENUITEM:
-		strcpy_s(pvar->ts->SetupFName, sizeof(pvar->ts->SetupFName), pvar->SetupFile);
+		_tcscpy_s(pvar->ts->SetupFNameW, sizeof(pvar->ts->SetupFNameW), pvar->SetupFile);
 		pvar->OverEnv = TRUE;
 		SendMessage(hWin, WM_USER_ACCELCOMMAND, IdCmdRestoreSetup, 0);
 		return 1;
@@ -703,16 +714,16 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 		mii.cbSize = sizeof(MENUITEMINFO);
 		mii.fMask = MIIM_TYPE;
 		mii.dwTypeData = name;
-		mii.cch = sizeof(name) - 1;
+		mii.cch = sizeof(name)/sizeof(name[0]) - 1;
 		GetMenuItemInfo(pvar->EnvMenu, TTXMenuOrgID(cmd), FALSE, &mii);
-		p = strchr(name, '+');
+		p = _tcschr(name, _T('+'));
 		if (p)
 		{
-			GetAbsolutePath(path, sizeof(path), pvar->SetupDir, pvar->SetupFile);
-			CombinePath(path, sizeof(path), (p + 2));
-			strcat_s(path, sizeof(path), ".INI");
+			GetAbsolutePath(path, sizeof(path)/sizeof(path[0]), pvar->SetupDir, pvar->SetupFile);
+			CombinePath(path, sizeof(path)/sizeof(path[0]), (p + 2));
+			_tcscat_s(path, sizeof(path)/sizeof(path[0]), _T(".INI"));
 			RemovePathSlash(path);
-			strcpy_s(pvar->ts->SetupFName, sizeof(pvar->ts->SetupFName), path);
+			_tcscpy_s(pvar->ts->SetupFNameW, sizeof(pvar->ts->SetupFNameW), path);
 			pvar->OverEnv = TRUE;
 			SendMessage(hWin, WM_USER_ACCELCOMMAND, IdCmdRestoreSetup, 0);
 		}
@@ -721,11 +732,11 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 
 	if (cmd == ID_MENUITEM + MENUITEM_NUM)
 	{
-		strcpy_s(path, sizeof(path), pvar->ts->SetupFName);
-		p = "設定ファイル(*.ini)\0*.ini\0\0";
-		if (OpenFileDlg(0, 0, "設定ファイル", p, path, NULL, 0))
+		_tcscpy_s(path, sizeof(path)/sizeof(path[0]), pvar->ts->SetupFNameW);
+		p = _T("設定ファイル(*.ini)\0*.ini\0\0");
+		if (OpenFileDlg(0, 0, _T("設定ファイル"), p, path, NULL, 0))
 		{
-			strcpy_s(pvar->ts->SetupFName, sizeof(pvar->ts->SetupFName), path);
+			_tcscpy_s(pvar->ts->SetupFNameW, sizeof(pvar->ts->SetupFNameW)/sizeof(TCHAR), path);
 			pvar->OverEnv = TRUE;
 			SendMessage(hWin, WM_USER_ACCELCOMMAND, IdCmdRestoreSetup, 0);
 		}
@@ -742,7 +753,7 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 // 	 printf("TTXEnd %d\n", ORDER);
 // }
 
-// static void PASCAL TTXSetCommandLine(PCHAR cmd, int cmdlen, PGetHNRec rec)
+// static void PASCAL TTXSetCommandLine(TT_LPTSTR cmd, int cmdlen, PGetHNRec rec)
 // {
 // 	 printf("TTXSetCommandLine %d\n", ORDER);
 // }
@@ -777,7 +788,7 @@ BOOL __declspec(dllexport) PASCAL FAR TTXBind(WORD Version, TTXExports *exports)
 	/* do version checking if necessary */
 	/* if (Version!=TTVERSION) return FALSE; */
 
-	if (TTXIgnore(ORDER, INISECTION, 0))
+	if (TTXIgnore(ORDER, _T(INISECTION), 0))
 		return TRUE;
 
 	if (size > exports->size)
@@ -804,7 +815,7 @@ BOOL WINAPI DllMain(HANDLE hInstance,
 		break;
 	case DLL_PROCESS_ATTACH:
 		/* do process initialization */
-		DoCover_IsDebuggerPresent();
+		TTX_DLL_PROCESS_ATTACH();
 		hInst = hInstance;
 		pvar = &InstVar;
 		break;
