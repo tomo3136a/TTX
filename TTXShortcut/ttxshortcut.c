@@ -109,10 +109,6 @@ BOOL MakeShortcut(const PTCHAR name, const PTCHAR params, WORD wKey, const PTCHA
 	IShellLink *pSL;
 	IPersistFile *pPF;
 	HRESULT res;
-	int sz;
-#ifndef _UNICODE
-	wchar_t *ws;
-#endif
 
 	tt_path_sz = MAX_PATH;
 	tt_path = malloc(tt_path_sz*sizeof(TCHAR));
@@ -177,15 +173,17 @@ BOOL MakeShortcut(const PTCHAR name, const PTCHAR params, WORD wKey, const PTCHA
 
 	if (SUCCEEDED(pSL->lpVtbl->QueryInterface(pSL, COMPTR(IPersistFile, &pPF))))
 	{
+#ifdef TT4
+		int sz;
+		LPWSTR ws;
 		sz = _tcslen(lnk) + 1;
-#ifdef _UNICODE
-		res = pPF->lpVtbl->Save(pPF, lnk, TRUE);
-#else
 		ws = (wchar_t *)malloc(sizeof(wchar_t) * (sz + 1));
 		res = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, lnk, sz, ws, sz + 1);
 		res = pPF->lpVtbl->Save(pPF, ws, TRUE);
 		free(ws);
-#endif /* _UNICODE */
+#else
+		res = pPF->lpVtbl->Save(pPF, lnk, TRUE);
+#endif /* TT4 */
 		pPF->lpVtbl->Release(pPF);
 		if (res != S_OK)
 		{
@@ -574,7 +572,6 @@ BOOL WINAPI DllMain(HANDLE hInstance,
 		break;
 	case DLL_PROCESS_ATTACH:
 		/* do process initialization */
-		TTX_DLL_PROCESS_ATTACH();
 		hInst = hInstance;
 		pvar = &InstVar;
 		break;

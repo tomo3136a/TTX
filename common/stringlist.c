@@ -3,17 +3,9 @@
  * (C) 2021 tomo3136a
  */
 
-// #include "teraterm.h"
-// #include "tttypes.h"
-// #include "ttplugin.h"
-// #include <windows.h>
-// #include <tchar.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-// #include <shlobj.h>
-// #include <time.h>
 
 #include "stringlist.h"
 

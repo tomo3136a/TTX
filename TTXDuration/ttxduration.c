@@ -34,6 +34,8 @@
 
 #define IdDurationTimer 3002
 
+#define TIMER_INTERVAL 200
+
 static HANDLE hInst; /* Instance handle of TTX*.DLL */
 
 typedef struct
@@ -99,7 +101,7 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 
 ///////////////////////////////////////////////////////////////
 
-static void DrawTextToMenuBarRight(HWND hwnd, PTCHAR text, int decoration)
+static void DrawTextToMenuBarRight(HWND hwnd, LPCTSTR text, int decoration)
 {
 	MENUBARINFO mbi;
 	RECT rect;
@@ -136,10 +138,10 @@ static void DrawTextToMenuBarRight(HWND hwnd, PTCHAR text, int decoration)
 
 static void CALLBACK DurationTimerProc(HWND hwnd, UINT msg, UINT_PTR ev, DWORD now)
 {
+	size_t buf_sz;
+	TCHAR buf[16];
 	time_t duration;
 	time_t border;
-	TCHAR buf[16];
-	int buf_sz;
 	int h, m, s;
 	int decoration;
 	int i;
@@ -188,12 +190,8 @@ static void CALLBACK DurationTimerProc(HWND hwnd, UINT msg, UINT_PTR ev, DWORD n
 	}
 
 	DrawTextToMenuBarRight(hwnd, buf, decoration);
-
-	//	SendMessage(hwnd, WM_IDLE, 0, 0);
 	return;
 }
-
-#define TIMER_INTERVAL 200
 
 static VOID TimerControl(HWND hWnd)
 {
@@ -299,48 +297,51 @@ static void PASCAL TTXCloseFile(TTXFileHooks *hooks)
 
 ///////////////////////////////////////////////////////////////
 
-static void PASCAL TTXReadIniFile(TT_LPTCSTR fn, PTTSet ts)
+static void PASCAL TTXReadIniFile(TT_LPCTSTR fn, PTTSet ts)
 {
 	if (!pvar->skip)
 		(pvar->origReadIniFile)(fn, ts);
 
-	pvar->enableOnOff = GetIniOnOff(_T(INISECTION), _T("EnableOnOff"), FALSE, (PTCHAR)fn);
-	pvar->nowTimeMode = GetIniOnOff(_T(INISECTION), _T("NowTimeMode"), FALSE, (PTCHAR)fn);
-	pvar->resetStart = GetIniOnOff(_T(INISECTION), _T("ResetStart"), FALSE, (PTCHAR)fn);
-	pvar->connectStart = GetIniOnOff(_T(INISECTION), _T("ConnectStart"), FALSE, (PTCHAR)fn);
-	pvar->disconnectStop = GetIniOnOff(_T(INISECTION), _T("DisconnectStop"), FALSE, (PTCHAR)fn);
+	pvar->enableOnOff = GetIniOnOff(_T(INISECTION), _T("EnableOnOff"), FALSE, fn);
+	pvar->nowTimeMode = GetIniOnOff(_T(INISECTION), _T("NowTimeMode"), FALSE, fn);
+	pvar->resetStart = GetIniOnOff(_T(INISECTION), _T("ResetStart"), FALSE, fn);
+	pvar->connectStart = GetIniOnOff(_T(INISECTION), _T("ConnectStart"), FALSE, fn);
+	pvar->disconnectStop = GetIniOnOff(_T(INISECTION), _T("DisconnectStop"), FALSE, fn);
 
-	pvar->border[0] = GetIniNum(_T(INISECTION), _T("Border1"), 30, (PTCHAR)fn);
-	pvar->border[1] = GetIniNum(_T(INISECTION), _T("Border2"), 20, (PTCHAR)fn);
-	pvar->border[2] = GetIniNum(_T(INISECTION), _T("Border3"), 10, (PTCHAR)fn);
-	pvar->border[3] = GetIniNum(_T(INISECTION), _T("Border4"), 0, (PTCHAR)fn);
+	pvar->border[0] = GetIniNum(_T(INISECTION), _T("Border1"), 30, fn);
+	pvar->border[1] = GetIniNum(_T(INISECTION), _T("Border2"), 20, fn);
+	pvar->border[2] = GetIniNum(_T(INISECTION), _T("Border3"), 10, fn);
+	pvar->border[3] = GetIniNum(_T(INISECTION), _T("Border4"), 0, fn);
 }
 
-static void PASCAL TTXWriteIniFile(TT_LPTCSTR fn, PTTSet ts)
+static void PASCAL TTXWriteIniFile(TT_LPCTSTR fn, PTTSet ts)
 {
 	(pvar->origWriteIniFile)(fn, ts);
 
-	WriteIniOnOff(_T(INISECTION), _T("EnableOnOff"), pvar->enableOnOff, FALSE, (PTCHAR)fn);
-	WriteIniOnOff(_T(INISECTION), _T("NowTimeMode"), pvar->nowTimeMode, FALSE, (PTCHAR)fn);
-	WriteIniOnOff(_T(INISECTION), _T("ResetStart"), pvar->resetStart, FALSE, (PTCHAR)fn);
-	WriteIniOnOff(_T(INISECTION), _T("ConnectStart"), pvar->connectStart, FALSE, (PTCHAR)fn);
-	WriteIniOnOff(_T(INISECTION), _T("DisconnectStop"), pvar->disconnectStop, FALSE, (PTCHAR)fn);
+	WriteIniOnOff(_T(INISECTION), _T("EnableOnOff"), pvar->enableOnOff, FALSE, fn);
+	WriteIniOnOff(_T(INISECTION), _T("NowTimeMode"), pvar->nowTimeMode, FALSE, fn);
+	WriteIniOnOff(_T(INISECTION), _T("ResetStart"), pvar->resetStart, FALSE, fn);
+	WriteIniOnOff(_T(INISECTION), _T("ConnectStart"), pvar->connectStart, FALSE, fn);
+	WriteIniOnOff(_T(INISECTION), _T("DisconnectStop"), pvar->disconnectStop, FALSE, fn);
 
-	WriteIniNum(_T(INISECTION), _T("Border1"), pvar->border[0], FALSE, (PTCHAR)fn);
-	WriteIniNum(_T(INISECTION), _T("Border2"), pvar->border[1], FALSE, (PTCHAR)fn);
-	WriteIniNum(_T(INISECTION), _T("Border3"), pvar->border[2], FALSE, (PTCHAR)fn);
-	WriteIniNum(_T(INISECTION), _T("Border4"), pvar->border[3], FALSE, (PTCHAR)fn);
+	WriteIniNum(_T(INISECTION), _T("Border1"), pvar->border[0], FALSE, fn);
+	WriteIniNum(_T(INISECTION), _T("Border2"), pvar->border[1], FALSE, fn);
+	WriteIniNum(_T(INISECTION), _T("Border3"), pvar->border[2], FALSE, fn);
+	WriteIniNum(_T(INISECTION), _T("Border4"), pvar->border[3], FALSE, fn);
 }
 
 static void PASCAL TTXParseParam(TT_LPTSTR Param, PTTSet ts, PCHAR DDETopic)
 {
-	TCHAR buf[MAX_PATH + 20];
+	size_t buf_sz;
+	LPTSTR buf;
 	PTCHAR next;
 
 	(pvar->origParseParam)(Param, ts, DDETopic);
 
+	buf_sz = _tcsnlen(Param, _TRUNCATE);
+	buf = (LPTSTR)malloc(buf_sz*sizeof(TCHAR));
 	next = Param;
-	while (next = TTXGetParam(buf, sizeof(buf)/sizeof(buf[0]), next))
+	while (next = TTXGetParam(buf, buf_sz, next))
 	{
 		if (_tcsnicmp(buf, _T("/F="), 3) == 0)
 		{
@@ -350,6 +351,7 @@ static void PASCAL TTXParseParam(TT_LPTSTR Param, PTTSet ts, PCHAR DDETopic)
 			break;
 		}
 	}
+	free(buf);
 }
 
 static void PASCAL TTXGetSetupHooks(TTXSetupHooks *hooks)
@@ -565,7 +567,6 @@ BOOL WINAPI DllMain(HANDLE hInstance,
 		break;
 	case DLL_PROCESS_ATTACH:
 		/* do process initialization */
-		TTX_DLL_PROCESS_ATTACH();
 		hInst = hInstance;
 		pvar = &InstVar;
 		break;

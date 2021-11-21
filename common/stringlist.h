@@ -5,6 +5,9 @@
 
 #include <windows.h>
 
+#ifndef _STRINGLIST_H
+#define _STRINGLIST_H
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -33,3 +36,5 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* _STRINGLIST_H */

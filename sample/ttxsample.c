@@ -7,6 +7,7 @@
 #include "tttypes.h"
 #include "ttplugin.h"
 #include "tt_res.h"
+//#include <windows.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -96,7 +97,7 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 ///////////////////////////////////////////////////////////////
 
 //{when use ReadIniFile hook}
-static void PASCAL TTXReadIniFile(TT_LPTCSTR FName, PTTSet ts)
+static void PASCAL TTXReadIniFile(TT_LPCTSTR FName, PTTSet ts)
 {
 	TCHAR s[20]; //{use fixed size string}
 
@@ -503,7 +504,6 @@ BOOL WINAPI DllMain(HANDLE hInstance,
 		break;
 	case DLL_PROCESS_ATTACH:
 		/* do process initialization */
-		TTX_DLL_PROCESS_ATTACH();
 		hInst = hInstance;
 		pvar = &InstVar;
 		break;

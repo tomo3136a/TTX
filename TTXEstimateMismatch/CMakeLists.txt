@@ -6,9 +6,13 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/")
 
 if(TT4)
 add_definitions(-DTT4)
-set(TT_VERSION "4")
 else()
 add_definitions(-DUNICODE -D_UNICODE)
+endif()
+
+if(TT4)
+set(TT_VERSION "4")
+else()
 set(TT_VERSION "5")
 endif()
 

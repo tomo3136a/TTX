@@ -7,13 +7,13 @@
 #include "tttypes.h"
 #include "ttplugin.h"
 #include <windows.h>
-#include <tchar.h>
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <shlobj.h>
 #include <time.h>
+#include <tchar.h>
 
 #include "ttxcommon.h"
 
@@ -108,48 +108,26 @@ UINT UILang(LPSTR lang)
 								 : 1;
 }
 
+LPTSTR TTXGetModuleFileName(HMODULE hModule)
+{
+	size_t buf_sz;
+	LPTSTR buf;
+
+	buf_sz = MAX_PATH + 1;
+	buf = (LPTSTR)malloc(buf_sz*sizeof(TCHAR));
+	while (buf && (GetModuleFileName(hModule, buf, buf_sz) >= buf_sz))
+	{
+		free(buf);
+		buf_sz += buf_sz;
+		buf = (LPTSTR)malloc(buf_sz*sizeof(TCHAR));
+	}
+	return buf;
+}
+
 LPTSTR TTXGetPath(PTTSet ts, UINT uid)
 {
 	LPTSTR s = NULL;
-#ifdef _UNICODE
-	switch(uid)
-	{
-		case ID_HOMEDIR:
-			s = ts->HomeDirW;
-			break;
-        case ID_SETUPFNAME:
-			s = ts->SetupFNameW;
-			break;
-        case ID_KEYCNFNM:
-			s = ts->KeyCnfFNW;
-			break;
-        case ID_LOGFN:
-			s = ts->LogFNW;
-			break;
-        case ID_MACROFN:
-			s = ts->MacroFNW;
-			break;
-        case ID_UILANGUAGEFILE:
-			s = ts->UILanguageFileW;
-			break;
-        case ID_UILANGUAGEFILE_INI:
-			s = ts->UILanguageFileW_ini;
-			break;
-        case ID_EXEDIR:
-			s = ts->ExeDirW;
-			break;
-        case ID_LOGDIR:
-			s = ts->LogDirW;
-			break;
-		default:
-			s = NULL;
-			break;
-	}
-	if (s)
-	{
-		return _tcsdup(s);
-	}
-#else
+#ifdef TT4
 	switch(uid)
 	{
 		case ID_HOMEDIR:
@@ -183,17 +161,78 @@ LPTSTR TTXGetPath(PTTSet ts, UINT uid)
 			s = NULL;
 			break;
 	}
-	if (s)
+#else
+	switch(uid)
 	{
-		return _tcsdup(s);
+		case ID_HOMEDIR:
+			s = ts->HomeDirW;
+			break;
+        case ID_SETUPFNAME:
+			s = ts->SetupFNameW;
+			break;
+        case ID_KEYCNFNM:
+			s = ts->KeyCnfFNW;
+			break;
+        case ID_LOGFN:
+			s = ts->LogFNW;
+			break;
+        case ID_MACROFN:
+			s = ts->MacroFNW;
+			break;
+        case ID_UILANGUAGEFILE:
+			s = ts->UILanguageFileW;
+			break;
+        case ID_UILANGUAGEFILE_INI:
+			s = ts->UILanguageFileW_ini;
+			break;
+        case ID_EXEDIR:
+			s = ts->ExeDirW;
+			break;
+        case ID_LOGDIR:
+			s = ts->LogDirW;
+			break;
+		default:
+			s = NULL;
+			break;
 	}
-#endif /* _UNICODE */
-	return NULL;
+#endif /* TT4 */
+	return (s) ? _tcsdup(s) : NULL;
 }
 
 BOOL TTXSetPath(PTTSet ts, UINT uid, LPTSTR s)
 {
-#ifdef _UNICODE
+#ifdef TT4
+	switch(uid)
+	{
+		case ID_HOMEDIR:
+			strncpy_s(ts->HomeDir, sizeof(ts->HomeDir), s, _TRUNCATE);
+			break;
+        case ID_SETUPFNAME:
+			strncpy_s(ts->SetupFName, sizeof(ts->SetupFName), s, _TRUNCATE);
+			break;
+        case ID_KEYCNFNM:
+			strncpy_s(ts->KeyCnfFN, sizeof(ts->KeyCnfFN), s, _TRUNCATE);
+			break;
+        case ID_LOGFN:
+			strncpy_s(ts->LogFN, sizeof(ts->LogFN), s, _TRUNCATE);
+			break;
+        case ID_MACROFN:
+			strncpy_s(ts->MacroFN, sizeof(ts->MacroFN), s, _TRUNCATE);
+			break;
+        case ID_UILANGUAGEFILE:
+			strncpy_s(ts->UILanguageFile, sizeof(ts->UILanguageFile), s, _TRUNCATE);
+			break;
+        case ID_UILANGUAGEFILE_INI:
+			strncpy_s(ts->UILanguageFile_ini, sizeof(ts->UILanguageFile_ini), s, _TRUNCATE);
+			break;
+        case ID_EXEDIR:
+			break;
+        case ID_LOGDIR:
+			break;
+		default:
+			break;
+	}
+#else
 	LPSTR p;
 	switch(uid)
 	{
@@ -257,38 +296,7 @@ BOOL TTXSetPath(PTTSet ts, UINT uid, LPTSTR s)
 		default:
 			break;
 	}
-#else
-	switch(uid)
-	{
-		case ID_HOMEDIR:
-			strncpy_s(ts->HomeDir, sizeof(ts->HomeDir), s, _TRUNCATE);
-			break;
-        case ID_SETUPFNAME:
-			strncpy_s(ts->SetupFName, sizeof(ts->SetupFName), s, _TRUNCATE);
-			break;
-        case ID_KEYCNFNM:
-			strncpy_s(ts->KeyCnfFN, sizeof(ts->KeyCnfFN), s, _TRUNCATE);
-			break;
-        case ID_LOGFN:
-			strncpy_s(ts->LogFN, sizeof(ts->LogFN), s, _TRUNCATE);
-			break;
-        case ID_MACROFN:
-			strncpy_s(ts->MacroFN, sizeof(ts->MacroFN), s, _TRUNCATE);
-			break;
-        case ID_UILANGUAGEFILE:
-			strncpy_s(ts->UILanguageFile, sizeof(ts->UILanguageFile), s, _TRUNCATE);
-			break;
-        case ID_UILANGUAGEFILE_INI:
-			strncpy_s(ts->UILanguageFile_ini, sizeof(ts->UILanguageFile_ini), s, _TRUNCATE);
-			break;
-        case ID_EXEDIR:
-			break;
-        case ID_LOGDIR:
-			break;
-		default:
-			break;
-	}
-#endif /* _UNICODE */
+#endif /* TT4 */
 	return TRUE;
 }
 

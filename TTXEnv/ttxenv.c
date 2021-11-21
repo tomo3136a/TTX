@@ -5,10 +5,10 @@
 
 #include "teraterm.h"
 #include "tttypes.h"
-#include "ttplugin.h"
-#ifdef _UNICODE
+#ifndef TT4
 #include "tttypes_key.h"
-#endif
+#endif /* not TT4 */
+#include "ttplugin.h"
 #include "tt_res.h"
 
 #include <stdlib.h>
@@ -108,7 +108,7 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 
 ///////////////////////////////////////////////////////////////
 
-static void PASCAL TTXReadIniFile(TT_LPTCSTR fn, PTTSet ts)
+static void PASCAL TTXReadIniFile(TT_LPCTSTR fn, PTTSet ts)
 {
 	TCHAR buf[MAX_PATH];
 	TCHAR path[MAX_PATH];
@@ -142,7 +142,7 @@ static void PASCAL TTXReadIniFile(TT_LPTCSTR fn, PTTSet ts)
 	pvar->OverEnv = FALSE;
 }
 
-static void PASCAL TTXWriteIniFile(TT_LPTCSTR fn, PTTSet ts)
+static void PASCAL TTXWriteIniFile(TT_LPCTSTR fn, PTTSet ts)
 {
 	TCHAR buf[MAX_PATH];
 	LPTSTR p;
@@ -182,13 +182,16 @@ static void PASCAL TTXWriteIniFile(TT_LPTCSTR fn, PTTSet ts)
 
 static void PASCAL TTXParseParam(TT_LPTSTR Param, PTTSet ts, PCHAR DDETopic)
 {
-	TCHAR buf[MAX_PATH + 20];
+	size_t buf_sz;
+	LPTSTR buf;
 	PTCHAR next;
 
 	(pvar->origParseParam)(Param, ts, DDETopic);
 
+	buf_sz = _tcsnlen(Param, _TRUNCATE);
+	buf = (LPTSTR)malloc(buf_sz*sizeof(TCHAR));
 	next = Param;
-	while (next = TTXGetParam(buf, sizeof(buf)/sizeof(buf[0]), next))
+	while (next = TTXGetParam(buf, buf_sz, next))
 	{
 		if (_tcsnicmp(buf, _T("/F="), 3) == 0)
 		{
@@ -198,6 +201,7 @@ static void PASCAL TTXParseParam(TT_LPTSTR Param, PTTSet ts, PCHAR DDETopic)
 			break;
 		}
 	}
+	free(buf);
 }
 
 static void PASCAL TTXGetSetupHooks(TTXSetupHooks *hooks)
@@ -855,7 +859,6 @@ BOOL WINAPI DllMain(HANDLE hInstance,
 		break;
 	case DLL_PROCESS_ATTACH:
 		/* do process initialization */
-		TTX_DLL_PROCESS_ATTACH();
 		hInst = hInstance;
 		pvar = &InstVar;
 		break;

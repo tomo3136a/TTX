@@ -879,7 +879,6 @@ BOOL WINAPI DllMain(HANDLE hInstance,
 		break;
 	case DLL_PROCESS_ATTACH:
 		/* do process initialization */
-		TTX_DLL_PROCESS_ATTACH();
 		hInst = hInstance;
 		pvar = &InstVar;
 		break;

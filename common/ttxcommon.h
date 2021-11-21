@@ -3,22 +3,18 @@
  * (C) 2021 tomo3136a
  */
 
-#ifdef _COMPAT95
-#include "compat_w95.h"
-#define TTX_DLL_PROCESS_ATTACH() DoCover_IsDebuggerPresent()
-#else
-#define TTX_DLL_PROCESS_ATTACH()
-#endif /* _COMPAT95 */
+#ifndef _TTXCOMMOM_H
+#define _TTXCOMMOM_H
 
-#ifdef _UNICODE
-#define TT_TCHAR wchar_t
-#define TT_LPTSTR wchar_t *
-#define TT_LPTCSTR const wchar_t *
-#else
+#ifdef TT4
 #define TT_TCHAR CHAR
 #define TT_LPTSTR LPSTR
-#define TT_LPTCSTR LPSTR
-#endif /* _UNICODE */
+#define TT_LPCTSTR LPSTR
+#else
+#define TT_TCHAR wchar_t
+#define TT_LPTSTR wchar_t *
+#define TT_LPCTSTR const wchar_t *
+#endif /* TT4 */
 
 #include <windows.h>
 
@@ -49,6 +45,8 @@ extern "C"
     int TTXMenuID(UINT uid);
     int TTXMenuOrgID(UINT uid);
 
+    LPTSTR TTXGetModuleFileName(HMODULE hModule);
+
     //path string
     enum {
         ID_HOMEDIR              = 1,
@@ -74,13 +72,13 @@ extern "C"
     inline LPWSTR ACP2WC(LPSTR pszSrc){ return MB2WC(CP_ACP, pszSrc); }
     inline LPWSTR UTF82WC(LPSTR pszSrc){ return MB2WC(CP_UTF8, pszSrc); }
 
-#ifdef _UNICODE
-    inline LPSTR toMB(LPTSTR pszSrc){ return WC2MB(CP_ACP, pszSrc); }
-    inline LPTSTR toTC(LPSTR pszSrc){ return MB2WC(CP_ACP, pszSrc); }
-#else
+#ifdef TT4
     inline LPSTR toMB(LPTSTR pszSrc){ return _tcsdup(pszSrc); }
     inline LPTSTR toTC(LPSTR pszSrc){ return _tcsdup(pszSrc); }
-#endif /* _UNICODE */
+#else
+    inline LPSTR toMB(LPTSTR pszSrc){ return WC2MB(CP_ACP, pszSrc); }
+    inline LPTSTR toTC(LPSTR pszSrc){ return MB2WC(CP_ACP, pszSrc); }
+#endif /* TT4 */
 
     BOOL TTXFree(LPVOID pBuf);
 
@@ -218,3 +216,5 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* _TTXCOMMOM_H */
