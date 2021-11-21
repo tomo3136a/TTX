@@ -348,7 +348,7 @@ BOOL make_setup_cmd(PTCHAR path, BOOL shortcut, PTCHAR ini)
 		{
 			s = "set ini=%base%";
 			WriteFile(hFile, s, strlen(s), &dwWriteSize, NULL);
-			s = WC2ACP(ini);
+			s = toMB(ini);
 			WriteFile(hFile, s, strlen(s), &dwWriteSize, NULL);
 			TTXFree(s);
 			s = "\r\n"
@@ -548,7 +548,9 @@ BOOL write_filelist(HANDLE hFile, PTCHAR src, int n)
 			_tcscat_s(path, path_sz, _T(".in"));
 			CopyFile(org, path, FALSE);
 
-			conv_ini_file(path, pvar->ts->SetupFNameW);
+			p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+			conv_ini_file(path, p);
+			TTXFree(p);
 		}
 
 		WriteFile(hFile, path, lstrlen(path), &dwWriteSize, NULL);
@@ -598,17 +600,17 @@ BOOL write_filelist(HANDLE hFile, PTCHAR src, int n)
 //src: パッケージ化対象のフォルダ
 //dst: パッケージの出力策フォルダ
 //bSetup: _setup.cmd の追加要求
-BOOL make_package(PTCHAR name, PTCHAR src, PTCHAR dst, BOOL bSetup)
+BOOL make_package(LPTSTR name, LPTSTR src, LPTSTR dst, BOOL bSetup)
 {
 	HANDLE hFile;
-	PTCHAR tmp;
+	LPTSTR tmp;
 	int tmp_sz;
-	PTCHAR lst;
+	LPTSTR lst;
 	int lst_sz;
-	PTCHAR path;
+	LPTSTR path;
 	int path_sz;
 	DWORD dwWriteSize;
-	PTCHAR s;
+	LPTSTR s;
 
 	//create tempolary folder
 	tmp_sz = MAX_PATH;
@@ -635,9 +637,11 @@ BOOL make_package(PTCHAR name, PTCHAR src, PTCHAR dst, BOOL bSetup)
 	}
 	if (bSetup)
 	{
+		s = TTXGetPath(pvar->ts, ID_SETUPFNAME);
 		path_sz = MAX_PATH;
 		path = (PTCHAR)malloc(path_sz*sizeof(TCHAR));
-		GetRelatedPath(path, path_sz, pvar->ts->SetupFNameW, pvar->ts->SetupFNameW, 0);
+		GetRelatedPath(path, path_sz, s, s, 0);
+		TTXFree(s);
 		if (make_setup_cmd(tmp, bSetup, path))
 		{
 			_tcscpy_s(path, path_sz, tmp);
@@ -672,11 +676,11 @@ static LRESULT CALLBACK PackageProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 {
 	LPITEMIDLIST pidl;
 	TCHAR name[64];
-	PTCHAR path;
+	LPTSTR path;
 	int path_sz;
-	PTCHAR buf;
+	LPTSTR buf;
 	int buf_sz;
-	PTCHAR s;
+	LPTSTR s;
 	BOOL flg;
 
 	switch (msg)
@@ -685,7 +689,9 @@ static LRESULT CALLBACK PackageProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 		SetDlgItemTextA(dlg, IDC_NAME, pvar->ts->Title);
 		path_sz = MAX_PATH;
 		path = (PTCHAR)malloc(path_sz*sizeof(TCHAR));
-		GetParentPath(path, path_sz, pvar->ts->SetupFNameW);
+		s = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+		GetParentPath(path, path_sz, s);
+		TTXFree(s);
 		SetDlgItemText(dlg, IDC_PATH1, path);
 		if (SHGetSpecialFolderLocation(NULL, CSIDL_DESKTOP, &pidl) == NOERROR)
 		{

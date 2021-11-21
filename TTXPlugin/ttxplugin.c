@@ -343,12 +343,15 @@ static LRESULT CALLBACK SettingProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 {
 	static BOOL bUpdate = FALSE;
 	LV_HITTESTINFO lvinfo;
+	LPTSTR p;
 
 	switch (msg)
 	{
 	case WM_INITDIALOG:
 		bUpdate = FALSE;
-		LoadListView(dlg, IDC_LISTVIEW, pvar->ts->SetupFNameW);
+		p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+		LoadListView(dlg, IDC_LISTVIEW, p);
+		TTXFree(p);
 		MoveParentCenter(dlg);
 		return TRUE;
 
@@ -379,7 +382,9 @@ static LRESULT CALLBACK SettingProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 		case IDOK:
 			if (bUpdate)
 			{
-				SaveListView(dlg, IDC_LISTVIEW, pvar->ts->SetupFNameW);
+				p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+				SaveListView(dlg, IDC_LISTVIEW, p);
+				TTXFree(p);
 				EndDialog(dlg, IDOK);
 				return TRUE;
 			}

@@ -23,7 +23,7 @@
 ///////////////////////////////////////////////////////////////////////////
 
 static int _menu_offset = 0;
-BOOL TTXIgnore(int order, PTCHAR name, WORD version)
+BOOL TTXIgnore(int order, LPCTSTR name, WORD version)
 {
 	// TODO: test order, test version
 	TCHAR buf[32];
@@ -58,7 +58,7 @@ int TTXMenuOrgID(UINT uid)
 // buf は NULL 禁止
 // MBS(ShiftJIS)は対応しない(「@[\]^_`{|}~」は区切り文字に使用する設計しない)
 
-PTCHAR TTXGetParam(PTCHAR buf, size_t sz, PTCHAR param)
+LPTSTR TTXGetParam(LPTSTR buf, size_t sz, LPTSTR param)
 {
 	size_t i = 0;
 	BOOL quoted = FALSE;
@@ -97,7 +97,7 @@ PTCHAR TTXGetParam(PTCHAR buf, size_t sz, PTCHAR param)
 }
 
 // UI言語指定
-UINT UILang(PCHAR lang)
+UINT UILang(LPSTR lang)
 {
 	lang += 4;
 	return strstr(lang, "Eng")	 ? 1
@@ -106,88 +106,6 @@ UINT UILang(PCHAR lang)
 		   : strstr(lang, "Kor") ? 4
 		   : strstr(lang, "UTF") ? 5
 								 : 1;
-}
-
-size_t GetEnvPath(PTTSet ts, UINT uid, TCHAR *buf, DWORD dwsz)
-{
-	PTSTR s = NULL;
-#ifdef _UNICODE
-	switch(uid)
-	{
-		case ID_HOMEDIR:
-			s = ts->HomeDirW;
-			break;
-        case ID_SETUPFNAME:
-			s = ts->SetupFNameW;
-			break;
-        case ID_KEYCNFNM:
-			s = ts->KeyCnfFNW;
-			break;
-        case ID_LOGFN:
-			s = ts->LogFNW;
-			break;
-        case ID_MACROFN:
-			s = ts->MacroFNW;
-			break;
-        case ID_UILANGUAGEFILE:
-			s = ts->UILanguageFileW;
-			break;
-        case ID_UILANGUAGEFILE_INI:
-			s = ts->UILanguageFileW_ini;
-			break;
-        case ID_EXEDIR:
-			s = ts->ExeDirW;
-			break;
-        case ID_LOGDIR:
-			s = ts->LogDirW;
-			break;
-		default:
-			s = NULL;
-			break;
-	}
-#else
-	switch(uid)
-	{
-		case ID_HOMEDIR:
-			s = ts->HomeDir;
-			break;
-        case ID_SETUPFNAME:
-			s = ts->SetupFName;
-			break;
-        case ID_KEYCNFNM:
-			s = ts->KeyCnfFN;
-			break;
-        case ID_LOGFN:
-			s = ts->LogFN;
-			break;
-        case ID_MACROFN:
-			s = ts->MacroFN;
-			break;
-        case ID_UILANGUAGEFILE:
-			s = ts->UILanguageFile;
-			break;
-        case ID_UILANGUAGEFILE_INI:
-			s = ts->UILanguageFile_ini;
-			break;
-        case ID_EXEDIR:
-//			memset(buf, 0, dwsz*sizeof(TCHAR));
-//			GetModuleFileName(NULL, buf, dwsz - 1);
-			s = NULL;
-			break;
-        case ID_LOGDIR:
-			s = NULL;
-			break;
-		default:
-			s = NULL;
-			break;
-	}
-#endif /* _UNICODE */
-	if (buf)
-	{
-		memset(buf, 0, dwsz*sizeof(TCHAR));
-		_tcsnccpy_s(buf, dwsz, s, dwsz-1);
-	}
-	return _tcslen(s);
 }
 
 LPTSTR TTXGetPath(PTTSet ts, UINT uid)
@@ -256,8 +174,6 @@ LPTSTR TTXGetPath(PTTSet ts, UINT uid)
 			s = ts->UILanguageFile_ini;
 			break;
         case ID_EXEDIR:
-//			memset(buf, 0, dwsz*sizeof(TCHAR));
-//			GetModuleFileName(NULL, buf, dwsz - 1);
 			s = NULL;
 			break;
         case ID_LOGDIR:
@@ -269,10 +185,111 @@ LPTSTR TTXGetPath(PTTSet ts, UINT uid)
 	}
 	if (s)
 	{
-		return _tcsdup(s));
+		return _tcsdup(s);
 	}
 #endif /* _UNICODE */
 	return NULL;
+}
+
+BOOL TTXSetPath(PTTSet ts, UINT uid, LPTSTR s)
+{
+#ifdef _UNICODE
+	LPSTR p;
+	switch(uid)
+	{
+		case ID_HOMEDIR:
+			free(ts->HomeDirW);
+			ts->HomeDirW = _wcsdup(s);
+			p = toMB(s);
+			strncpy_s(ts->HomeDir, sizeof(ts->HomeDir), p, _TRUNCATE);
+			free(p);
+			break;
+        case ID_SETUPFNAME:
+			free(ts->SetupFNameW);
+			ts->SetupFNameW = _wcsdup(s);
+			p = toMB(s);
+			strncpy_s(ts->SetupFName, sizeof(ts->SetupFName), p, _TRUNCATE);
+			free(p);
+			break;
+        case ID_KEYCNFNM:
+			free(ts->KeyCnfFNW);
+			ts->KeyCnfFNW = _wcsdup(s);
+			p = toMB(s);
+			strncpy_s(ts->KeyCnfFN, sizeof(ts->KeyCnfFN), p, _TRUNCATE);
+			free(p);
+			break;
+        case ID_LOGFN:
+			free(ts->LogFNW);
+			ts->LogFNW = _wcsdup(s);
+			p = toMB(s);
+			strncpy_s(ts->LogFN, sizeof(ts->LogFN), p, _TRUNCATE);
+			free(p);
+			break;
+        case ID_MACROFN:
+			free(ts->MacroFNW);
+			ts->MacroFNW = _wcsdup(s);
+			p = toMB(s);
+			strncpy_s(ts->MacroFN, sizeof(ts->MacroFN), p, _TRUNCATE);
+			free(p);
+			break;
+        case ID_UILANGUAGEFILE:
+			free(ts->UILanguageFileW);
+			ts->UILanguageFileW = _wcsdup(s);
+			p = toMB(s);
+			strncpy_s(ts->UILanguageFile, sizeof(ts->UILanguageFile), p, _TRUNCATE);
+			free(p);
+			break;
+        case ID_UILANGUAGEFILE_INI:
+			free(ts->UILanguageFileW_ini);
+			ts->UILanguageFileW_ini = _wcsdup(s);
+			p = toMB(s);
+			strncpy_s(ts->UILanguageFile_ini, sizeof(ts->UILanguageFile_ini), p, _TRUNCATE);
+			free(p);
+			break;
+        case ID_EXEDIR:
+			free(ts->ExeDirW);
+			ts->ExeDirW = _wcsdup(s);
+			break;
+        case ID_LOGDIR:
+			free(ts->LogDirW);
+			ts->LogDirW = _wcsdup(s);
+			break;
+		default:
+			break;
+	}
+#else
+	switch(uid)
+	{
+		case ID_HOMEDIR:
+			strncpy_s(ts->HomeDir, sizeof(ts->HomeDir), s, _TRUNCATE);
+			break;
+        case ID_SETUPFNAME:
+			strncpy_s(ts->SetupFName, sizeof(ts->SetupFName), s, _TRUNCATE);
+			break;
+        case ID_KEYCNFNM:
+			strncpy_s(ts->KeyCnfFN, sizeof(ts->KeyCnfFN), s, _TRUNCATE);
+			break;
+        case ID_LOGFN:
+			strncpy_s(ts->LogFN, sizeof(ts->LogFN), s, _TRUNCATE);
+			break;
+        case ID_MACROFN:
+			strncpy_s(ts->MacroFN, sizeof(ts->MacroFN), s, _TRUNCATE);
+			break;
+        case ID_UILANGUAGEFILE:
+			strncpy_s(ts->UILanguageFile, sizeof(ts->UILanguageFile), s, _TRUNCATE);
+			break;
+        case ID_UILANGUAGEFILE_INI:
+			strncpy_s(ts->UILanguageFile_ini, sizeof(ts->UILanguageFile_ini), s, _TRUNCATE);
+			break;
+        case ID_EXEDIR:
+			break;
+        case ID_LOGDIR:
+			break;
+		default:
+			break;
+	}
+#endif /* _UNICODE */
+	return TRUE;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -319,7 +336,7 @@ BOOL TTXFree(LPVOID pBuf)
 
 //文字列 P 中に文字 c を検索し次のポインタを返す
 // p が NULL または文字列最終の場合はそのまま返す
-PTCHAR strskip(PTCHAR p, TCHAR c)
+LPTSTR strskip(LPTSTR p, TCHAR c)
 {
 	if (p) {
 		while (*p) {
@@ -342,7 +359,7 @@ PTCHAR strskip(PTCHAR p, TCHAR c)
 // ctx は現在の走査位置保存用変数のポインタ
 // p は連結文字列の開始位置(走査開始時))、NULL の場合は ctx の値を使う(2つ目以降の操作時)
 //すべて切り出したら NULL を返す
-PTCHAR StrSetTok(strset_t p, strset_t *ctx)
+LPTSTR StrSetTok(strset_t p, strset_t *ctx)
 {
 	PTCHAR ret;
 
@@ -413,7 +430,7 @@ int StrSetKeys(strset_t dst, strset_t src)
 //連結文字列からキーワードのインデックス取得
 // p, k は NULL 禁止
 //キーワードが見つからない場合は文字列個数を返す
-int StrSetFindIndex(strset_t p, PTCHAR k)
+int StrSetFindIndex(strset_t p, LPTSTR k)
 {
 	const TCHAR sep = _T('=');
 	int cnt = 0;
@@ -437,7 +454,7 @@ int StrSetFindIndex(strset_t p, PTCHAR k)
 //連結文字列からキーワードで検索し文字列取得
 // p, k は NULL 禁止
 //キーワードが見つからない場合は空文字列を返す
-PTCHAR StrSetFindKey(strset_t p, PTCHAR k)
+LPTSTR StrSetFindKey(strset_t p, LPTSTR k)
 {
 	const TCHAR sep = _T('=');
 	while (*p) {
@@ -460,7 +477,7 @@ PTCHAR StrSetFindKey(strset_t p, PTCHAR k)
 //値は「=」文字の次以降の文字列
 // p, v は NULL 禁止
 //値が見つからない場合は空文字列を返す
-PTCHAR StrSetFindVal(strset_t p, PTCHAR v)
+LPTSTR StrSetFindVal(strset_t p, LPTSTR v)
 {
 	const TCHAR sep = _T('=');
 	while (*p) {
@@ -484,7 +501,7 @@ PTCHAR StrSetFindVal(strset_t p, PTCHAR v)
 //連結文字列からn番目の文字列を取得
 // p は NULL 禁止
 // n が範囲外なら空文字列を返す
-PTCHAR StrSetAt(strset_t p, int n)
+LPTSTR StrSetAt(strset_t p, int n)
 {
 	int cnt = 0;
 	while (*p && (cnt < n)) {
@@ -505,7 +522,7 @@ PTCHAR StrSetAt(strset_t p, int n)
 
 // find address of file name
 // src のパスからファイル名の位置を取得
-PTCHAR FindFileName(PTCHAR path)
+LPTSTR FindFileName(LPCTSTR path)
 {
 	PTCHAR p;
 	p = _tcsrchr(path, _T('\\'));
@@ -515,7 +532,7 @@ PTCHAR FindFileName(PTCHAR path)
 
 // find address of file extension
 // path からファイル拡張子の位置を取得
-PTCHAR FindFileExt(PTCHAR path)
+LPTSTR FindFileExt(LPCTSTR path)
 {
 	PTCHAR p, q;
 	p = _tcsrchr(path, _T('\\'));
@@ -528,11 +545,11 @@ PTCHAR FindFileExt(PTCHAR path)
 // path の次のパスセグメントの位置を取得
 // path の最後がパス区切り文字の場合は、それは無いものとして扱う
 // path にパス区切り文字が無い場合は全体を対象とする
-PTCHAR FindPathNextComponent(PTCHAR path)
+LPTSTR FindPathNextComponent(LPCTSTR path)
 {
 	PTCHAR sp, ep, p;
 
-	sp = path;
+	sp = (LPTSTR)path;
 	ep = sp + _tcslen(sp);
 	p = ep;
 	if (p > sp) {
@@ -556,11 +573,11 @@ PTCHAR FindPathNextComponent(PTCHAR path)
 // src の最後がパス区切り文字の場合は、それは無いものとして扱う
 // src にパス区切り文字が無い場合は全体を対象とする
 // dst=NULL は禁止
-PTCHAR GetParentPath(PTCHAR dst, int sz, PTCHAR src)
+LPTSTR GetParentPath(LPTSTR dst, int sz, LPCTSTR src)
 {
-	PTCHAR sp, ep, p;
+	LPTSTR sp, ep, p;
 
-	sp = src;
+	sp = (LPTSTR)src;
 	ep = sp + _tcslen(sp);
 	p = ep;
 	if (p > sp) {
@@ -583,11 +600,11 @@ PTCHAR GetParentPath(PTCHAR dst, int sz, PTCHAR src)
 // src の最後がパス区切り文字の場合は、それは無いものとして扱う
 // src にパス区切り文字が無い場合は全体を対象とする
 // dst=NULL は禁止
-PTCHAR GetPathName(PTCHAR dst, int sz, PTCHAR src)
+LPTSTR GetPathName(LPTSTR dst, int sz, LPCTSTR src)
 {
-	PTCHAR sp, ep, p;
+	LPTSTR sp, ep, p;
 
-	sp = src;
+	sp = (LPTSTR)src;
 	ep = sp + _tcslen(sp);
 	p = ep;
 	if (p > sp) {
@@ -609,12 +626,12 @@ PTCHAR GetPathName(PTCHAR dst, int sz, PTCHAR src)
 // get linearized path
 // src のパスから「.」や「..」を取り除いて直列化したパスを複製
 // dst=NULL は禁止
-PTCHAR GetLinearizedPath(PTCHAR dst, int sz, PTCHAR src)
+LPTSTR GetLinearizedPath(LPTSTR dst, int sz, LPCTSTR src)
 {
-	PTCHAR sp, ep, p, p2;
+	LPTSTR sp, ep, p, p2;
 	int n;
 
-	sp = src;
+	sp = (LPTSTR)src;
 	ep = sp + _tcslen(sp);
 	_tcscpy_s(dst, sz, _T(""));
 	if (sp[0] == _T('\\') && sp[1] == _T('\\')) {
@@ -665,7 +682,7 @@ PTCHAR GetLinearizedPath(PTCHAR dst, int sz, PTCHAR src)
 // src が相対パスの場合は、base ファイルを基準とする
 // dst=NULL は禁止
 //「/」文字は対応していない
-PTCHAR GetAbsolutePath(PTCHAR dst, int sz, PTCHAR src, PTCHAR base)
+LPTSTR GetAbsolutePath(PTCHAR dst, int sz, LPCTSTR src, LPCTSTR base)
 {
 	TCHAR buf[MAX_PATH];
 	PTCHAR p;
@@ -688,11 +705,11 @@ PTCHAR GetAbsolutePath(PTCHAR dst, int sz, PTCHAR src, PTCHAR base)
 //ただし「..」は最大 lv 個までとし、それ以上の場合は絶対パスのままとする
 // dst=NULL は禁止
 //「/」文字は対応していない
-PTCHAR GetRelatedPath(PTCHAR dst, int sz, PTCHAR src, PTCHAR base, int lv)
+LPTSTR GetRelatedPath(LPTSTR dst, int sz, LPCTSTR src, LPCTSTR base, int lv)
 {
 	TCHAR buf[MAX_PATH];
 	int i, j, k;
-	PTCHAR p;
+	LPTSTR p;
 
 	i = j = 0;
 	GetLinearizedPath(buf, sizeof(buf) / sizeof(buf[0]), src);
@@ -736,7 +753,7 @@ PTCHAR GetRelatedPath(PTCHAR dst, int sz, PTCHAR src, PTCHAR base, int lv)
 // get file name
 // src のパスから拡張子を除いたファイルの名前を取得
 // dst=NULL は禁止
-PTCHAR GetFileName(PTCHAR dst, int sz, PTCHAR src)
+LPTSTR GetFileName(LPTSTR dst, int sz, LPCTSTR src)
 {
 	PTCHAR p;
 	p = FindFileName(src);
@@ -748,7 +765,7 @@ PTCHAR GetFileName(PTCHAR dst, int sz, PTCHAR src)
 		}
 		return dst;
 	}
-	return src;
+	return (LPTSTR)src;
 }
 
 // get file extension
@@ -757,7 +774,7 @@ PTCHAR GetFileName(PTCHAR dst, int sz, PTCHAR src)
 //「.」は含まない
 //無い場合は NULL を返す
 //パス区切り文字「\」「/」は認識しない
-PTCHAR GetFileExt(PTCHAR dst, int sz, PTCHAR src)
+LPTSTR GetFileExt(LPTSTR dst, int sz, LPTSTR src)
 {
 	PTCHAR p;
 	p = FindFileExt(src);
@@ -773,7 +790,7 @@ PTCHAR GetFileExt(PTCHAR dst, int sz, PTCHAR src)
 //関数は破壊関数
 //最後のパス区切り文字は削除
 //パス区切り文字「/」は「\」に変換
-PTCHAR RemovePathSlash(PTCHAR path)
+LPTSTR RemovePathSlash(LPTSTR path)
 {
 	PTCHAR p;
 
@@ -789,7 +806,7 @@ PTCHAR RemovePathSlash(PTCHAR path)
 }
 
 /// remove last slash from path
-PTCHAR RemoveFileName(PTCHAR path)
+LPTSTR RemoveFileName(LPTSTR path)
 {
 	PTCHAR p;
 
@@ -800,7 +817,7 @@ PTCHAR RemoveFileName(PTCHAR path)
 }
 
 /// remove last slash from path
-PTCHAR RemoveFileExt(PTCHAR path)
+LPTSTR RemoveFileExt(LPTSTR path)
 {
 	PTCHAR p;
 
@@ -814,7 +831,7 @@ PTCHAR RemoveFileExt(PTCHAR path)
 // combine path
 // path に子要素 fn を連結
 // path=NULL は禁止
-PTCHAR CombinePath(PTCHAR path, int sz, PTCHAR fn)
+LPTSTR CombinePath(LPTSTR path, int sz, LPCTSTR fn)
 {
 	RemovePathSlash(path);
 	_tcscat_s(path, sz, _T("\\"));
@@ -825,7 +842,7 @@ PTCHAR CombinePath(PTCHAR path, int sz, PTCHAR fn)
 // test exist file
 //ファイルが存在するか確認
 //存在していれは TRUE を返す
-BOOL FileExists(PTCHAR path)
+BOOL FileExists(LPCTSTR path)
 {
 	HANDLE hFind;
 	WIN32_FIND_DATA fd;
@@ -989,7 +1006,7 @@ BOOL WriteIniNum(LPCTSTR sect, LPCTSTR name, int val, BOOL bEnable, LPCTSTR fn)
 	TCHAR buf[16];
 	PTCHAR p = NULL;
 	if (bEnable || val) {
-		_tcprintf_s(buf, sizeof(buf), _TRUNCATE, "%d", val);
+		_sntprintf_s(buf, sizeof(buf), _TRUNCATE, _T("%d"), val);
 		p = buf;
 	}
 	return WritePrivateProfileString(sect, name, p, fn);

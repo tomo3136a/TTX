@@ -6,7 +6,9 @@
 #include "teraterm.h"
 #include "tttypes.h"
 #include "ttplugin.h"
+#ifdef _UNICODE
 #include "tttypes_key.h"
+#endif
 #include "tt_res.h"
 
 #include <stdlib.h>
@@ -109,6 +111,8 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 static void PASCAL TTXReadIniFile(TT_LPTCSTR fn, PTTSet ts)
 {
 	TCHAR buf[MAX_PATH];
+	TCHAR path[MAX_PATH];
+	LPTSTR p;
 
 	if (!pvar->skip)
 		(pvar->origReadIniFile)(fn, ts);
@@ -118,12 +122,11 @@ static void PASCAL TTXReadIniFile(TT_LPTCSTR fn, PTTSet ts)
 	pvar->UseKeyCnf = (buf[0]) ? TRUE : FALSE;
 	if (pvar->UseKeyCnf)
 	{
-		//GetAbsolutePath(pvar->ts->KeyCnfFN, sizeof(pvar->ts->KeyCnfFN), buf, fn);
-		GetAbsolutePath(
-			(PTCHAR)(pvar->ts->KeyCnfFNW), 
-			_tcslen(pvar->ts->KeyCnfFNW), 
-			buf, 
-			(PTCHAR)fn);
+		p  = TTXGetPath(ts, ID_KEYCNFNM);
+		_tcscpy_s(path, sizeof(path)/sizeof(path[0]), p);
+		TTXFree(p);
+		GetAbsolutePath(path, sizeof(path)/sizeof(path[0]), buf, fn);
+		TTXSetPath(ts, ID_KEYCNFNM, path);
 		PostMessage(pvar->cv->HWin, WM_USER_ACCELCOMMAND, IdCmdLoadKeyMap, 0);
 	}
 
@@ -142,24 +145,35 @@ static void PASCAL TTXReadIniFile(TT_LPTCSTR fn, PTTSet ts)
 static void PASCAL TTXWriteIniFile(TT_LPTCSTR fn, PTTSet ts)
 {
 	TCHAR buf[MAX_PATH];
-	PTCHAR p;
+	LPTSTR p;
+	LPTSTR p1;
+	LPTSTR p2;
 
 	(pvar->origWriteIniFile)(fn, ts);
 
 	p = NULL;
 	if (pvar->UseKeyCnf)
 	{
-		GetRelatedPath(buf, sizeof(buf)/sizeof(buf[0]), 
-			pvar->ts->KeyCnfFNW, pvar->ts->SetupFNameW, 0);
+		// GetRelatedPath(buf, sizeof(buf)/sizeof(buf[0]), 
+		// 	pvar->ts->KeyCnfFNW, pvar->ts->SetupFNameW, 0);
+		p1 = TTXGetPath(pvar->ts, ID_KEYCNFNM);
+		p2 = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+		GetRelatedPath(buf, sizeof(buf)/sizeof(buf[0]), p1, p2, 0);
+		TTXFree(p1);
+		TTXFree(p2);
 		p = buf;
 	}
-	WritePrivateProfileString(_T(INISECTION), _T("KeyCnf"), p, (PTCHAR)fn);
+	WritePrivateProfileString(_T(INISECTION), _T("KeyCnf"), p, fn);
 
 	p = NULL;
 	if (pvar->EnableEnv)
 	{
-		GetRelatedPath(buf, sizeof(buf)/sizeof(buf[0]), 
-			pvar->SetupDir, pvar->ts->SetupFNameW, 0);
+		//GetRelatedPath(buf, sizeof(buf)/sizeof(buf[0]), 
+		//	pvar->SetupDir, pvar->ts->SetupFNameW, 0);
+		p1 = pvar->SetupDir;
+		p2 = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+		GetRelatedPath(buf, sizeof(buf)/sizeof(buf[0]), p1, p2, 0);
+		TTXFree(p2);
 		p = buf;
 	}
 	WriteIniOnOff(_T(INISECTION), _T("EnableEnv"), pvar->EnableEnv, pvar->EnableEnv, (PTCHAR)fn);
@@ -340,6 +354,7 @@ static LRESULT CALLBACK EnvCopyProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 	TCHAR buf[MAX_PATH];
 	TCHAR path[MAX_PATH];
 	TCHAR fn[MAX_PATH];
+	LPTSTR p;
 	PTCHAR s;
 
 	switch (msg)
@@ -347,9 +362,13 @@ static LRESULT CALLBACK EnvCopyProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 	case WM_INITDIALOG:
 		GetAbsolutePath(buf, sizeof(buf)/sizeof(buf[0]), pvar->SetupDir, pvar->SetupFile);
 		SetDlgItemText(dlg, IDC_PATH1, buf);
-		GetPathName(buf, sizeof(buf)/sizeof(buf[0]), pvar->ts->SetupFNameW);
+		p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+		GetPathName(buf, sizeof(buf)/sizeof(buf[0]), p);
+		TTXFree(p);
 		SetDlgItemText(dlg, IDC_PATH2, buf);
-		GetPathName(buf, sizeof(buf)/sizeof(buf[0]), pvar->ts->KeyCnfFNW);
+		p = TTXGetPath(pvar->ts, ID_KEYCNFNM);
+		GetPathName(buf, sizeof(buf)/sizeof(buf[0]), p);
+		TTXFree(p);
 		SetDlgItemText(dlg, IDC_PATH3, buf);
 		CheckDlgButton(dlg, IDC_CHECK2, BST_CHECKED);
 		CheckDlgButton(dlg, IDC_CHECK3, BST_CHECKED);
@@ -374,9 +393,13 @@ static LRESULT CALLBACK EnvCopyProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 				}
 				else
 				{
-					GetPathName(buf, sizeof(buf)/sizeof(buf[0]), pvar->ts->SetupFNameW);
+					p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+					GetPathName(buf, sizeof(buf)/sizeof(buf[0]), p);
+					TTXFree(p);
 					SetDlgItemText(dlg, IDC_PATH2, buf);
-					GetPathName(buf, sizeof(buf)/sizeof(buf[0]), pvar->ts->KeyCnfFNW);
+					p = TTXGetPath(pvar->ts, ID_KEYCNFNM);
+					GetPathName(buf, sizeof(buf)/sizeof(buf[0]), p);
+					TTXFree(p);
 					SetDlgItemText(dlg, IDC_PATH3, buf);
 				}
 			}
@@ -404,9 +427,13 @@ static LRESULT CALLBACK EnvCopyProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 				}
 				else
 				{
-					GetPathName(buf, sizeof(buf)/sizeof(buf[0]), pvar->ts->SetupFNameW);
+					p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+					GetPathName(buf, sizeof(buf)/sizeof(buf[0]), p);
+					TTXFree(p);
 					SetDlgItemText(dlg, IDC_PATH2, buf);
-					GetPathName(buf, sizeof(buf)/sizeof(buf[0]), pvar->ts->KeyCnfFNW);
+					p = TTXGetPath(pvar->ts, ID_KEYCNFNM);
+					GetPathName(buf, sizeof(buf)/sizeof(buf[0]), p);
+					TTXFree(p);
 					SetDlgItemText(dlg, IDC_PATH3, buf);
 				}
 				EnableWindow(GetDlgItem(dlg, IDC_PATH2), FALSE);
@@ -447,7 +474,9 @@ static LRESULT CALLBACK EnvCopyProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 					return FALSE;
 				}
 			}
-			CopyFile(pvar->ts->SetupFNameW, fn, FALSE);
+			p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+			CopyFile(p, fn, FALSE);
+			TTXFree(p);
 			WritePrivateProfileString(_T(INISECTION), _T("EnableEnv"), NULL, fn);
 			WritePrivateProfileString(_T(INISECTION), _T("SetupDir"), NULL, fn);
 			WritePrivateProfileString(_T(INISECTION), _T("KeyCnf"), NULL, fn);
@@ -480,13 +509,15 @@ static LRESULT CALLBACK EnvCopyProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 			}
 
 			// set startup macro
-			if (pvar->ts->MacroFN[0] &&
+			p = TTXGetPath(pvar->ts, ID_MACROFN);
+			if (p[0] &&
 				(IsDlgButtonChecked(dlg, IDC_CHECK3) == BST_CHECKED) &&
-				CopyPathEnv(buf, sizeof(buf)/sizeof(buf[0]), pvar->ts->MacroFNW, FALSE, pvar->ttpath, fn))
+				CopyPathEnv(buf, sizeof(buf)/sizeof(buf[0]), p, FALSE, pvar->ttpath, fn))
 			{
 				GetRelatedPath(path, sizeof(path)/sizeof(path[0]), buf, pvar->ttpath, 0);
 				WritePrivateProfileString(_T(TTSECTION), _T("StartupMacro"), path, fn);
 			}
+			TTXFree(p);
 
 			// copy keymap file
 			GetDlgItemText(dlg, IDC_PATH3, buf, sizeof(buf));
@@ -497,7 +528,9 @@ static LRESULT CALLBACK EnvCopyProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 				if (!FileExists(path) ||
 					(MessageBox(dlg, s, _T("WARNING"), MB_YESNO | MB_ICONWARNING) == IDYES))
 				{
-					CopyFile(pvar->ts->KeyCnfFNW, path, FALSE);
+					p = TTXGetPath(pvar->ts, ID_KEYCNFNM);
+					CopyFile(p, path, FALSE);
+					TTXFree(p);
 				}
 				GetRelatedPath(buf, sizeof(buf)/sizeof(buf[0]), path, fn, 2);
 				WritePrivateProfileString(_T(INISECTION), _T("KeyCnf"), buf, fn);
@@ -508,8 +541,7 @@ static LRESULT CALLBACK EnvCopyProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 			}
 			if (pvar->OverEnv)
 			{
-				_tcscpy_s(pvar->ts->SetupFNameW, 
-					sizeof(pvar->ts->SetupFNameW)/sizeof(TCHAR), fn);
+				TTXSetPath(pvar->ts, ID_SETUPFNAME, fn);
 			}
 			EndDialog(dlg, IDOK);
 			return TRUE;
@@ -579,7 +611,9 @@ static void PASCAL TTXModifyPopupMenu(HMENU menu)
 		}
 
 		uid = TTXMenuID(ID_MENUITEM);
-		uflg = MF_ENABLED | ((_tcsnicmp(pvar->ts->SetupFNameW, pvar->SetupFile, MAX_PATH) == 0) ? MF_CHECKED : 0);
+		p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+		uflg = MF_ENABLED | ((_tcsnicmp(p, pvar->SetupFile, MAX_PATH) == 0) ? MF_CHECKED : 0);
+		TTXFree(p);
 		GetRelatedPath(path, sizeof(path)/sizeof(path[0]), pvar->SetupFile, pvar->SetupFile, 0);
 		RemoveFileExt(path);
 		_sntprintf_s(name, sizeof(name)/sizeof(name[0]), _TRUNCATE, _T("&0 + %s"), path);
@@ -605,7 +639,9 @@ static void PASCAL TTXModifyPopupMenu(HMENU menu)
 				AppendMenu(menu, MF_ENABLED, uid, _T("more..."));
 				break;
 			}
-			uflg = MF_ENABLED | ((_tcsnicmp(pvar->ts->SetupFNameW, path, MAX_PATH) == 0) ? MF_CHECKED : 0);
+			p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+			uflg = MF_ENABLED | ((_tcsnicmp(p, path, MAX_PATH) == 0) ? MF_CHECKED : 0);
+			TTXFree(p);
 			GetRelatedPath(path, sizeof(path)/sizeof(path[0]), path, pvar->SetupFile, 0);
 			RemoveFileExt(path);
 			_sntprintf_s(name, sizeof(name)/sizeof(name[0]), _TRUNCATE, _T("&%d + %s"), TTXMenuOrgID(uid - ID_MENUITEM), path);
@@ -644,7 +680,9 @@ static void PASCAL TTXModifyPopupMenu(HMENU menu)
 				GetAbsolutePath(path, sizeof(path)/sizeof(path[0]), pvar->SetupDir, pvar->SetupFile);
 				CombinePath(path, sizeof(path)/sizeof(path[0]), win32fd2.cFileName);
 				CombinePath(path, sizeof(path)/sizeof(path[0]), win32fd.cFileName);
-				uflg = MF_ENABLED | ((_tcsnicmp(pvar->ts->SetupFNameW, path, MAX_PATH) == 0) ? MF_CHECKED : 0);
+				p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+				uflg = MF_ENABLED | ((_tcsnicmp(p, path, MAX_PATH) == 0) ? MF_CHECKED : 0);
+				TTXFree(p);
 				GetRelatedPath(path, sizeof(path)/sizeof(path[0]), path, pvar->SetupFile, 0);
 				RemoveFileExt(path);
 				while (p = _tcschr(path, _T('\\')))
@@ -702,7 +740,7 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 		return 1;
 
 	case ID_MENUITEM:
-		_tcscpy_s(pvar->ts->SetupFNameW, sizeof(pvar->ts->SetupFNameW), pvar->SetupFile);
+		TTXSetPath(pvar->ts, ID_SETUPFNAME, pvar->SetupFile);
 		pvar->OverEnv = TRUE;
 		SendMessage(hWin, WM_USER_ACCELCOMMAND, IdCmdRestoreSetup, 0);
 		return 1;
@@ -723,7 +761,7 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 			CombinePath(path, sizeof(path)/sizeof(path[0]), (p + 2));
 			_tcscat_s(path, sizeof(path)/sizeof(path[0]), _T(".INI"));
 			RemovePathSlash(path);
-			_tcscpy_s(pvar->ts->SetupFNameW, sizeof(pvar->ts->SetupFNameW), path);
+			TTXSetPath(pvar->ts, ID_SETUPFNAME, path);
 			pvar->OverEnv = TRUE;
 			SendMessage(hWin, WM_USER_ACCELCOMMAND, IdCmdRestoreSetup, 0);
 		}
@@ -732,11 +770,13 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 
 	if (cmd == ID_MENUITEM + MENUITEM_NUM)
 	{
-		_tcscpy_s(path, sizeof(path)/sizeof(path[0]), pvar->ts->SetupFNameW);
+		p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+		_tcscpy_s(path, sizeof(path)/sizeof(path[0]), p);
+		TTXFree(p);
 		p = _T("設定ファイル(*.ini)\0*.ini\0\0");
 		if (OpenFileDlg(0, 0, _T("設定ファイル"), p, path, NULL, 0))
 		{
-			_tcscpy_s(pvar->ts->SetupFNameW, sizeof(pvar->ts->SetupFNameW)/sizeof(TCHAR), path);
+			TTXSetPath(pvar->ts, ID_SETUPFNAME, path);
 			pvar->OverEnv = TRUE;
 			SendMessage(hWin, WM_USER_ACCELCOMMAND, IdCmdRestoreSetup, 0);
 		}

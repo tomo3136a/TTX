@@ -17,12 +17,8 @@
 #else
 #define TT_TCHAR CHAR
 #define TT_LPTSTR LPSTR
-#define TT_LPTCSTR LPCSTR
+#define TT_LPTCSTR LPSTR
 #endif /* _UNICODE */
-
-//#define TT_TCHAR TCHAR
-//#define TT_LPTSTR LPTSTR
-//#define TT_LPTCSTR LPTCSTR
 
 #include <windows.h>
 
@@ -41,19 +37,19 @@ extern "C"
 
     /* ttx support */
     ///TTX load test
-    BOOL TTXIgnore(int order, PTCHAR name, WORD version);
+    BOOL TTXIgnore(int order, LPCTSTR name, WORD version);
 
-    ///token command line parameter
-    PTCHAR TTXGetParam(PTCHAR buf, size_t sz, PTCHAR param);
+    //token command line parameter
+    PTCHAR TTXGetParam(LPTSTR buf, size_t sz, LPTSTR param);
 
-    ///get UI language ID(1=English, 2=Japanese)
-    UINT UILang(PCHAR lang);
+    //get UI language ID(1=English, 2=Japanese)
+    UINT UILang(LPSTR lang);
 
-    ///get Menu ID offset
+    //get Menu ID offset
     int TTXMenuID(UINT uid);
     int TTXMenuOrgID(UINT uid);
 
-    ///get environment string
+    //path string
     enum {
         ID_HOMEDIR              = 1,
         ID_SETUPFNAME           = 2,
@@ -66,8 +62,8 @@ extern "C"
         ID_LOGDIR               = 9,
         ID_STRMAX,
     };
-    //size_t GetEnvPath(PTTSet ts, UINT uid, TCHAR *buf, DWORD dwsz);
     LPTSTR TTXGetPath(PTTSet ts, UINT uid);
+    BOOL TTXSetPath(PTTSet ts, UINT uid, LPTSTR s);
 
     /* string */
     LPSTR WC2MB(UINT cp, LPWSTR pwzSrc);
@@ -82,21 +78,21 @@ extern "C"
     inline LPSTR toMB(LPTSTR pszSrc){ return WC2MB(CP_ACP, pszSrc); }
     inline LPTSTR toTC(LPSTR pszSrc){ return MB2WC(CP_ACP, pszSrc); }
 #else
-    inline LPSTR toMB(LPCTSTR pszSrc){ return _tcsdup(pszSrc); }
-    inline LPTSTR toTC(LPCSTR pszSrc){ return _tcsdup(pszSrc); }
+    inline LPSTR toMB(LPTSTR pszSrc){ return _tcsdup(pszSrc); }
+    inline LPTSTR toTC(LPSTR pszSrc){ return _tcsdup(pszSrc); }
 #endif /* _UNICODE */
 
     BOOL TTXFree(LPVOID pBuf);
 
     ///文字列中に文字を検索し次のポインタを返す
-    PTCHAR strskip(PTCHAR p, TCHAR c);
+    LPTSTR strskip(LPTSTR p, TCHAR c);
 
     /* string set */
     ///連結文字列定義
-    typedef PTCHAR strset_t;
+    typedef LPTSTR strset_t;
 
     ///連結文字列から順次切り出す
-    PTCHAR StrSetTok(strset_t p, strset_t *ctx);
+    LPTSTR StrSetTok(strset_t p, strset_t *ctx);
 
     ///連結文字列のサイズを取得する
     int StrSetSize(strset_t p, int *cnt);
@@ -105,62 +101,62 @@ extern "C"
     int StrSetKeys(strset_t dst, strset_t src);
 
     ///連結文字列からキーワードのインデックス取得
-    int StrSetFindIndex(strset_t p, PTCHAR k);
+    int StrSetFindIndex(strset_t p, LPTSTR k);
 
     ///連結文字列からキーワードで検索し文字列取得
-    PTCHAR StrSetFindKey(strset_t p, PTCHAR k);
+    LPTSTR StrSetFindKey(strset_t p, LPTSTR k);
 
     ///連結文字列から値で検索し文字列取得
-    PTCHAR StrSetFindVal(strset_t p, PTCHAR v);
+    LPTSTR StrSetFindVal(strset_t p, LPTSTR v);
 
     ///連結文字列からn番目の文字列を取得する
-    PTCHAR StrSetAt(strset_t p, int n);
+    LPTSTR StrSetAt(strset_t p, int n);
 
     /* path */
     // fileapi.h は使わないようなので代替え実装、互換性はない
 
     /* find 型 */
     ///find file name address
-    PTCHAR FindFileName(PTCHAR path);
+    LPTSTR FindFileName(LPCTSTR path);
 
     ///find file extension address
-    PTCHAR FindFileExt(PTCHAR path);
+    LPTSTR FindFileExt(LPCTSTR path);
 
     ///find path component path address
-    PTCHAR FindPathNextComponent(PTCHAR path);
+    LPTSTR FindPathNextComponent(LPCTSTR path);
 
     /* build 型(src to dst) */
     ///get parent path
-    PTCHAR GetParentPath(PTCHAR dst, int sz, PTCHAR src);
+    LPTSTR GetParentPath(LPTSTR dst, int sz, LPCTSTR src);
 
     ///get path item name
-    PTCHAR GetPathName(PTCHAR dst, int sz, PTCHAR src);
+    LPTSTR GetPathName(LPTSTR dst, int sz, LPCTSTR src);
 
     ///get linearized path
-    PTCHAR GetLinearizedPath(PTCHAR dst, int sz, PTCHAR src);
+    LPTSTR GetLinearizedPath(PTCHAR dst, int sz, LPCTSTR src);
 
     ///get absolute path
-    PTCHAR GetAbsolutePath(PTCHAR dst, int sz, PTCHAR src, PTCHAR base);
+    LPTSTR GetAbsolutePath(LPTSTR dst, int sz, LPCTSTR src, LPCTSTR base);
 
     ///get related path
-    PTCHAR GetRelatedPath(PTCHAR dst, int sz, PTCHAR src, PTCHAR base, int lv);
+    LPTSTR GetRelatedPath(LPTSTR dst, int sz, LPCTSTR src, LPCTSTR base, int lv);
 
     /* replase 型 */
     ///remove last slash from path
-    PTCHAR RemovePathSlash(PTCHAR path);
+    LPTSTR RemovePathSlash(LPTSTR path);
 
     ///remove last slash from path
-    PTCHAR RemoveFileName(PTCHAR path);
+    LPTSTR RemoveFileName(LPTSTR path);
 
     ///remove last slash from path
-    PTCHAR RemoveFileExt(PTCHAR path);
+    LPTSTR RemoveFileExt(LPTSTR path);
 
     ///combine path
-    PTCHAR CombinePath(PTCHAR path, int sz, PTCHAR fn);
+    LPTSTR CombinePath(LPTSTR path, int sz, LPCTSTR fn);
 
     /* test 型 */
     ///test exist file
-    BOOL FileExists(PTCHAR path);
+    BOOL FileExists(LPCTSTR path);
 
     /* setting file */
     ///セクション名の連結文字列取得(開放はfree(outp))
