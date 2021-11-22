@@ -532,7 +532,7 @@ LPTSTR StrSetAt(strset_t p, int n)
 // src のパスからファイル名の位置を取得
 LPTSTR FindFileName(LPCTSTR path)
 {
-	PTCHAR p;
+	LPTSTR p;
 	p = _tcsrchr(path, _T('\\'));
 	p = p ? (p + 1) : path;
 	return p;
@@ -542,7 +542,7 @@ LPTSTR FindFileName(LPCTSTR path)
 // path からファイル拡張子の位置を取得
 LPTSTR FindFileExt(LPCTSTR path)
 {
-	PTCHAR p, q;
+	LPTSTR p, q;
 	p = _tcsrchr(path, _T('\\'));
 	p = p ? (p + 1) : path;
 	q = _tcsrchr(p, _T('.'));
@@ -555,7 +555,7 @@ LPTSTR FindFileExt(LPCTSTR path)
 // path にパス区切り文字が無い場合は全体を対象とする
 LPTSTR FindPathNextComponent(LPCTSTR path)
 {
-	PTCHAR sp, ep, p;
+	LPTSTR sp, ep, p;
 
 	sp = (LPTSTR)path;
 	ep = sp + _tcslen(sp);
@@ -602,6 +602,31 @@ LPTSTR GetParentPath(LPTSTR dst, int sz, LPCTSTR src)
 	_tcsncpy_s(dst, sz, sp, p - sp);
 	return dst;
 }
+
+// LPTSTR GetParentPath(LPCTSTR src)
+// {
+// 	LPTSTR sp, ep, p, dst;
+// 	size_t sz;
+
+// 	sp = (LPTSTR)src;
+// 	ep = sp + _tcslen(sp);
+// 	p = ep;
+// 	if (p > sp) {
+// 		p--;
+// 		ep = (*p == '\\' || *p == '/') ? (ep - 1) : ep;
+// 		p = ep;
+// 		while (p > sp) {
+// 			p--;
+// 			if (*p == '\\' || *p == '/' || *p == ':') {
+// 				break;
+// 			}
+// 		}
+// 	}
+// 	sz = p - sp + sizeof(TCHAR);
+// 	dst = (LPTSTR)malloc(sz * sizeof(TCHAR));
+// 	_tcsncpy_s(dst, sz, sp, p - sp);
+// 	return dst;
+// }
 
 // get path segment name
 // src のファイル名を取得し、サイズ sz の dst に複製
@@ -657,7 +682,6 @@ LPTSTR GetLinearizedPath(LPTSTR dst, int sz, LPCTSTR src)
 	while (p <= ep) {
 		if (*p == _T('\\') || *p == _T('/') || p == ep) {
 			n = p - sp;
-			// n = p - src;
 			if (n > 0 && (p[-1] == _T('\\') || p[-1] == _T('/'))) {
 				// Nothing
 			}

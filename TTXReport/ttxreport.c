@@ -465,34 +465,38 @@ void SetInfoMsg(HWND hWnd, LPCTSTR szText, DWORD dwSize)
 
 VOID UpdateReportMsg(HWND hWnd)
 {
-	TCHAR tmp[1024];
-	TCHAR path[MAX_PATH];
+	TCHAR buf[1024];
+	size_t path_sz;
+	LPTSTR path;
 	DWORD dwSize;
 	HANDLE hFile;
 	LPTSTR p;
-	int sz;
+	size_t sz;
 
-	memset(tmp, 0, sizeof(tmp));
+	memset(buf, 0, 1024*sizeof(TCHAR));
 	if (pvar->report_title[0])
 	{
-		_tcsncpy_s(tmp, 1024, pvar->report_title, _TRUNCATE);
-		_tcsncat_s(tmp, 1024, _T("\r\n"), _TRUNCATE);
+		_tcsncpy_s(buf, 1024, pvar->report_title, _TRUNCATE);
+		_tcsncat_s(buf, 1024, _T("\r\n"), _TRUNCATE);
 	}
+
 	p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
-	GetAbsolutePath(path, sizeof(path)/sizeof(path[0]), 
-		pvar->report_note_path, p);
+	path_sz = _tcsnlen(pvar->report_note_path, _TRUNCATE) + _tcsnlen(p, _TRUNCATE) + 2;
+	path = (LPTSTR)malloc(path_sz*sizeof(TCHAR));
+	GetAbsolutePath(path, path_sz, pvar->report_note_path, p);
 	TTXFree(p);
 	hFile = CreateFile(path, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
+	free(path);
 	if (hFile != INVALID_HANDLE_VALUE)
 	{
-		sz = _tcsnlen(tmp, _TRUNCATE);
-		if (ReadFile(hFile, tmp + sz, 1024 - sz, &dwSize, NULL))
-			tmp[sz + dwSize - 1] = _T('\0');
+		sz = _tcsnlen(buf, _TRUNCATE);
+		if (ReadFile(hFile, buf + sz, 1024 - sz, &dwSize, NULL))
+			buf[sz + dwSize - 1] = _T('\0');
 		CloseHandle(hFile);
 	}
 
 	if (pvar->ChangeReport)
-		SetInfoMsg(report_dialog, tmp, dwSize);
+		SetInfoMsg(report_dialog, buf, dwSize);
 }
 
 ///////////////////////////////////////////////////////////////

@@ -52,9 +52,9 @@ typedef struct
 	BOOL EnableEnv;
 	BOOL OverEnv;
 	BOOL UseKeyCnf;
-	TCHAR SetupFile[MAX_PATH];
-	TCHAR SetupDir[MAX_PATH];
-	TCHAR ttpath[MAX_PATH];
+	LPTSTR SetupFile;
+	LPTSTR SetupDir;
+	LPTSTR ttpath;
 
 } TInstVar;
 
@@ -75,10 +75,9 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 	pvar->UseEnv = FALSE;
 	pvar->EnableEnv = FALSE;
 	pvar->OverEnv = FALSE;
-	pvar->SetupFile[0] = 0;
-	pvar->SetupDir[0] = 0;
-	memset(pvar->ttpath, sizeof(pvar->ttpath), 0);
-	GetModuleFileName(NULL, pvar->ttpath, sizeof(pvar->ttpath) - 1);
+	pvar->SetupFile = NULL;
+	pvar->SetupDir = NULL;
+	pvar->ttpath = TTXGetModuleFileName(NULL);
 }
 
 ///////////////////////////////////////////////////////////////
@@ -110,74 +109,102 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 
 static void PASCAL TTXReadIniFile(TT_LPCTSTR fn, PTTSet ts)
 {
-	TCHAR buf[MAX_PATH];
-	TCHAR path[MAX_PATH];
+	TCHAR buf[32];
+	size_t path_sz;
+	LPTSTR path;
 	LPTSTR p;
 
 	if (!pvar->skip)
 		(pvar->origReadIniFile)(fn, ts);
 
 	GetPrivateProfileString(_T(INISECTION), _T("KeyCnf"), _T(""), 
-		buf, sizeof(buf)/sizeof(buf[0]), (LPCTSTR)fn);
+		buf, sizeof(buf)/sizeof(buf[0]), fn);
 	pvar->UseKeyCnf = (buf[0]) ? TRUE : FALSE;
 	if (pvar->UseKeyCnf)
 	{
 		p  = TTXGetPath(ts, ID_KEYCNFNM);
-		_tcscpy_s(path, sizeof(path)/sizeof(path[0]), p);
-		TTXFree(p);
-		GetAbsolutePath(path, sizeof(path)/sizeof(path[0]), buf, fn);
+		path_sz = _tcsnlen(p, _TRUNCATE) + _tcsnlen(fn, _TRUNCATE) + 2;
+		path = (LPTSTR)malloc(path_sz*sizeof(TCHAR));
+		GetAbsolutePath(path, path_sz, p, fn);
 		TTXSetPath(ts, ID_KEYCNFNM, path);
+		free(path);
+		TTXFree(p);
 		PostMessage(pvar->cv->HWin, WM_USER_ACCELCOMMAND, IdCmdLoadKeyMap, 0);
 	}
 
-	pvar->EnableEnv = GetIniOnOff(_T(INISECTION), _T("EnableEnv"), FALSE, (PTCHAR)fn);
+	pvar->EnableEnv = GetIniOnOff(_T(INISECTION), _T("EnableEnv"), FALSE, fn);
 	if (!pvar->OverEnv)
 	{
 		pvar->UseEnv = pvar->EnableEnv;
-		_tcscpy_s(pvar->SetupFile, sizeof(pvar->SetupFile), fn);
-		GetPrivateProfileString(_T(INISECTION), _T("SetupDir"), _T(""), 
-			buf, sizeof(buf)/sizeof(buf[0]), (PTCHAR)fn);
-		GetAbsolutePath(pvar->SetupDir, sizeof(pvar->SetupDir), buf, (PTCHAR)fn);
+		path_sz = _tcsnlen(fn, _TRUNCATE) + 1;
+		path = (LPTSTR)malloc(path_sz*sizeof(TCHAR));
+		_tcscpy_s(path, path_sz, fn);
+		if (pvar->SetupFile)
+		{
+			free(pvar->SetupFile);
+			pvar->SetupFile = NULL;
+		}
+		pvar->SetupFile = path;
+	
+		p = NULL;
+		GetIniString(_T(INISECTION), _T("SetupDir"), _T(""), &p, 128, 64, fn);
+		path_sz = _tcsnlen(p, _TRUNCATE) + _tcsnlen(fn, _TRUNCATE) + 2;
+		path = (LPTSTR)malloc(path_sz*sizeof(TCHAR));
+		GetAbsolutePath(path, path_sz, p, fn);
+		TTXFree(p);
+		if (pvar->SetupDir)
+		{
+			free(pvar->SetupDir);
+			pvar->SetupDir = NULL;
+		}
+		pvar->SetupDir = path;
 	}
 	pvar->OverEnv = FALSE;
 }
 
 static void PASCAL TTXWriteIniFile(TT_LPCTSTR fn, PTTSet ts)
 {
-	TCHAR buf[MAX_PATH];
-	LPTSTR p;
+	size_t path_sz;
+	LPTSTR path;
 	LPTSTR p1;
 	LPTSTR p2;
 
 	(pvar->origWriteIniFile)(fn, ts);
 
-	p = NULL;
+	path = NULL;
 	if (pvar->UseKeyCnf)
 	{
 		// GetRelatedPath(buf, sizeof(buf)/sizeof(buf[0]), 
 		// 	pvar->ts->KeyCnfFNW, pvar->ts->SetupFNameW, 0);
 		p1 = TTXGetPath(pvar->ts, ID_KEYCNFNM);
 		p2 = TTXGetPath(pvar->ts, ID_SETUPFNAME);
-		GetRelatedPath(buf, sizeof(buf)/sizeof(buf[0]), p1, p2, 0);
+		path_sz = _tcsnlen(p1, _TRUNCATE) + _tcsnlen(p2, _TRUNCATE) + 2;
+		path = (LPTSTR)malloc(path_sz+sizeof(TCHAR));
+		GetRelatedPath(path, path_sz, p1, p2, 0);
 		TTXFree(p1);
 		TTXFree(p2);
-		p = buf;
 	}
-	WritePrivateProfileString(_T(INISECTION), _T("KeyCnf"), p, fn);
+	WritePrivateProfileString(_T(INISECTION), _T("KeyCnf"), path, fn);
+	if (path)
+		free(path);
 
-	p = NULL;
+	path = NULL;
 	if (pvar->EnableEnv)
 	{
 		//GetRelatedPath(buf, sizeof(buf)/sizeof(buf[0]), 
 		//	pvar->SetupDir, pvar->ts->SetupFNameW, 0);
 		p1 = pvar->SetupDir;
 		p2 = TTXGetPath(pvar->ts, ID_SETUPFNAME);
-		GetRelatedPath(buf, sizeof(buf)/sizeof(buf[0]), p1, p2, 0);
+		path_sz = _tcsnlen(p1, _TRUNCATE) + _tcsnlen(p2, _TRUNCATE) + 2;
+		path = (LPTSTR)malloc(path_sz+sizeof(TCHAR));
+		GetRelatedPath(path, path_sz, p1, p2, 0);
 		TTXFree(p2);
-		p = buf;
 	}
-	WriteIniOnOff(_T(INISECTION), _T("EnableEnv"), pvar->EnableEnv, pvar->EnableEnv, (PTCHAR)fn);
-	WritePrivateProfileString(_T(INISECTION), _T("SetupDir"), p, fn);
+	WritePrivateProfileString(_T(INISECTION), _T("SetupDir"), path, fn);
+	if (path)
+		free(path);
+
+	WriteIniOnOff(_T(INISECTION), _T("EnableEnv"), pvar->EnableEnv, pvar->EnableEnv, fn);
 }
 
 static void PASCAL TTXParseParam(TT_LPTSTR Param, PTTSet ts, PCHAR DDETopic)
@@ -293,7 +320,7 @@ static void PASCAL TTXGetSetupHooks(TTXSetupHooks *hooks)
 
 // src_baseを基準としたsrcのパスをdst_baseのフォルダにコピーする。
 // ファイルコピーしたら TRUE を返す
-BOOL CopyPathEnv(PTCHAR dst, int sz, PTCHAR src, BOOL force, PTCHAR src_base, PTCHAR dst_base)
+BOOL CopyPathEnv(LPTSTR dst, int sz, LPTSTR src, BOOL force, LPTSTR src_base, LPTSTR dst_base)
 {
 	TCHAR path[MAX_PATH];
 	TCHAR tmp[MAX_PATH];
@@ -508,7 +535,12 @@ static LRESULT CALLBACK EnvCopyProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 				{
 					pvar->EnableEnv = TRUE;
 					pvar->UseEnv = TRUE;
-					_tcscpy_s(pvar->SetupFile, sizeof(pvar->SetupFile)/sizeof(TCHAR), fn);
+					if (pvar->SetupFile)
+					{
+						free(pvar->SetupFile);
+						pvar->SetupFile = NULL;
+					}
+					pvar->SetupFile = _tcsdup(fn);
 				}
 			}
 
