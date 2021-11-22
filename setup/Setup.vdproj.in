@@ -140,13 +140,13 @@
         }
         "File"
         {
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_143E7E1DACAE463ABEE937F304321D99"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_20DDFAC956B44F1ABEA72D8D8651864A"
             {
-            "SourcePath" = "8:..\\build\\data\\ttx.txt"
-            "TargetName" = "8:ttx.txt"
+            "SourcePath" = "8:..\\build\\data\\license\\TTX-@TTX_VERSION_MAJOR@.@TTX_VERSION_MINOR@.@TTX_VERSION_PATCH@\\LICENSE"
+            "TargetName" = "8:LICENSE"
             "Tag" = "8:"
-            "Folder" = "8:_5890C0CDE9CF44CE94F4EC28C9F3D65A"
-            "Condition" = "8:CHECKBOXA4"
+            "Folder" = "8:_15B53E3F635C44728BEA30E606029975"
+            "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
             "ReadOnly" = "11:FALSE"
@@ -407,6 +407,28 @@
             "Property" = "8:TARGETDIR"
                 "Folders"
                 {
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_E46C4571CF0D48D299178C71095307EC"
+                    {
+                    "Name" = "8:license"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_A97569C8DC514E0DB40ACBE772AA101B"
+                        "Folders"
+                        {
+                            "{9EF0B969-E518-4E46-987F-47570745A589}:_15B53E3F635C44728BEA30E606029975"
+                            {
+                            "Name" = "8:TTX-@TTX_VERSION_MAJOR@.@TTX_VERSION_MINOR@.@TTX_VERSION_PATCH@"
+                            "AlwaysCreate" = "11:FALSE"
+                            "Condition" = "8:"
+                            "Transitive" = "11:FALSE"
+                            "Property" = "8:_ED9EBFD5B3BA436B916CDC7DE4E8CDE7"
+                                "Folders"
+                                {
+                                }
+                            }
+                        }
+                    }
                 }
             }
             "{1525181F-901A-416C-8A58-119130FE478E}:_E775CE6574124B4DA70F56E537C98C67"

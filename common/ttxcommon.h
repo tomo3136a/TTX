@@ -41,9 +41,9 @@ extern "C"
     //get UI language ID(1=English, 2=Japanese)
     UINT UILang(LPSTR lang);
 
-    //get Menu ID offset
-    int TTXMenuID(UINT uid);
-    int TTXMenuOrgID(UINT uid);
+    ///get Menu ID offset
+    UINT TTXMenuID(UINT uid);
+    UINT TTXMenuOrgID(UINT uid);
 
     LPTSTR TTXGetModuleFileName(HMODULE hModule);
 

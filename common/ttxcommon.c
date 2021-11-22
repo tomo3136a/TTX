@@ -39,14 +39,14 @@ BOOL TTXIgnore(int order, LPCTSTR name, WORD version)
 }
 
 // get offset based Menu ID
-int TTXMenuID(UINT uid)
+UINT TTXMenuID(UINT uid)
 {
-	return (int)uid + _menu_offset;
+	return (UINT)(uid + _menu_offset);
 }
 // get original based Menu ID
-int TTXMenuOrgID(UINT uid)
+UINT TTXMenuOrgID(UINT uid)
 {
-	return (int)uid - _menu_offset;
+	return (UINT)(uid - _menu_offset);
 }
 
 //コマンドラインパラメータ解析
@@ -602,31 +602,6 @@ LPTSTR GetParentPath(LPTSTR dst, int sz, LPCTSTR src)
 	_tcsncpy_s(dst, sz, sp, p - sp);
 	return dst;
 }
-
-// LPTSTR GetParentPath(LPCTSTR src)
-// {
-// 	LPTSTR sp, ep, p, dst;
-// 	size_t sz;
-
-// 	sp = (LPTSTR)src;
-// 	ep = sp + _tcslen(sp);
-// 	p = ep;
-// 	if (p > sp) {
-// 		p--;
-// 		ep = (*p == '\\' || *p == '/') ? (ep - 1) : ep;
-// 		p = ep;
-// 		while (p > sp) {
-// 			p--;
-// 			if (*p == '\\' || *p == '/' || *p == ':') {
-// 				break;
-// 			}
-// 		}
-// 	}
-// 	sz = p - sp + sizeof(TCHAR);
-// 	dst = (LPTSTR)malloc(sz * sizeof(TCHAR));
-// 	_tcsncpy_s(dst, sz, sp, p - sp);
-// 	return dst;
-// }
 
 // get path segment name
 // src のファイル名を取得し、サイズ sz の dst に複製
