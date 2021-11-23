@@ -222,8 +222,8 @@
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_5F1742E8BFBA4B4CACB1785E0BD15DE8"
             {
-            "SourcePath" = "8:..\\build\\data\\userkey.txt"
-            "TargetName" = "8:userkey.txt"
+            "SourcePath" = "8:..\\build\\data\\userkey.dat"
+            "TargetName" = "8:userkey.dat"
             "Tag" = "8:"
             "Folder" = "8:_5890C0CDE9CF44CE94F4EC28C9F3D65A"
             "Condition" = "8:CHECKBOXB4"

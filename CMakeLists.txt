@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.8)
 
-project(TTX VERSION 1.0.5)
+project(TTX VERSION 1.0.6)
 
 add_subdirectory(TTXPlugin)
 set_target_properties(TTXPlugin PROPERTIES FOLDER TTX)
