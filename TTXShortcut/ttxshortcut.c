@@ -100,12 +100,12 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 											(sizeof((obj) - (type **)(obj))) - \
 											(sizeof((obj) - (type **)(obj))))
 
-BOOL MakeShortcut(const PTCHAR name, const PTCHAR params, WORD wKey, const PTCHAR lnk)
+BOOL MakeShortcut(const LPTSTR name, const LPTSTR params, WORD wKey, const LPTSTR lnk)
 {
-	PTCHAR tt_path;
+	LPTSTR tt_path;
 	int tt_path_sz;
-	PTCHAR app_path;
-	PTCHAR app_args;
+	LPTSTR app_path;
+	LPTSTR app_args;
 	IShellLink *pSL;
 	IPersistFile *pPF;
 	HRESULT res;
@@ -223,19 +223,19 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 		CheckDlgButton(dlg, IDC_CHECK1, BST_CHECKED);
 		path = TTXGetPath(pvar->ts, ID_SETUPFNAME);
 		SetDlgItemText(dlg, IDC_PATH1, path);
-		TTXFree(path);
+		TTXFree(&path);
 		//CheckDlgButton(dlg, IDC_CHECK2, BST_CHECKED);
 		path = TTXGetPath(pvar->ts, ID_KEYCNFNM);
 		SetDlgItemText(dlg, IDC_PATH2, path);
-		TTXFree(path);
+		TTXFree(&path);
 		//CheckDlgButton(dlg, IDC_CHECK3, BST_CHECKED);
 		path = TTXGetPath(pvar->ts, ID_LOGFN);
 		SetDlgItemText(dlg, IDC_PATH3, path);
-		TTXFree(path);
+		TTXFree(&path);
 		//CheckDlgButton(dlg, IDC_CHECK4, BST_CHECKED);
 		path = TTXGetPath(pvar->ts, ID_MACROFN);
 		SetDlgItemText(dlg, IDC_PATH4, path);
-		TTXFree(path);
+		TTXFree(&path);
 		path_sz = MAX_PATH;
 		path = (LPTSTR)malloc(path_sz*sizeof(TCHAR));
 		if (path)
@@ -258,28 +258,28 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 			path = TTXGetPath(pvar->ts, ID_SETUPFNAME);
 			s = (IsDlgButtonChecked(dlg, IDC_CHECK1) == BST_CHECKED) ? path : _T("");
 			SetDlgItemText(dlg, IDC_PATH1, s);
-			TTXFree(path);
+			TTXFree(&path);
 			return TRUE;
 
 		case IDC_CHECK2:
 			path = TTXGetPath(pvar->ts, ID_KEYCNFNM);
 			s = (IsDlgButtonChecked(dlg, IDC_CHECK2) == BST_CHECKED) ? path : _T("");
 			SetDlgItemText(dlg, IDC_PATH2, s);
-			TTXFree(path);
+			TTXFree(&path);
 			return TRUE;
 
 		case IDC_CHECK3:
 			path = TTXGetPath(pvar->ts, ID_LOGFN);
 			s = (IsDlgButtonChecked(dlg, IDC_CHECK3) == BST_CHECKED) ? path : _T("");
 			SetDlgItemText(dlg, IDC_PATH3, s);
-			TTXFree(path);
+			TTXFree(&path);
 			return TRUE;
 
 		case IDC_CHECK4:
 			path = TTXGetPath(pvar->ts, ID_MACROFN);
 			s = (IsDlgButtonChecked(dlg, IDC_CHECK4) == BST_CHECKED) ? path : _T("");
 			SetDlgItemText(dlg, IDC_PATH4, s);
-			TTXFree(path);
+			TTXFree(&path);
 			return TRUE;
 
 		case IDC_BUTTON2:
@@ -308,19 +308,19 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 
 		case IDC_BUTTON4:
 			path_sz = MAX_PATH;
-			path = (PTCHAR)malloc(path_sz*sizeof(TCHAR));
+			path = (LPTSTR)malloc(path_sz*sizeof(TCHAR));
 			if (path)
 			{
 				GetDlgItemText(dlg, IDC_PATH4, path, path_sz);
 				s = _T("マクロファイルを選択してください");
-				OpenFileDlg(dlg, IDC_PATH4, s, _T("Macro(*.TTTL)\0*.TTL\0"), path, NULL, 0);
+				OpenFileDlg(dlg, IDC_PATH4, s, _T("Macro(*.TTL)\0*.TTL\0"), path, NULL, 0);
 				free(path);
 			}
 			return TRUE;
 
 		case IDC_BUTTON5:
 			path_sz = MAX_PATH;
-			path = (PTCHAR)malloc(path_sz*sizeof(TCHAR));
+			path = (LPTSTR)malloc(path_sz*sizeof(TCHAR));
 			if (path)
 			{
 				GetDlgItemText(dlg, IDC_PATH5, path, path_sz);
@@ -332,19 +332,19 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 
 		case IDOK:
 			path_sz = MAX_PATH;
-			path = (PTCHAR)malloc(path_sz*sizeof(TCHAR));
+			path = (LPTSTR)malloc(path_sz*sizeof(TCHAR));
 			if (!path)
 				return FALSE;
 
 			buf_sz = MAX_PATH;
-			buf = (PTCHAR)malloc(buf_sz*sizeof(TCHAR));
+			buf = (LPTSTR)malloc(buf_sz*sizeof(TCHAR));
 			if (!buf)
 			{
 				free(path);
 				return FALSE;
 			}
-
 			buf[0] = 0;
+
 			/* command line options */
 			GetDlgItemText(dlg, IDC_OPTS, buf, buf_sz);
 			if (buf[0])
@@ -355,13 +355,13 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 			if (IsDlgButtonChecked(dlg, IDC_CHECK1) == BST_CHECKED)
 			{
 				s = TTXGetPath(pvar->ts, ID_SETUPFNAME);
-				if (s[0])
+				if (s && s[0])
 				{
 					_tcscat_s(buf, buf_sz, _T("/F=\""));
 					_tcscat_s(buf, buf_sz, s);
 					_tcscat_s(buf, buf_sz, _T("\" "));
 				}
-				TTXFree(path);
+				TTXFree(&s);
 			}
 			/* command line options(/K=keymap file) */
 			if (IsDlgButtonChecked(dlg, IDC_CHECK2) == BST_CHECKED)
@@ -399,7 +399,7 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 			/* output folder */
 			GetDlgItemText(dlg, IDC_PATH5, path, path_sz);
 			/* output shortcut file name */
-			GetDlgItemText(dlg, IDC_NAME, name, sizeof(name));
+			GetDlgItemText(dlg, IDC_NAME, name, sizeof(name)/sizeof(TCHAR));
 			if (!name[0])
 			{
 				s = _T("名前がありません。");

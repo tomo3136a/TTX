@@ -36,7 +36,7 @@ extern "C"
     BOOL TTXIgnore(int order, LPCTSTR name, WORD version);
 
     //token command line parameter
-    PTCHAR TTXGetParam(LPTSTR buf, size_t sz, LPTSTR param);
+    LPTSTR TTXGetParam(LPTSTR buf, size_t sz, LPTSTR param);
 
     //get UI language ID(1=English, 2=Japanese)
     UINT UILang(LPSTR lang);
@@ -80,7 +80,7 @@ extern "C"
     inline LPTSTR toTC(LPSTR pszSrc){ return MB2WC(CP_ACP, pszSrc); }
 #endif /* TT4 */
 
-    BOOL TTXFree(LPVOID pBuf);
+    BOOL TTXFree(LPVOID *pBuf);
 
     ///文字列中に文字を検索し次のポインタを返す
     LPTSTR strskip(LPTSTR p, TCHAR c);
@@ -131,7 +131,7 @@ extern "C"
     LPTSTR GetPathName(LPTSTR dst, int sz, LPCTSTR src);
 
     ///get linearized path
-    LPTSTR GetLinearizedPath(PTCHAR dst, int sz, LPCTSTR src);
+    LPTSTR GetLinearizedPath(LPTSTR dst, int sz, LPCTSTR src);
 
     ///get absolute path
     LPTSTR GetAbsolutePath(LPTSTR dst, int sz, LPCTSTR src, LPCTSTR base);
@@ -174,7 +174,7 @@ extern "C"
 
     ///文字列を設定ファイルから取得(開放はfree(outp))
     DWORD GetIniString(LPCTSTR sect, LPCTSTR name, LPCTSTR sDefault,
-                       PTCHAR *outp, DWORD sz, DWORD nsz, LPCTSTR fn);
+                       LPTSTR *outp, DWORD sz, DWORD nsz, LPCTSTR fn);
     LPSTR GetIniStringA(LPCTSTR sect, LPCTSTR name, LPCTSTR sDefault, LPCTSTR fn);
 
     ///OM/OFF 設定を設定ファイルに書き込む
@@ -203,15 +203,15 @@ extern "C"
     VOID MoveParentCenter(HWND hWnd);
 
     ///create dialog font and set to phFont (require to delete item after)
-    VOID SetDlgFont(HWND hWnd, UINT uItem, HFONT *phFont, LONG uH, PTCHAR szFont);
+    VOID SetDlgFont(HWND hWnd, UINT uItem, HFONT *phFont, LONG uH, LPTSTR szFont);
 
     /* dialog */
     ///open to file select dialog
-    BOOL OpenFileDlg(HWND hWnd, UINT editCtl, PTCHAR szTitle,
-                     PTCHAR szFilter, PTCHAR szPath, PTCHAR fn, int n);
+    BOOL OpenFileDlg(HWND hWnd, UINT editCtl, LPTSTR szTitle,
+                     LPTSTR szFilter, LPTSTR szPath, LPTSTR fn, int n);
 
     ///open to folder select dialog
-    BOOL OpenFolderDlg(HWND hWnd, UINT editCtl, PTCHAR szTitle, PTCHAR szPath);
+    BOOL OpenFolderDlg(HWND hWnd, UINT editCtl, LPTSTR szTitle, LPTSTR szPath);
 
 #ifdef __cplusplus
 }

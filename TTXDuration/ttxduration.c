@@ -334,7 +334,7 @@ static void PASCAL TTXParseParam(TT_LPTSTR Param, PTTSet ts, PCHAR DDETopic)
 {
 	size_t buf_sz;
 	LPTSTR buf;
-	PTCHAR next;
+	LPTSTR next;
 
 	(pvar->origParseParam)(Param, ts, DDETopic);
 

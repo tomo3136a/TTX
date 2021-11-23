@@ -237,7 +237,7 @@ static void PASCAL TTXReadIniFile(TT_LPCTSTR fn, PTTSet ts)
 	{
 		LPSTR p = toMB(buf);
 		strcpy_s(pvar->report_clear, buf_sz, p);
-		TTXFree(p);
+		TTXFree(&p);
 	}
 
 	GetPrivateProfileString(_T(INISECTION), _T("InfoTest"), _T(""),
@@ -301,7 +301,7 @@ static void PASCAL TTXReadIniFile(TT_LPCTSTR fn, PTTSet ts)
 static void PASCAL TTXWriteIniFile(TT_LPCTSTR fn, PTTSet ts)
 {
 	TCHAR name[20];
-	PTCHAR buf;
+	LPTSTR buf;
 	int buf_sz;
 	int i;
 	LPTSTR p;
@@ -341,7 +341,7 @@ static void PASCAL TTXWriteIniFile(TT_LPCTSTR fn, PTTSet ts)
 		LPTSTR p;
 		p = toTC(pvar->report_clear);
 		WritePrivateProfileString(_T(INISECTION), _T("ReportClear"), p, fn);
-		TTXFree(p);
+		TTXFree(&p);
 	}
 	if (pvar->info_test_path[0])
 	{
@@ -359,7 +359,7 @@ static void PASCAL TTXWriteIniFile(TT_LPCTSTR fn, PTTSet ts)
 						pvar->report_rule[i].sub,
 						pvar->report_rule[i].cmd,
 						p);
-			TTXFree(p);
+			TTXFree(&p);
 			WritePrivateProfileString(_T(INISECTION), name, buf, fn);
 		}
 	}
@@ -384,7 +384,7 @@ static void PASCAL TTXParseParam(TT_LPTSTR Param, PTTSet ts, PCHAR DDETopic)
 {
 	size_t buf_sz;
 	LPTSTR buf;
-	PTCHAR next;
+	LPTSTR next;
 
 	(pvar->origParseParam)(Param, ts, DDETopic);
 
@@ -484,7 +484,7 @@ VOID UpdateReportMsg(HWND hWnd)
 	path_sz = _tcsnlen(pvar->report_note_path, _TRUNCATE) + _tcsnlen(p, _TRUNCATE) + 2;
 	path = (LPTSTR)malloc(path_sz*sizeof(TCHAR));
 	GetAbsolutePath(path, path_sz, pvar->report_note_path, p);
-	TTXFree(p);
+	TTXFree(&p);
 	hFile = CreateFile(path, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
 	free(path);
 	if (hFile != INVALID_HANDLE_VALUE)
@@ -787,7 +787,7 @@ void ttx_recv(char *rstr, int rcnt)
 				buff[blen] = '\0';
 				p = toTC(buff);
 				SetInfoLog(p, blen);
-				TTXFree(p);
+				TTXFree(&p);
 			}
 			blen = 0;
 			continue;
@@ -844,7 +844,7 @@ void ttx_recv(char *rstr, int rcnt)
 					buff[blen] = '\0';
 					p = toTC(buff);
 					SetInfoLog(p, blen);
-					TTXFree(p);
+					TTXFree(&p);
 				}
 
 				if (cmd & INFO_CMD_CLEAR) //clear
@@ -928,7 +928,7 @@ static void PASCAL TTXCloseFile(TTXFileHooks *hooks)
 //
 static LRESULT CALLBACK ReportSettingProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	PTCHAR buf;
+	LPTSTR buf;
 	int buf_sz;
 	LPTSTR p;
 
@@ -963,7 +963,7 @@ static LRESULT CALLBACK ReportSettingProc(HWND dlg, UINT msg, WPARAM wParam, LPA
 			GetDlgItemText(dlg, IDC_MSG_PATH, buf, buf_sz);
 			OpenFileDlg(dlg, IDC_MSG_PATH, _T("説明ファイル"), _T(""), buf, p, 1);
 			free(buf);
-			TTXFree(p);
+			TTXFree(&p);
 			return TRUE;
 		case IDC_BUTTON7:
 			p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
@@ -971,7 +971,7 @@ static LRESULT CALLBACK ReportSettingProc(HWND dlg, UINT msg, WPARAM wParam, LPA
 			GetDlgItemText(dlg, IDC_PATH7, buf, buf_sz);
 			OpenFileDlg(dlg, IDC_PATH7, _T("パターンファイル"), _T(""), buf, p, 1);
 			free(buf);
-			TTXFree(p);
+			TTXFree(&p);
 			return TRUE;
 		case IDC_BUTTON1:
 			p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
@@ -979,7 +979,7 @@ static LRESULT CALLBACK ReportSettingProc(HWND dlg, UINT msg, WPARAM wParam, LPA
 			GetDlgItemText(dlg, IDC_PATH1, buf, buf_sz);
 			OpenFileDlg(dlg, IDC_PATH1, _T("パターンファイル1"), _T(""), buf, p, 1);
 			free(buf);
-			TTXFree(p);
+			TTXFree(&p);
 			return TRUE;
 		case IDC_BUTTON2:
 			p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
@@ -987,7 +987,7 @@ static LRESULT CALLBACK ReportSettingProc(HWND dlg, UINT msg, WPARAM wParam, LPA
 			GetDlgItemText(dlg, IDC_PATH2, buf, buf_sz);
 			OpenFileDlg(dlg, IDC_PATH2, _T("パターンファイル2"), _T(""), buf, p, 1);
 			free(buf);
-			TTXFree(p);
+			TTXFree(&p);
 			return TRUE;
 		case IDC_BUTTON3:
 			p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
@@ -995,7 +995,7 @@ static LRESULT CALLBACK ReportSettingProc(HWND dlg, UINT msg, WPARAM wParam, LPA
 			GetDlgItemText(dlg, IDC_PATH3, buf, buf_sz);
 			OpenFileDlg(dlg, IDC_PATH3, _T("パターンファイル3"), _T(""), buf, p, 1);
 			free(buf);
-			TTXFree(p);
+			TTXFree(&p);
 			return TRUE;
 		case IDC_BUTTON4:
 			p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
@@ -1003,7 +1003,7 @@ static LRESULT CALLBACK ReportSettingProc(HWND dlg, UINT msg, WPARAM wParam, LPA
 			GetDlgItemText(dlg, IDC_PATH4, buf, buf_sz);
 			OpenFileDlg(dlg, IDC_PATH4, _T("パターンファイル4"), _T(""), buf, p, 1);
 			free(buf);
-			TTXFree(p);
+			TTXFree(&p);
 			return TRUE;
 		case IDC_BUTTON6:
 			p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
@@ -1011,7 +1011,7 @@ static LRESULT CALLBACK ReportSettingProc(HWND dlg, UINT msg, WPARAM wParam, LPA
 			GetDlgItemText(dlg, IDC_PATH6, buf, buf_sz);
 			OpenFileDlg(dlg, IDC_PATH6, _T("結果出力ファイル"), _T(""), buf, p, 1);
 			free(buf);
-			TTXFree(p);
+			TTXFree(&p);
 			return TRUE;
 
 		case IDOK:

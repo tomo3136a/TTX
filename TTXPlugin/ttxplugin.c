@@ -152,7 +152,7 @@ static BOOL GetModuleVersion(LPTSTR buf, int sz, LPTSTR fn)
 	return TRUE;
 }
 
-static BOOL GetModuleDescription(PTCHAR buf, int sz, PTCHAR fn)
+static BOOL GetModuleDescription(LPTSTR buf, int sz, LPCTSTR fn)
 {
 	//#pragma comment(lib, "version.lib")
 	DWORD dwSize;
@@ -201,7 +201,7 @@ void LoadListView(HWND dlg, UINT uid, LPTSTR fn)
 	UINT lang;
 	int i;
 	TCHAR path[MAX_PATH];
-	PTCHAR p;
+	LPTSTR p;
 
 	lang = UILang(pvar->ts->UILanguageFile);
 
@@ -288,7 +288,7 @@ void LoadListView(HWND dlg, UINT uid, LPTSTR fn)
 	FindClose(hFind);
 }
 
-void SaveListView(HWND dlg, UINT uid, PTCHAR fn)
+void SaveListView(HWND dlg, UINT uid, LPCTSTR fn)
 {
 	HWND hWnd;
 	TCHAR buf1[16];
@@ -352,7 +352,7 @@ static LRESULT CALLBACK SettingProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 		bUpdate = FALSE;
 		p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
 		LoadListView(dlg, IDC_LISTVIEW, p);
-		TTXFree(p);
+		TTXFree(&p);
 		MoveParentCenter(dlg);
 		return TRUE;
 
@@ -385,7 +385,7 @@ static LRESULT CALLBACK SettingProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 			{
 				p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
 				SaveListView(dlg, IDC_LISTVIEW, p);
-				TTXFree(p);
+				TTXFree(&p);
 				EndDialog(dlg, IDOK);
 				return TRUE;
 			}

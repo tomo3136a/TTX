@@ -27,7 +27,7 @@ BOOL TTXIgnore(int order, LPCTSTR name, WORD version)
 {
 	// TODO: test order, test version
 	TCHAR buf[32];
-	PTCHAR p;
+	LPTSTR p;
 
 	GetPrivateProfileString(_T(TTX_SECTION), name, _T(""), 
 		buf, sizeof(buf) / sizeof(buf[0]), _T(INI_FILE));
@@ -330,14 +330,11 @@ LPWSTR MB2WC(UINT cp, LPSTR pszSrc)
 	return NULL;
 }
 
-BOOL TTXFree(LPVOID pBuf)
+BOOL TTXFree(LPVOID *pBuf)
 {
-	if (pBuf != NULL)
-	{
-		free(pBuf);
-		return TRUE;
-	}
-	return FALSE;
+	free(*pBuf);
+	pBuf = NULL;
+	return TRUE;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -369,7 +366,7 @@ LPTSTR strskip(LPTSTR p, TCHAR c)
 //すべて切り出したら NULL を返す
 LPTSTR StrSetTok(strset_t p, strset_t *ctx)
 {
-	PTCHAR ret;
+	LPTSTR ret;
 
 	p = p ? p : (ctx ? *ctx : 0);
 	if (!p || !*p)
@@ -443,8 +440,8 @@ int StrSetFindIndex(strset_t p, LPTSTR k)
 	const TCHAR sep = _T('=');
 	int cnt = 0;
 	while (*p) {
-		PTCHAR p2 = p;
-		PTCHAR k2 = k;
+		LPTSTR p2 = p;
+		LPTSTR k2 = k;
 		while (*p2 && *k2 && (*p2 != sep) && (*p2 == *k2)) {
 			p2++;
 			k2++;
@@ -466,8 +463,8 @@ LPTSTR StrSetFindKey(strset_t p, LPTSTR k)
 {
 	const TCHAR sep = _T('=');
 	while (*p) {
-		PTCHAR p2 = p;
-		PTCHAR k2 = k;
+		LPTSTR p2 = p;
+		LPTSTR k2 = k;
 		while (*p2 && *k2 && (*p2 == *k2)) {
 			p2++;
 			k2++;
@@ -489,8 +486,8 @@ LPTSTR StrSetFindVal(strset_t p, LPTSTR v)
 {
 	const TCHAR sep = _T('=');
 	while (*p) {
-		PTCHAR p2 = strskip(p, sep);
-		PTCHAR v2 = v;
+		LPTSTR p2 = strskip(p, sep);
+		LPTSTR v2 = v;
 		if (*p2) {
 			while (*p2 && *v2 && (*p2 == *v2)) {
 				p2++;
@@ -689,10 +686,10 @@ LPTSTR GetLinearizedPath(LPTSTR dst, int sz, LPCTSTR src)
 // src が相対パスの場合は、base ファイルを基準とする
 // dst=NULL は禁止
 //「/」文字は対応していない
-LPTSTR GetAbsolutePath(PTCHAR dst, int sz, LPCTSTR src, LPCTSTR base)
+LPTSTR GetAbsolutePath(LPTSTR dst, int sz, LPCTSTR src, LPCTSTR base)
 {
 	TCHAR buf[MAX_PATH];
-	PTCHAR p;
+	LPTSTR p;
 
 	_tcscpy_s(buf, sizeof(buf) / sizeof(buf[0]), _T(""));
 	p = _tcschr(src, _T('\\'));
@@ -762,7 +759,7 @@ LPTSTR GetRelatedPath(LPTSTR dst, int sz, LPCTSTR src, LPCTSTR base, int lv)
 // dst=NULL は禁止
 LPTSTR GetFileName(LPTSTR dst, int sz, LPCTSTR src)
 {
-	PTCHAR p;
+	LPTSTR p;
 	p = FindFileName(src);
 	if (p) {
 		_tcscpy_s(dst, sz, p);
@@ -783,7 +780,7 @@ LPTSTR GetFileName(LPTSTR dst, int sz, LPCTSTR src)
 //パス区切り文字「\」「/」は認識しない
 LPTSTR GetFileExt(LPTSTR dst, int sz, LPTSTR src)
 {
-	PTCHAR p;
+	LPTSTR p;
 	p = FindFileExt(src);
 	if (p) {
 		_tcscpy_s(dst, sz, ++p);
@@ -799,7 +796,7 @@ LPTSTR GetFileExt(LPTSTR dst, int sz, LPTSTR src)
 //パス区切り文字「/」は「\」に変換
 LPTSTR RemovePathSlash(LPTSTR path)
 {
-	PTCHAR p;
+	LPTSTR p;
 
 	p = path;
 	while (p = _tcschr(p, _T('/'))) {
@@ -815,7 +812,7 @@ LPTSTR RemovePathSlash(LPTSTR path)
 /// remove last slash from path
 LPTSTR RemoveFileName(LPTSTR path)
 {
-	PTCHAR p;
+	LPTSTR p;
 
 	p = FindFileName(path);
 	p = (p == path) ? path : (p - 1);
@@ -826,7 +823,7 @@ LPTSTR RemoveFileName(LPTSTR path)
 /// remove last slash from path
 LPTSTR RemoveFileExt(LPTSTR path)
 {
-	PTCHAR p;
+	LPTSTR p;
 
 	p = FindFileExt(path);
 	if (p && *p) {
@@ -867,16 +864,16 @@ BOOL FileExists(LPCTSTR path)
 //戻り値は文字列を格納したバッファのサイズ、取得出来ないときは 0
 DWORD GetIniSects(strset_t *outp, DWORD sz, DWORD nsz, LPCTSTR fn)
 {
-	PTCHAR buf;
+	LPTSTR buf;
 
-	buf = (PTCHAR)malloc(sz * sizeof(TCHAR));
+	buf = (LPTSTR)malloc(sz * sizeof(TCHAR));
 	if (!buf)
 		return 0;
 
 	while (sz < GetPrivateProfileSectionNames(buf, sz, fn) + 3) {
 		free(buf);
 		sz += nsz ? nsz : sz;
-		buf = (PTCHAR)malloc(sz * sizeof(TCHAR));
+		buf = (LPTSTR)malloc(sz * sizeof(TCHAR));
 		if (!buf)
 			return 0;
 	}
@@ -898,15 +895,15 @@ DWORD GetIniSects(strset_t *outp, DWORD sz, DWORD nsz, LPCTSTR fn)
 //戻り値は文字列を格納したバッファのサイズ、取得出来ないときは 0
 DWORD GetIniStrSet(LPCTSTR sect, strset_t *outp, DWORD sz, DWORD nsz, LPCTSTR fn)
 {
-	PTCHAR buf;
+	LPTSTR buf;
 
-	buf = (PTCHAR)malloc(sz * sizeof(TCHAR));
+	buf = (LPTSTR)malloc(sz * sizeof(TCHAR));
 	if (!buf)
 		return 0;
 	while (sz < GetPrivateProfileSection(sect, buf, sz, fn) + 3) {
 		free(buf);
 		sz += nsz ? nsz : sz;
-		buf = (PTCHAR)malloc(sz * sizeof(TCHAR));
+		buf = (LPTSTR)malloc(sz * sizeof(TCHAR));
 		if (!buf)
 			return 0;
 	}
@@ -954,18 +951,18 @@ UINT GetIniNum(LPCTSTR sect, LPCTSTR name, INT nDefault, LPCTSTR fn)
 // INIファイル fn の sect セクションに name キーの値を文字列として outp に取得
 //値が無ければ、デフォルト値 sDefault を outp に返す
 //戻り値は文字列を格納したバッファのサイズ、取得出来ないときは 0
-DWORD GetIniString(LPCTSTR sect, LPCTSTR name, LPCTSTR sDefault, PTCHAR *outp, DWORD sz, DWORD nsz, LPCTSTR fn)
+DWORD GetIniString(LPCTSTR sect, LPCTSTR name, LPCTSTR sDefault, LPTSTR *outp, DWORD sz, DWORD nsz, LPCTSTR fn)
 {
-	PTCHAR buf;
+	LPTSTR buf;
 
-	buf = (PTCHAR)malloc(sz * sizeof(TCHAR));
+	buf = (LPTSTR)malloc(sz * sizeof(TCHAR));
 	if (!buf)
 		return 0;
 
 	while (sz < GetPrivateProfileString(sect, name, sDefault, buf, sz, fn) + 3) {
 		free(buf);
 		sz += nsz ? nsz : sz;
-		buf = (PTCHAR)malloc(sz * sizeof(TCHAR));
+		buf = (LPTSTR)malloc(sz * sizeof(TCHAR));
 		if (!buf)
 			return 0;
 	}
@@ -985,7 +982,7 @@ DWORD GetIniString(LPCTSTR sect, LPCTSTR name, LPCTSTR sDefault, PTCHAR *outp, D
 
 LPSTR GetIniStringA(LPCTSTR sect, LPCTSTR name, LPCTSTR sDefault, LPCTSTR fn)
 {
-	PTCHAR buf;
+	LPTSTR buf;
 	PCHAR p;
 
 	buf = NULL;
@@ -1001,7 +998,7 @@ LPSTR GetIniStringA(LPCTSTR sect, LPCTSTR name, LPCTSTR sDefault, LPCTSTR fn)
 // bEnable=FALSE ならば name キーを削除
 BOOL WriteIniOnOff(LPCTSTR sect, LPCTSTR name, int bFlag, BOOL bEnable, LPCTSTR fn)
 {
-	PTCHAR p = bEnable ? ((bFlag != FALSE) ? _T("on") : _T("off")) : NULL;
+	LPTSTR p = bEnable ? ((bFlag != FALSE) ? _T("on") : _T("off")) : NULL;
 	return WritePrivateProfileString(sect, name, p, fn);
 }
 
@@ -1011,7 +1008,7 @@ BOOL WriteIniOnOff(LPCTSTR sect, LPCTSTR name, int bFlag, BOOL bEnable, LPCTSTR 
 BOOL WriteIniNum(LPCTSTR sect, LPCTSTR name, int val, BOOL bEnable, LPCTSTR fn)
 {
 	TCHAR buf[16];
-	PTCHAR p = NULL;
+	LPTSTR p = NULL;
 	if (bEnable || val) {
 		_sntprintf_s(buf, sizeof(buf), _TRUNCATE, _T("%d"), val);
 		p = buf;
@@ -1181,7 +1178,7 @@ VOID MoveParentCenter(HWND hWnd)
 // create dialog font and set to phFont (require to delete item after)
 //ダイアログにフォントを設定
 //仕様が終わったら DeleteObject すること
-VOID SetDlgFont(HWND hWnd, UINT uItem, HFONT *phFont, LONG uH, PTCHAR szFont)
+VOID SetDlgFont(HWND hWnd, UINT uItem, HFONT *phFont, LONG uH, LPTSTR szFont)
 {
 	HWND hItem = GetDlgItem(hWnd, uItem);
 	*phFont = CreateFont(uH, 0, 0, 0, 0, 0, 0, 0, SHIFTJIS_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
@@ -1195,7 +1192,7 @@ VOID SetDlgFont(HWND hWnd, UINT uItem, HFONT *phFont, LONG uH, PTCHAR szFont)
 // hWnd ウインドウが無いか editCtl が -1 の場合は、 UI コンポーネントは使用せず、 szPath を読み込む
 // szPath が NULL 以外の場合は szPath にも書き込む(サイズは MAX_PATH 以上であること)
 //成功した場合 TRUE を返す
-BOOL OpenFileDlg(HWND hWnd, UINT editCtl, PTCHAR szTitle, PTCHAR szFilter, PTCHAR szPath, PTCHAR fn, int n)
+BOOL OpenFileDlg(HWND hWnd, UINT editCtl, LPTSTR szTitle, LPTSTR szFilter, LPTSTR szPath, LPTSTR fn, int n)
 {
 	TCHAR szFile[MAX_PATH];
 	OPENFILENAME ofn;
@@ -1250,7 +1247,7 @@ static int CALLBACK setDefaultFolder(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM
 	return 0;
 }
 
-BOOL OpenFolderDlg(HWND hWnd, UINT editCtl, PTCHAR szTitle, PTCHAR szPath)
+BOOL OpenFolderDlg(HWND hWnd, UINT editCtl, LPTSTR szTitle, LPTSTR szPath)
 {
 	BROWSEINFO bi;
 	LPITEMIDLIST pidlRoot;

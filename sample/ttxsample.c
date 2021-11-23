@@ -340,7 +340,7 @@ static LRESULT CALLBACK SettingProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 			OpenFileDlg(dlg, IDC_PATH1, _T("ƒtƒ@ƒCƒ‹"), 
 				_T("File(*.txt)\0*.txt\0"), buf, path, 0);
 			free(buf);
-			TTXFree(path);
+			TTXFree(&path);
 			return TRUE;
 
 		//{use folder selector}
