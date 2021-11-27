@@ -129,8 +129,8 @@ static BOOL GetModuleVersion(LPTSTR buf, int sz, LPTSTR fn)
 		return FALSE;
 	}
 
-	lpBuf = malloc(dwSize + 2);
-	memset(lpBuf, 0, dwSize + 2);
+	lpBuf = malloc((dwSize + 2)*sizeof(TCHAR));
+	memset(lpBuf, 0, (dwSize + 2)*sizeof(TCHAR));
 	if (!GetFileVersionInfo(fn, dwHandle, dwSize, lpBuf))
 	{
 		free(lpBuf);
@@ -143,8 +143,10 @@ static BOOL GetModuleVersion(LPTSTR buf, int sz, LPTSTR fn)
 		return FALSE;
 	}
 	_sntprintf_s(buf, sz, _TRUNCATE, _T("%d.%d.%d.%d"),
-				HIWORD(pFileInfo->dwFileVersionMS), LOWORD(pFileInfo->dwFileVersionMS),
-				HIWORD(pFileInfo->dwFileVersionLS), LOWORD(pFileInfo->dwFileVersionLS));
+				HIWORD(pFileInfo->dwFileVersionMS), 
+				LOWORD(pFileInfo->dwFileVersionMS),
+				HIWORD(pFileInfo->dwFileVersionLS), 
+				LOWORD(pFileInfo->dwFileVersionLS));
 
 	TrimVersion(buf);
 
@@ -158,6 +160,8 @@ static BOOL GetModuleDescription(LPTSTR buf, int sz, LPCTSTR fn)
 	DWORD dwSize;
 	DWORD dwHandle;
 	LPVOID lpBuf;
+	LPTSTR lpKey;
+	LPDWORD lpdwTrans;
 	UINT uLen;
 	LPTSTR s;
 	LPTSTR p;
@@ -168,22 +172,41 @@ static BOOL GetModuleDescription(LPTSTR buf, int sz, LPCTSTR fn)
 		return FALSE;
 	}
 
-	lpBuf = malloc(dwSize + 2);
-	memset(lpBuf, 0, dwSize + 2);
+	lpBuf = (LPTSTR)malloc((dwSize + 2) * sizeof(TCHAR));
+	if (!lpBuf)
+	{
+		return FALSE;
+	}
+	memset(lpBuf, 0, (dwSize + 2) * sizeof(TCHAR));
 	if (!GetFileVersionInfo(fn, dwHandle, dwSize, lpBuf))
 	{
 		free(lpBuf);
 		return FALSE;
 	}
 
-	s = _T("\\StringFileInfo\\040904b0\\FileDescription");
-	if (!VerQueryValue(lpBuf, s, (LPVOID *)&p, &uLen))
+	lpKey = _T("\\VarFileInfo\\Translation");
+	if (!VerQueryValue(lpBuf, lpKey, (LPVOID *)&lpdwTrans, &uLen))
 	{
+		free(lpBuf);
+		return FALSE;
+	}
+
+	lpKey = malloc(sizeof(TCHAR)*128);
+	if (!lpKey)
+	{
+		return FALSE;
+	}
+	s = _T("\\StringFileInfo\\%04x%04x\\FileDescription");
+	_sntprintf_s(lpKey, 128, 128, s, LOWORD(*lpdwTrans), HIWORD(*lpdwTrans));
+	if (!VerQueryValue(lpBuf, lpKey, (LPVOID *)&p, &uLen))
+	{
+		free(lpKey);
 		free(lpBuf);
 		return FALSE;
 	}
 	_tcscpy_s(buf, sz, (0 < uLen) ? p : _T(""));
 
+	free(lpKey);
 	free(lpBuf);
 	return TRUE;
 }
@@ -197,7 +220,7 @@ void LoadListView(HWND dlg, UINT uid, LPTSTR fn)
 	HANDLE hFind;
 	TCHAR name[64];
 	// TCHAR ent[70];
-	TCHAR buf[256];
+	TCHAR buf[512];
 	UINT lang;
 	int i;
 	TCHAR path[MAX_PATH];
