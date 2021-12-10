@@ -52,3 +52,15 @@ configure_file(
   userkey.dat
   ${CMAKE_BINARY_DIR}/data/userkey.dat
   )
+
+install(
+  TARGETS TTXUserKey
+  RUNTIME
+  DESTINATION .
+  )
+
+install(
+  FILES
+  userkey.dat
+  DESTINATION .
+  )

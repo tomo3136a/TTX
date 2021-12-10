@@ -50,3 +50,9 @@ configure_file(
   verinfo.h
   @ONLY
   )
+
+install(
+  TARGETS TTXReconnect
+  RUNTIME
+  DESTINATION .
+  )

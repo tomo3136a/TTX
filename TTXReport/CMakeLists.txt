@@ -49,3 +49,9 @@ configure_file(
   verinfo.h
   @ONLY
   )
+
+install(
+  TARGETS TTXReport
+  RUNTIME
+  DESTINATION .
+  )

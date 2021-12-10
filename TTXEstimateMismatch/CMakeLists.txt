@@ -47,3 +47,10 @@ target_link_libraries(
   version
   gdi32
   )
+
+install(
+  TARGETS TTXEstimateMismatch
+  RUNTIME
+  DESTINATION .
+  )
+  
