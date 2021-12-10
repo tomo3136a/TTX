@@ -5,6 +5,7 @@
 
 #include "teraterm.h"
 #include "tttypes.h"
+#include "tttypes_key.h"
 #include "ttplugin.h"
 
 #include <stdlib.h>
@@ -155,7 +156,7 @@ void LoadKeyList(HWND hWnd, UINT uid, LPCTSTR fn)
 	LVITEM item;
 	HWND hList;
 	TCHAR name[32];
-	size_t buf_sz;
+	DWORD buf_sz;
 	LPTSTR buf;
 	int i, j;
 	LPTSTR ctx;
@@ -273,7 +274,7 @@ void SaveKeyList(HWND hWnd, UINT uid, LPCTSTR fn)
 	HWND hList;
 	size_t buf_sz;
 	LPTSTR buf;
-	size_t s_sz;
+	int s_sz;
 	LPTSTR s;
 	int code;
 	int i, j, cnt;
@@ -509,7 +510,7 @@ void UpdateKeyListItem(HWND dlg, int idx)
 	ListView_GetItem(hListView, &item);
 
 	hWnd = GetDlgItem(dlg, IDC_COMBO_KEY);
-	i = SendMessage(hWnd, CB_FINDSTRINGEXACT, -1, (LPARAM)buf);
+	i = (int)SendMessage(hWnd, CB_FINDSTRINGEXACT, -1, (LPARAM)buf);
 	if (i < 0)
 	{
 		SendMessage(hWnd, WM_SETTEXT, 0, (LPARAM)buf);
@@ -522,7 +523,7 @@ void UpdateKeyListItem(HWND dlg, int idx)
 	ListView_GetItem(hListView, &item);
 
 	hWnd = GetDlgItem(dlg, IDC_COMBO_TYPE);
-	i = SendMessage(hWnd, CB_FINDSTRINGEXACT, -1, (LPARAM)buf);
+	i = (int)SendMessage(hWnd, CB_FINDSTRINGEXACT, -1, (LPARAM)buf);
 	EnableWindow(GetDlgItem(dlg, IDC_COMBO_CMD), (i == 3));
 	EnableWindow(GetDlgItem(dlg, IDC_EDIT_STR), (i != 3));
 	EnableWindow(GetDlgItem(dlg, IDC_BUTTON_SEL), (i == 2));
@@ -539,6 +540,11 @@ void UpdateKeyListItem(HWND dlg, int idx)
 	}
 	SetDlgItemText(dlg, IDC_COMBO_CMD, name);
 	free(buf);
+}
+
+static void UpdateKeyMap(HWND hWnd)
+{
+	PostMessage(hWnd, WM_USER_ACCELCOMMAND,IdCmdLoadKeyMap,0);
 }
 
 ///////////////////////////////////////////////////////////////
@@ -611,8 +617,10 @@ static LRESULT CALLBACK UserKeySettingProc(HWND dlg, UINT msg, WPARAM wParam, LP
 		SetDlgItemText(dlg, IDC_PATH, p);
 		LoadKeyList(dlg, IDC_KEYLIST, p);
 		TTXFree(&p);
-		KeyListProcOld = (WNDPROC)SetWindowLong(
-			GetDlgItem(dlg, IDC_KEYLIST), GWLP_WNDPROC, (LONG)KeyListProc);
+		// KeyListProcOld = (WNDPROC)SetWindowLong(
+		// 	GetDlgItem(dlg, IDC_KEYLIST), GWLP_WNDPROC, (LONG)KeyListProc);
+		KeyListProcOld = (WNDPROC)SetWindowLongPtr(
+			GetDlgItem(dlg, IDC_KEYLIST), GWLP_WNDPROC, (LONG_PTR)KeyListProc);
 		MoveParentCenter(dlg);
 		return TRUE;
 
@@ -646,7 +654,7 @@ static LRESULT CALLBACK UserKeySettingProc(HWND dlg, UINT msg, WPARAM wParam, LP
 		case IDC_COMBO_TYPE:
 			if (HIWORD(wParam) == CBN_SELCHANGE)
 			{
-				i = SendMessage(GetDlgItem(dlg, IDC_COMBO_TYPE), CB_GETCURSEL, 0, 0);
+				i = (INT)SendMessage(GetDlgItem(dlg, IDC_COMBO_TYPE), CB_GETCURSEL, 0, 0);
 				EnableWindow(GetDlgItem(dlg, IDC_COMBO_CMD), (i == 3));
 				EnableWindow(GetDlgItem(dlg, IDC_EDIT_STR), (i != 3));
 				EnableWindow(GetDlgItem(dlg, IDC_BUTTON_SEL), (i == 2));
@@ -662,7 +670,7 @@ static LRESULT CALLBACK UserKeySettingProc(HWND dlg, UINT msg, WPARAM wParam, LP
 				buf = (LPTSTR)malloc(buf_sz*sizeof(TCHAR));
 				if (!buf)
 					return FALSE;
-				i = SendMessage(GetDlgItem(dlg, IDC_COMBO_CMD), CB_GETCURSEL, 0, 0);
+				i = (INT)SendMessage(GetDlgItem(dlg, IDC_COMBO_CMD), CB_GETCURSEL, 0, 0);
 				if (i < 0)
 				{
 					GetDlgItemText(dlg, IDC_COMBO_CMD, name, sizeof(name));
@@ -687,7 +695,7 @@ static LRESULT CALLBACK UserKeySettingProc(HWND dlg, UINT msg, WPARAM wParam, LP
 			buf = (LPTSTR)malloc(buf_sz*sizeof(TCHAR));
 			if (!buf)
 				return FALSE;
-			GetDlgItemText(dlg, IDC_EDIT_STR, buf, buf_sz);
+			GetDlgItemText(dlg, IDC_EDIT_STR, buf, (INT)buf_sz);
 			p = _T("マクロファイル(*.ttl)\0*.ttl\0\0");
 			OpenFileDlg(dlg, IDC_EDIT_STR, _T("マクロファイルを選択してください"), p, buf, NULL, 1);
 			free(buf);
@@ -699,8 +707,8 @@ static LRESULT CALLBACK UserKeySettingProc(HWND dlg, UINT msg, WPARAM wParam, LP
 			if (!buf)
 				return FALSE;
 			GetDlgItemText(dlg, IDC_COMBO_KEY, name, sizeof(name)/sizeof(name[0]));
-			GetDlgItemText(dlg, IDC_EDIT_STR, buf, buf_sz);
-			i = SendMessage(GetDlgItem(dlg, IDC_COMBO_TYPE), CB_GETCURSEL, 0, 0);
+			GetDlgItemText(dlg, IDC_EDIT_STR, buf, (INT)buf_sz);
+			i = (INT)SendMessage(GetDlgItem(dlg, IDC_COMBO_TYPE), CB_GETCURSEL, 0, 0);
 			AddKeyListItem(GetDlgItem(dlg, IDC_KEYLIST), name, i, buf);
 			SetFocus(GetDlgItem(dlg, IDC_KEYLIST));
 			free(buf);
@@ -757,6 +765,7 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 							   hWin, UserKeySettingProc, (LPARAM)NULL))
 		{
 		case IDOK:
+			UpdateKeyMap(hWin);
 			break;
 		case IDCANCEL:
 			break;
