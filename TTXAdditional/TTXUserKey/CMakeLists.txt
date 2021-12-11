@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.8)
 
-project(TTXPackage)
+project(TTXUserKey)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/")
 
@@ -15,29 +15,29 @@ set(SRC
   ../common/ttxcommon.h
   ../common/ttxcommon.c
   verinfo.h
-  ttxpackage.c
-  ttxpackage.rc
+  ttxuserkey.c
+  ttxuserkey.rc
   )
 
 include_directories(
-  ../../teraterm/teraterm
-  ../../teraterm/common
+  ../../../teraterm/teraterm
+  ../../../teraterm/common
   ../common
   )
 
 add_library(
-  TTXPackage SHARED
+  TTXUserKey SHARED
   ${SRC}
   )
 
 set_target_properties(
-  TTXPackage
+  TTXUserKey
   PROPERTIES
   PREFIX ""
   )
 
 target_link_libraries(
-  TTXPackage
+  TTXUserKey
   #
   gdi32
   )
@@ -48,8 +48,19 @@ configure_file(
   @ONLY
   )
 
+configure_file(
+  userkey.dat
+  ${CMAKE_BINARY_DIR}/data/userkey.dat
+  )
+
 install(
-  TARGETS TTXPackage
+  TARGETS TTXUserKey
   RUNTIME
+  DESTINATION .
+  )
+
+install(
+  FILES
+  userkey.dat
   DESTINATION .
   )

@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.8)
 
-project(TTXDuration)
+project(TTXReconnect)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/")
 
@@ -13,32 +13,35 @@ endif()
 set(SRC
   ../common/ttxcommon.h
   ../common/ttxcommon.c
+  ../common/ttxversion.h
+  ../common/ttxversion.c
   verinfo.h
-  ttxduration.c
-  ttxduration.rc
+  ttxreconnect.c
+  ttxreconnect.rc
   readme.md
   )
 
 include_directories(
-  ../../teraterm/teraterm
-  ../../teraterm/common
+  ../../../teraterm/teraterm
+  ../../../teraterm/common
   ../common
   )
 
 add_library(
-  TTXDuration SHARED
+  TTXReconnect SHARED
   ${SRC}
   )
 
 set_target_properties(
-  TTXDuration
+  TTXReconnect
   PROPERTIES
   PREFIX ""
   )
 
 target_link_libraries(
-  TTXDuration
+  TTXReconnect
   #
+  version
   gdi32
   )
 
@@ -49,7 +52,7 @@ configure_file(
   )
 
 install(
-  TARGETS TTXDuration
+  TARGETS TTXReconnect
   RUNTIME
   DESTINATION .
   )

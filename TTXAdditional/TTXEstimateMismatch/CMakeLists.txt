@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.8)
 
-project(TTXUserKey)
+project(TTXEstimateMismatch)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/")
 
@@ -10,57 +10,47 @@ else()
 add_definitions(-DUNICODE -D_UNICODE)
 endif()
 
+if(TT4)
+set(TT_VERSION "4")
+else()
+set(TT_VERSION "5")
+endif()
+
 set(SRC
-  resource.h
   ../common/ttxcommon.h
   ../common/ttxcommon.c
-  verinfo.h
-  ttxuserkey.c
-  ttxuserkey.rc
+  ttxestimatemismatch.c
+  test_v${TT_VERSION}.c
+  readme.md
   )
 
 include_directories(
-  ../../teraterm/teraterm
-  ../../teraterm/common
+  ../../../teraterm/teraterm
+  ../../../teraterm/common
   ../common
   )
 
 add_library(
-  TTXUserKey SHARED
+  TTXEstimateMismatch SHARED
   ${SRC}
   )
 
 set_target_properties(
-  TTXUserKey
+  TTXEstimateMismatch
   PROPERTIES
   PREFIX ""
   )
 
 target_link_libraries(
-  TTXUserKey
+  TTXEstimateMismatch
   #
+  version
   gdi32
   )
 
-configure_file(
-  ../common/verinfo.h.in
-  verinfo.h
-  @ONLY
-  )
-
-configure_file(
-  userkey.dat
-  ${CMAKE_BINARY_DIR}/data/userkey.dat
-  )
-
 install(
-  TARGETS TTXUserKey
+  TARGETS TTXEstimateMismatch
   RUNTIME
   DESTINATION .
   )
-
-install(
-  FILES
-  userkey.dat
-  DESTINATION .
-  )
+  

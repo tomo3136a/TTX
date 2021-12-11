@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.8)
 
-project(TTXShortcut)
+project(TTXEnv)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/")
 
@@ -15,29 +15,29 @@ set(SRC
   ../common/ttxcommon.h
   ../common/ttxcommon.c
   verinfo.h
-  ttxshortcut.c
-  ttxshortcut.rc
+  ttxenv.c
+  ttxenv.rc
   )
 
 include_directories(
-  ../../teraterm/teraterm
-  ../../teraterm/common
+  ../../../teraterm/teraterm
+  ../../../teraterm/common
   ../common
   )
 
 add_library(
-  TTXShortcut SHARED
+  TTXEnv SHARED
   ${SRC}
   )
 
 set_target_properties(
-  TTXShortcut
+  TTXEnv
   PROPERTIES
   PREFIX ""
   )
 
 target_link_libraries(
-  TTXShortcut
+  TTXEnv
   #
   gdi32
   )
@@ -49,7 +49,7 @@ configure_file(
   )
 
 install(
-  TARGETS TTXShortcut
+  TARGETS TTXEnv
   RUNTIME
   DESTINATION .
   )

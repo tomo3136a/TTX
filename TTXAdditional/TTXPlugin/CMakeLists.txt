@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.8)
 
-project(TTXEstimateMismatch)
+project(TTXPlugin)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/")
 
@@ -10,47 +10,48 @@ else()
 add_definitions(-DUNICODE -D_UNICODE)
 endif()
 
-if(TT4)
-set(TT_VERSION "4")
-else()
-set(TT_VERSION "5")
-endif()
-
 set(SRC
+  resource.h
   ../common/ttxcommon.h
   ../common/ttxcommon.c
-  ttxestimatemismatch.c
-  test_v${TT_VERSION}.c
+  verinfo.h
+  ttxplugin.c
+  ttxplugin.rc
   readme.md
   )
 
 include_directories(
-  ../../teraterm/teraterm
-  ../../teraterm/common
+  ../../../teraterm/teraterm
+  ../../../teraterm/common
   ../common
   )
 
 add_library(
-  TTXEstimateMismatch SHARED
+  TTXPlugin SHARED
   ${SRC}
   )
 
 set_target_properties(
-  TTXEstimateMismatch
+  TTXPlugin
   PROPERTIES
   PREFIX ""
   )
 
 target_link_libraries(
-  TTXEstimateMismatch
+  TTXPlugin
   #
   version
   gdi32
   )
 
+configure_file(
+  ../common/verinfo.h.in
+  verinfo.h
+  @ONLY
+  )
+
 install(
-  TARGETS TTXEstimateMismatch
+  TARGETS TTXPlugin
   RUNTIME
   DESTINATION .
   )
-  
