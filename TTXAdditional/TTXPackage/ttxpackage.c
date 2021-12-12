@@ -407,9 +407,9 @@ BOOL make_cabinet(LPTSTR name, LPTSTR listfile, LPTSTR outpath)
 	buf = (LPTSTR)malloc(buf_sz*sizeof(TCHAR));
 
 	//make cabinet file
-	st = _T("makecab /D CabinetName1=\"%s.cab\" /D DiskDirectoryTemplate=\"%s\" /F \"%s\"");
+	st = _T("makecab /F \"%s\"");
 	GetParentPath(path, path_sz, listfile);
-	_sntprintf_s(buf, buf_sz, buf_sz, st, name, path, listfile);
+	_sntprintf_s(buf, buf_sz, buf_sz, st, listfile);
 	memset(&si, 0, sizeof(STARTUPINFO));
 	memset(&pi, 0, sizeof(PROCESS_INFORMATION));
 	si.cb = sizeof(STARTUPINFO);
@@ -456,10 +456,10 @@ BOOL make_cabinet(LPTSTR name, LPTSTR listfile, LPTSTR outpath)
 	s = "@echo off\r\n"
 		"pushd %~dp0\r\n"
 		"set nm=%~n0\r\n"
-		"if exist %nm% goto :setup\r\n"
+		"if exist \"%nm%\" goto :setup\r\n"
 		"certutil -decode \"%~dpnx0\" \"%TEMP%\\%nm%.cab\"\r\n"
-		"mkdir %nm%\r\n"
-		"expand \"%TEMP%\\%nm%.cab\" -F:* %nm%\r\n"
+		"mkdir \"%nm%\"\r\n"
+		"expand \"%TEMP%\\%nm%.cab\" -F:* \"%nm%\"\r\n"
 		"del \"%TEMP%\\%nm%.cab\"\r\n"
 		"set sc=1\r\n"
 		":setup\r\n"
@@ -498,12 +498,12 @@ BOOL make_cabinet(LPTSTR name, LPTSTR listfile, LPTSTR outpath)
 }
 
 //ファイルにファイルリストを書き出す
-BOOL write_filelist(HANDLE hFile, LPTSTR src, int n)
+static BOOL write_filelist(HANDLE hFile, LPTSTR src, size_t n, LPTSTR tmp)
 {
 	HANDLE hFind;
 	WIN32_FIND_DATA win32fd;
 	LPTSTR path;
-	int path_sz;
+	INT path_sz;
 	DWORD dwWriteSize;
 	LPTSTR p;
 	LPTSTR s;
@@ -528,33 +528,43 @@ BOOL write_filelist(HANDLE hFile, LPTSTR src, int n)
 			continue;
 
 		p = FindFileExt(win32fd.cFileName);
-		if (_tcsicmp(p, _T(".EXE")) == 0 ||
-			_tcsicmp(p, _T(".DLL")) == 0 ||
-			_tcsicmp(p, _T(".IN")) == 0)
-			continue;
+		if (p != NULL)
+		{
+			if (_tcsicmp(p, _T(".EXE")) == 0 ||
+				_tcsicmp(p, _T(".DLL")) == 0 ||
+				_tcsicmp(p, _T(".IN")) == 0)
+				continue;
+		}
 
 		_tcscpy_s(path, path_sz, src);
 		CombinePath(path, path_sz, win32fd.cFileName);
 
-		if (_tcsicmp(p, _T(".INI")) == 0 ||
-			_tcsicmp(p, _T(".CNF")) == 0)
+		if (p != NULL)
 		{
-			LPTSTR org;
-			int org_sz;
+			if (_tcsicmp(p, _T(".INI")) == 0 ||
+				_tcsicmp(p, _T(".CNF")) == 0)
+			{
+				LPTSTR org;
+				INT org_sz;
 
-			org_sz = _tcslen(path) + 4;
-			org = (LPTSTR)malloc(org_sz*sizeof(TCHAR));
-			_tcscpy_s(org, org_sz, path);
-			_tcscat_s(path, path_sz, _T(".in"));
-			CopyFile(org, path, FALSE);
+				org_sz = _tcslen(path) + 4;
+				org = (LPTSTR)malloc(org_sz*sizeof(TCHAR));
+				_tcscpy_s(org, org_sz, path);
+				_tcscpy_s(path, path_sz, tmp);
+				CombinePath(path, path_sz, win32fd.cFileName);
+				_tcscat_s(path, path_sz, _T(".in"));
+				CopyFile(org, path, FALSE);
+				free(org);
 
-			p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
-			conv_ini_file(path, p);
-			TTXFree(&p);
+				s = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+				conv_ini_file(path, s);
+				TTXFree(&s);
+			}
 		}
 
-		WriteFile(hFile, path, lstrlen(path), &dwWriteSize, NULL);
-		WriteFile(hFile, _T("\r\n"), 2, &dwWriteSize, NULL);
+		WriteFile(hFile, _T("\""), 1, &dwWriteSize, NULL);
+		WriteFile(hFile, path, _tcslen(path), &dwWriteSize, NULL);
+		WriteFile(hFile, _T("\"\r\n"), 3, &dwWriteSize, NULL);
 	} while (FindNextFile(hFind, &win32fd));
 	FindClose(hFind);
 
@@ -577,13 +587,13 @@ BOOL write_filelist(HANDLE hFile, LPTSTR src, int n)
 		_tcscpy_s(path, path_sz, src);
 		CombinePath(path, path_sz, win32fd.cFileName);
 
-		p = (lstrlen(path) > n) ? (path + n) : _T("");
+		p = (_tcslen(path) > n) ? (path + n) : _T("");
 		s = _T(".Set DestinationDir=\"");
-		WriteFile(hFile, s, lstrlen(s), &dwWriteSize, NULL);
-		WriteFile(hFile, p, lstrlen(p), &dwWriteSize, NULL);
+		WriteFile(hFile, s, _tcslen(s), &dwWriteSize, NULL);
+		WriteFile(hFile, p, _tcslen(p), &dwWriteSize, NULL);
 		s = _T("\"\r\n");
-		WriteFile(hFile, s, lstrlen(s), &dwWriteSize, NULL);
-		if (!write_filelist(hFile, path, n))
+		WriteFile(hFile, s, _tcslen(s), &dwWriteSize, NULL);
+		if (!write_filelist(hFile, path, n, tmp))
 		{
 			FindClose(hFind);
 			free(path);
@@ -591,6 +601,7 @@ BOOL write_filelist(HANDLE hFile, LPTSTR src, int n)
 		}
 	} while (FindNextFile(hFind, &win32fd));
 	FindClose(hFind);
+
 	free(path);
 	return TRUE;
 }
@@ -604,11 +615,13 @@ BOOL make_package(LPTSTR name, LPTSTR src, LPTSTR dst, BOOL bSetup)
 {
 	HANDLE hFile;
 	LPTSTR tmp;
-	int tmp_sz;
+	INT tmp_sz;
 	LPTSTR lst;
-	int lst_sz;
+	INT lst_sz;
 	LPTSTR path;
-	int path_sz;
+	INT path_sz;
+	LPTSTR buf;
+	INT buf_sz;
 	DWORD dwWriteSize;
 	LPTSTR s;
 
@@ -624,7 +637,7 @@ BOOL make_package(LPTSTR name, LPTSTR src, LPTSTR dst, BOOL bSetup)
 	lst_sz = MAX_PATH;
 	lst = (LPTSTR)malloc(lst_sz*sizeof(TCHAR));
 	_tcscpy_s(lst, lst_sz, tmp);
-	CombinePath(lst, lst_sz, _T("files.txt"));
+	CombinePath(lst, lst_sz, _T("files.ddf"));
 	hFile = CreateFile(lst, GENERIC_WRITE, 0, NULL,
 					   CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hFile == INVALID_HANDLE_VALUE)
@@ -635,6 +648,31 @@ BOOL make_package(LPTSTR name, LPTSTR src, LPTSTR dst, BOOL bSetup)
 		free(tmp);
 		return FALSE;
 	}
+
+	buf_sz = MAX_PATH;
+	buf = (LPTSTR)malloc(buf_sz*sizeof(TCHAR));
+	s = _T(".Set CabinetNameTemplate=\"%s.cab\"\r\n");
+	_sntprintf_s(buf, buf_sz, buf_sz, s, name);
+	WriteFile(hFile, buf, _tcslen(buf), &dwWriteSize, NULL);
+
+	s = _T(".Set DiskDirectoryTemplate=\"%s\"\r\n");
+	_sntprintf_s(buf, buf_sz, buf_sz, s, tmp);
+	WriteFile(hFile, buf, _tcslen(buf), &dwWriteSize, NULL);
+
+	s = _T(".Set MaxDiskSize=1024000000\r\n");
+	_sntprintf_s(buf, buf_sz, buf_sz, s, tmp);
+	WriteFile(hFile, buf, _tcslen(buf), &dwWriteSize, NULL);
+
+	s = _T(".Set RptFileName=NUL\r\n");
+	_sntprintf_s(buf, buf_sz, buf_sz, s, tmp);
+	WriteFile(hFile, buf, _tcslen(buf), &dwWriteSize, NULL);
+
+	s = _T(".Set InfFileName=NUL\r\n");
+	_sntprintf_s(buf, buf_sz, buf_sz, s, tmp);
+	WriteFile(hFile, buf, _tcslen(buf), &dwWriteSize, NULL);
+
+	free(buf);
+
 	if (bSetup)
 	{
 		s = TTXGetPath(pvar->ts, ID_SETUPFNAME);
@@ -646,12 +684,13 @@ BOOL make_package(LPTSTR name, LPTSTR src, LPTSTR dst, BOOL bSetup)
 		{
 			_tcscpy_s(path, path_sz, tmp);
 			CombinePath(path, path_sz, _T("_setup.cmd"));
-			_tcscat_s(path, path_sz, _T("\r\n"));
+			WriteFile(hFile, _T("\""), 1, &dwWriteSize, NULL);
 			WriteFile(hFile, path, _tcslen(path), &dwWriteSize, NULL);
+			WriteFile(hFile, _T("\"\r\n"), 3, &dwWriteSize, NULL);
 		}
 		free(path);
 	}
-	write_filelist(hFile, src, _tcslen(src) + 1);
+	write_filelist(hFile, src, _tcslen(src) + 1, tmp);
 	CloseHandle(hFile);
 
 	//make batch file
@@ -661,7 +700,7 @@ BOOL make_package(LPTSTR name, LPTSTR src, LPTSTR dst, BOOL bSetup)
 	}
 
 	//destroy templary folder
-	DeleteDirectory(tmp);
+	//DeleteDirectory(tmp);
 
 	free(lst);
 	free(tmp);
@@ -677,9 +716,9 @@ static LRESULT CALLBACK PackageProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 	LPITEMIDLIST pidl;
 	TCHAR name[64];
 	LPTSTR path;
-	int path_sz;
+	INT path_sz;
 	LPTSTR buf;
-	int buf_sz;
+	INT buf_sz;
 	LPTSTR s;
 	BOOL flg;
 
