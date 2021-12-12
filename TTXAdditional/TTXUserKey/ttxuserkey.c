@@ -5,7 +5,10 @@
 
 #include "teraterm.h"
 #include "tttypes.h"
+#ifdef TT4
+#else
 #include "tttypes_key.h"
+#endif /* TT4 */
 #include "ttplugin.h"
 
 #include <stdlib.h>
