@@ -24,6 +24,8 @@ set(SRC
 include_directories(
   ../../../teraterm/teraterm
   ../../../teraterm/common
+  ../../teraterm/teraterm
+  ../../teraterm/common
   ../common
   )
 
