@@ -313,9 +313,9 @@ BOOL make_setup_cmd(LPTSTR path, BOOL shortcut, LPTSTR ini)
 	}
 
 	s = "@echo off\r\n"
+		"set base=%~dp0\r\n"
 		"pushd %~dp0\r\n"
 		"setlocal ENABLEDELAYEDEXPANSION\r\n"
-		"set base=%~dp0\r\n"
 		"for /f \"delims=\" %%a in (\"%base:~0,-1%\") do set nm=%%~na\r\n\r\n";
 	WriteFile(hFile, s, (DWORD)strlen(s), &dwWriteSize, NULL);
 
@@ -323,6 +323,7 @@ BOOL make_setup_cmd(LPTSTR path, BOOL shortcut, LPTSTR ini)
 		"set PS=powershell -Command\r\n"
 		"%PS% \"gci *.in -Recurse |%%{gc $_|"
 		"%%{$_ -replace '{BASE}','!base!'}|sc ($_.FullName -replace '\\.in$','')}\"\r\n"
+		"attrib.exe -r  *.in\r\n"
 		"%PS% \"gci *.in -Recurse |remove-item\"\r\n"
 		"\r\n";
 	WriteFile(hFile, s, (DWORD)strlen(s), &dwWriteSize, NULL);
@@ -342,7 +343,7 @@ BOOL make_setup_cmd(LPTSTR path, BOOL shortcut, LPTSTR ini)
 		WriteFile(hFile, s, (DWORD)strlen(s), &dwWriteSize, NULL);
 
 		s = "echo ショートカット作成中...\r\n"
-			"if exist %lnk% del /f %lnk%\r\n";
+			"if exist \"%lnk%\" del /f \"%lnk%\"\r\n";
 		WriteFile(hFile, s, (DWORD)strlen(s), &dwWriteSize, NULL);
 		if (ini && ini[0])
 		{
@@ -368,7 +369,7 @@ BOOL make_setup_cmd(LPTSTR path, BOOL shortcut, LPTSTR ini)
 
 		s = ":sc\r\n"
 			"echo ショートカット実行\r\n"
-			"start \"%nm%\" %lnk%\r\n"
+			"start \"%nm%\" \"%lnk%\"\r\n"
 			"\r\n";
 		WriteFile(hFile, s, (DWORD)strlen(s), &dwWriteSize, NULL);
 	}
@@ -463,7 +464,7 @@ BOOL make_cabinet(LPTSTR name, LPTSTR listfile, LPTSTR outpath)
 		"del \"%TEMP%\\%nm%.cab\"\r\n"
 		"set sc=1\r\n"
 		":setup\r\n"
-		"if exist %nm%\\_setup.cmd call %nm%\\_setup.cmd %sc%\r\n"
+		"if exist \"%nm%\\_setup.cmd\" call \"%nm%\\_setup.cmd\" %sc%\r\n"
 		"popd\r\n"
 		"exit /b\r\n\r\n";
 	WriteFile(hWriteFile, s, (DWORD)strlen(s), &dwWriteSize, NULL);
