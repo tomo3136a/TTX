@@ -37,12 +37,14 @@ typedef struct
 	PTTSet ts;
 	PComVar cv;
 	BOOL skip;
+	HWND hwnd;
 
 	//menu
 	HMENU SetupMenu;
 	HMENU EnvMenu;
 
-	//original callback
+	// original callback
+	PGetHostName origGetHostName;
 	PReadIniFile origReadIniFile;
 	PWriteIniFile origWriteIniFile;
 	PParseParam origParseParam;
@@ -70,6 +72,7 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 	pvar->ts = ts;
 	pvar->cv = cv;
 	pvar->skip = FALSE;
+	pvar->hwnd = cv->HWin;
 
 	pvar->UseKeyCnf = FALSE;
 	pvar->UseEnv = FALSE;
@@ -100,10 +103,18 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 //   printf("TTXCloseFile %d\n", ORDER);
 // }
 
-// static void PASCAL TTXGetUIHooks(TTXUIHooks *hooks)
-// {
-// 	 printf("TTXGetUIHooks %d\n", ORDER);
-// }
+static BOOL PASCAL TTXGetHostName(HWND WndParent, PGetHNRec GetHNRec)
+{
+	if (pvar->hwnd == 0)
+		pvar->hwnd = WndParent;
+	return (pvar->origGetHostName)(WndParent, GetHNRec);
+}
+
+static void PASCAL TTXGetUIHooks(TTXUIHooks *hooks)
+{
+	pvar->origGetHostName = *hooks->GetHostName;
+	*hooks->GetHostName = TTXGetHostName;
+}
 
 ///////////////////////////////////////////////////////////////
 
@@ -122,14 +133,15 @@ static void PASCAL TTXReadIniFile(TT_LPCTSTR fn, PTTSet ts)
 	pvar->UseKeyCnf = (buf[0]) ? TRUE : FALSE;
 	if (pvar->UseKeyCnf)
 	{
-		p  = TTXGetPath(ts, ID_KEYCNFNM);
+		p  = buf;
 		path_sz = _tcsnlen(p, _TRUNCATE) + _tcsnlen(fn, _TRUNCATE) + 2;
 		path = (LPTSTR)malloc(path_sz*sizeof(TCHAR));
 		GetAbsolutePath(path, path_sz, p, fn);
 		TTXSetPath(ts, ID_KEYCNFNM, path);
 		free(path);
-		TTXFree(&p);
-		PostMessage(pvar->cv->HWin, WM_USER_ACCELCOMMAND, IdCmdLoadKeyMap, 0);
+		if (pvar->hwnd == 0)
+			pvar->hwnd = pvar->cv->HWin;
+		PostMessage(pvar->hwnd, WM_USER_ACCELCOMMAND, IdCmdLoadKeyMap, 0);
 	}
 
 	pvar->EnableEnv = GetIniOnOff(_T(INISECTION), _T("EnableEnv"), FALSE, fn);
@@ -737,6 +749,8 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 	TCHAR name[32];
 	LPTSTR p;
 
+	pvar->hwnd = hWin;
+
 	switch (TTXMenuOrgID(cmd))
 	{
 		// case ID_MENUITEM1:
@@ -842,7 +856,7 @@ static TTXExports Exports = {
 
 	/* Now we just list the functions that we've implemented. */
 	TTXInit,
-	NULL, //TTXGetUIHooks,
+	TTXGetUIHooks,
 	TTXGetSetupHooks,
 	NULL, //TTXOpenTCP,
 	NULL, //TTXCloseTCP,
