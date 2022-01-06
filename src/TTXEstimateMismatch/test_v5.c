@@ -21,11 +21,17 @@
 	strcat_s(buf, BUF_SZ, "="); \
 	strcat_s(buf, BUF_SZ, s);   \
 	strcat_s(buf, BUF_SZ, "\r")
+#define LINEW(buf, nm, s)        \
+	wcscat_s(buf, BUF_SZ, nm);  \
+	wcscat_s(buf, BUF_SZ, u"="); \
+	wcscat_s(buf, BUF_SZ, s);   \
+	wcscat_s(buf, BUF_SZ, u"\r")
 
 void DisplayTTTSet(HWND hWnd, PTTSet ts, WORD tt_version)
 {
 	CHAR buf[128];
 	PCHAR msg;
+	PWCHAR msgw;
 
 	msg = (PCHAR)malloc(BUF_SZ*sizeof(CHAR));
 	msg[0] = 0;
@@ -97,4 +103,32 @@ void DisplayTTTSet(HWND hWnd, PTTSet ts, WORD tt_version)
 				TT_VERSION_MAJOR, TT_VERSION_MINOR, tt_version);
 	MessageBoxA(hWnd, msg, buf, MB_OK);
 	free(msg);
+
+	MessageBoxW(hWnd, ts->HomeDirW, u"HomeDirW", MB_OK);
+	MessageBoxW(hWnd, ts->SetupFNameW, u"SetupFNameW", MB_OK);
+	MessageBoxW(hWnd, ts->KeyCnfFNW, u"KeyCnfFNW", MB_OK);
+	MessageBoxW(hWnd, ts->LogFNW, u"LogFNW", MB_OK);
+	MessageBoxW(hWnd, ts->MacroFNW, u"MacroFNW", MB_OK);
+	MessageBoxW(hWnd, ts->UILanguageFileW, u"UILanguageFileW", MB_OK);
+	MessageBoxW(hWnd, ts->UILanguageFileW_ini, u"UILanguageFileW_ini", MB_OK);
+	MessageBoxW(hWnd, ts->ExeDirW, u"ExeDirW", MB_OK);
+	MessageBoxW(hWnd, ts->LogDirW, u"LogDirW", MB_OK);
+	MessageBoxW(hWnd, ts->FileDirW, u"FileDirW", MB_OK);
+
+	// msgw = (PWCHAR)malloc(BUF_SZ*sizeof(WCHAR));
+	// wcscat_s(msgw, BUF_SZ, u"---- v5.0 ----\r");
+	// LINEW(msgw, u"HomeDirW", ts->HomeDirW);
+	// LINEW(msgw, u"SetupFNameW", ts->SetupFNameW);
+	// LINEW(msgw, u"KeyCnfFNW", ts->KeyCnfFNW);
+	// LINEW(msgw, u"LogFNW", ts->LogFNW);
+	// LINEW(msgw, u"MacroFNW", ts->MacroFNW);
+	// LINEW(msgw, u"UILanguageFileW", ts->UILanguageFileW);
+	// LINEW(msgw, u"UILanguageFileW_ini", ts->UILanguageFileW_ini);
+	// LINEW(msgw, u"ExeDirW", ts->ExeDirW);
+	// LINEW(msgw, u"LogDirW", ts->LogDirW);
+	// LINEW(msgw, u"FileDirW", ts->FileDirW);
+	// MessageBoxW(hWnd, msgw, u"---", MB_OK);
+	// free(msgw);
+
+	MessageBoxA(hWnd, "", "DisplayTTTSet", MB_OK);
 }
