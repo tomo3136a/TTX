@@ -222,19 +222,8 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 		SetDlgItemTextA(dlg, IDC_NAME, pvar->ts->Title);
 		CheckDlgButton(dlg, IDC_CHECK1, BST_CHECKED);
 		path = TTXGetPath(pvar->ts, ID_SETUPFNAME);
-		SetDlgItemText(dlg, IDC_PATH1, path);
-		TTXFree(&path);
-		//CheckDlgButton(dlg, IDC_CHECK2, BST_CHECKED);
-		path = TTXGetPath(pvar->ts, ID_KEYCNFNM);
-		SetDlgItemText(dlg, IDC_PATH2, path);
-		TTXFree(&path);
-		//CheckDlgButton(dlg, IDC_CHECK3, BST_CHECKED);
-		path = TTXGetPath(pvar->ts, ID_LOGFN);
-		SetDlgItemText(dlg, IDC_PATH3, path);
-		TTXFree(&path);
-		//CheckDlgButton(dlg, IDC_CHECK4, BST_CHECKED);
-		path = TTXGetPath(pvar->ts, ID_MACROFN);
-		SetDlgItemText(dlg, IDC_PATH4, path);
+		if (path != NULL)
+			SetDlgItemText(dlg, IDC_PATH1, GetContractPath(path, _tcsclen(path), path));
 		TTXFree(&path);
 		path_sz = MAX_PATH;
 		path = (LPTSTR)malloc(path_sz*sizeof(TCHAR));
@@ -244,7 +233,7 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 			{
 				SHGetPathFromIDList(pidl, path);
 				CoTaskMemFree(pidl);
-				SetDlgItemText(dlg, IDC_PATH5, path);
+				SetDlgItemText(dlg, IDC_PATH5, GetContractPath(path, path_sz, path));
 			}
 			free(path);
 		}
@@ -256,6 +245,8 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 		{
 		case IDC_CHECK1:
 			path = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+			if (path != NULL)
+				GetContractPath(path, _tcsclen(path), path);
 			s = (IsDlgButtonChecked(dlg, IDC_CHECK1) == BST_CHECKED) ? path : _T("");
 			SetDlgItemText(dlg, IDC_PATH1, s);
 			TTXFree(&path);
@@ -263,6 +254,8 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 
 		case IDC_CHECK2:
 			path = TTXGetPath(pvar->ts, ID_KEYCNFNM);
+			if (path != NULL)
+				GetContractPath(path, _tcsclen(path), path);
 			s = (IsDlgButtonChecked(dlg, IDC_CHECK2) == BST_CHECKED) ? path : _T("");
 			SetDlgItemText(dlg, IDC_PATH2, s);
 			TTXFree(&path);
@@ -270,6 +263,8 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 
 		case IDC_CHECK3:
 			path = TTXGetPath(pvar->ts, ID_LOGFN);
+			if (path != NULL)
+				GetContractPath(path, _tcsclen(path), path);
 			s = (IsDlgButtonChecked(dlg, IDC_CHECK3) == BST_CHECKED) ? path : _T("");
 			SetDlgItemText(dlg, IDC_PATH3, s);
 			TTXFree(&path);
@@ -277,6 +272,8 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 
 		case IDC_CHECK4:
 			path = TTXGetPath(pvar->ts, ID_MACROFN);
+			if (path != NULL)
+				GetContractPath(path, _tcsclen(path), path);
 			s = (IsDlgButtonChecked(dlg, IDC_CHECK4) == BST_CHECKED) ? path : _T("");
 			SetDlgItemText(dlg, IDC_PATH4, s);
 			TTXFree(&path);
@@ -289,7 +286,10 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 			{
 				GetDlgItemText(dlg, IDC_PATH2, path, path_sz);
 				s = _T("キーマップファイルを選択してください");
-				OpenFileDlg(dlg, IDC_PATH2, s, _T("KeyMap(*.CNF)\0*.CNF\0"), path, NULL, 0);
+				OpenFileDlg(dlg, -1, s, _T("KeyMap(*.CNF)\0*.CNF\0"), path, path, 0);
+				SetDlgItemText(dlg, IDC_PATH2, GetContractPath(path, path_sz, path));
+				if (path[0])
+					CheckDlgButton(dlg, IDC_CHECK2, BST_CHECKED);
 				free(path);
 			}
 			return TRUE;
@@ -301,7 +301,10 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 			{
 				GetDlgItemText(dlg, IDC_PATH3, path, path_sz);
 				s = _T("ログファイルを選択してください");
-				OpenFileDlg(dlg, IDC_PATH3, s, _T("Log(*.LOG)\0*.LOG\0"), path, NULL, 0);
+				OpenFileDlg(dlg, -1, s, _T("Log(*.LOG)\0*.LOG\0"), path, path, 0);
+				SetDlgItemText(dlg, IDC_PATH3, GetContractPath(path, path_sz, path));
+				if (path[0])
+					CheckDlgButton(dlg, IDC_CHECK3, BST_CHECKED);
 				free(path);
 			}
 			return TRUE;
@@ -313,7 +316,10 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 			{
 				GetDlgItemText(dlg, IDC_PATH4, path, path_sz);
 				s = _T("マクロファイルを選択してください");
-				OpenFileDlg(dlg, IDC_PATH4, s, _T("Macro(*.TTL)\0*.TTL\0"), path, NULL, 0);
+				OpenFileDlg(dlg, -1, s, _T("Macro(*.TTL)\0*.TTL\0"), path, path, 0);
+				SetDlgItemText(dlg, IDC_PATH4, GetContractPath(path, path_sz, path));
+				if (path[0])
+					CheckDlgButton(dlg, IDC_CHECK4, BST_CHECKED);
 				free(path);
 			}
 			return TRUE;
@@ -326,6 +332,8 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 				GetDlgItemText(dlg, IDC_PATH5, path, path_sz);
 				s = _T("出力先を選択してください");
 				OpenFolderDlg(dlg, IDC_PATH5, s, path);
+				GetDlgItemText(dlg, IDC_PATH5, path, path_sz);
+				SetDlgItemText(dlg, IDC_PATH5, GetContractPath(path, path_sz, path));
 				free(path);
 			}
 			return TRUE;
@@ -336,7 +344,7 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 			if (!path)
 				return FALSE;
 
-			buf_sz = MAX_PATH;
+			buf_sz = MAX_PATH * 10;
 			buf = (LPTSTR)malloc(buf_sz*sizeof(TCHAR));
 			if (!buf)
 			{
@@ -354,14 +362,13 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 			/* command line options(/F=setup file) */
 			if (IsDlgButtonChecked(dlg, IDC_CHECK1) == BST_CHECKED)
 			{
-				s = TTXGetPath(pvar->ts, ID_SETUPFNAME);
-				if (s && s[0])
+				GetDlgItemText(dlg, IDC_PATH1, path, path_sz);
+				if (path[0])
 				{
 					_tcscat_s(buf, buf_sz, _T("/F=\""));
-					_tcscat_s(buf, buf_sz, s);
+					_tcscat_s(buf, buf_sz, path);
 					_tcscat_s(buf, buf_sz, _T("\" "));
 				}
-				TTXFree(&s);
 			}
 			/* command line options(/K=keymap file) */
 			if (IsDlgButtonChecked(dlg, IDC_CHECK2) == BST_CHECKED)
@@ -397,7 +404,16 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 				}
 			}
 			/* output folder */
-			GetDlgItemText(dlg, IDC_PATH5, path, path_sz);
+			s = (LPTSTR)malloc(path_sz * sizeof(TCHAR));
+			if (!s)
+			{
+				free(path);
+				free(buf);
+				return FALSE;
+			}
+			GetDlgItemText(dlg, IDC_PATH5, s, path_sz);
+			ExpandEnvironmentStrings(s, path, path_sz);
+			free(s);
 			/* output shortcut file name */
 			GetDlgItemText(dlg, IDC_NAME, name, sizeof(name)/sizeof(TCHAR));
 			if (!name[0])

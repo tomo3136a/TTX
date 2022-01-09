@@ -128,6 +128,7 @@ LPTSTR TTXGetPath(PTTSet ts, UINT uid)
 {
 	LPTSTR s = NULL;
 #ifdef TT4
+	//not use wide character
 	switch(uid)
 	{
 		case ID_HOMEDIR:
@@ -156,6 +157,9 @@ LPTSTR TTXGetPath(PTTSet ts, UINT uid)
 			break;
         case ID_LOGDIR:
 			s = NULL;
+			break;
+        case ID_FILEDIR:
+			s = ts->FileDir;
 			break;
 		default:
 			s = NULL;
@@ -191,6 +195,9 @@ LPTSTR TTXGetPath(PTTSet ts, UINT uid)
         case ID_LOGDIR:
 			s = ts->LogDirW;
 			break;
+        case ID_FILEDIR:
+			s = ts->FileDirW;
+			break;
 		default:
 			s = NULL;
 			break;
@@ -202,6 +209,7 @@ LPTSTR TTXGetPath(PTTSet ts, UINT uid)
 BOOL TTXSetPath(PTTSet ts, UINT uid, LPTSTR s)
 {
 #ifdef TT4
+	//not use wide character
 	switch(uid)
 	{
 		case ID_HOMEDIR:
@@ -226,11 +234,14 @@ BOOL TTXSetPath(PTTSet ts, UINT uid, LPTSTR s)
 			strncpy_s(ts->UILanguageFile_ini, sizeof(ts->UILanguageFile_ini), s, _TRUNCATE);
 			break;
         case ID_EXEDIR:
-			break;
+			return FALSE;
         case ID_LOGDIR:
+			return FALSE;
+        case ID_FILEDIR:
+			strncpy_s(ts->FileDir, sizeof(ts->FileDir), s, _TRUNCATE);
 			break;
 		default:
-			break;
+			return FALSE;
 	}
 #else
 	LPSTR p;
@@ -293,8 +304,15 @@ BOOL TTXSetPath(PTTSet ts, UINT uid, LPTSTR s)
 			free(ts->LogDirW);
 			ts->LogDirW = _wcsdup(s);
 			break;
-		default:
+        case ID_FILEDIR:
+			free(ts->FileDirW);
+			ts->FileDirW = _wcsdup(s);
+			p = toMB(s);
+			strncpy_s(ts->FileDir, sizeof(ts->FileDir), p, _TRUNCATE);
+			free(p);
 			break;
+		default:
+			return FALSE;
 	}
 #endif /* TT4 */
 	return TRUE;
@@ -574,11 +592,11 @@ LPTSTR FindPathNextComponent(LPCTSTR path)
 }
 
 // get parent path
-// src の親ディレクトリを取得し、サイズ sz の dst に複製
+// src の親ディレクトリを取得し、サイズ dst_sz の dst に複製
 // src の最後がパス区切り文字の場合は、それは無いものとして扱う
 // src にパス区切り文字が無い場合は全体を対象とする
 // dst=NULL は禁止
-LPTSTR GetParentPath(LPTSTR dst, int sz, LPCTSTR src)
+LPTSTR GetParentPath(LPTSTR dst, size_t dst_sz, LPCTSTR src)
 {
 	LPTSTR sp, ep, p;
 
@@ -596,16 +614,16 @@ LPTSTR GetParentPath(LPTSTR dst, int sz, LPCTSTR src)
 			}
 		}
 	}
-	_tcsncpy_s(dst, sz, sp, p - sp);
+	_tcsncpy_s(dst, dst_sz, sp, p - sp);
 	return dst;
 }
 
 // get path segment name
-// src のファイル名を取得し、サイズ sz の dst に複製
+// src のファイル名を取得し、サイズ dst_sz の dst に複製
 // src の最後がパス区切り文字の場合は、それは無いものとして扱う
 // src にパス区切り文字が無い場合は全体を対象とする
 // dst=NULL は禁止
-LPTSTR GetPathName(LPTSTR dst, int sz, LPCTSTR src)
+LPTSTR GetPathName(LPTSTR dst, size_t dst_sz, LPCTSTR src)
 {
 	LPTSTR sp, ep, p;
 
@@ -624,21 +642,21 @@ LPTSTR GetPathName(LPTSTR dst, int sz, LPCTSTR src)
 			}
 		}
 	}
-	_tcsncpy_s(dst, sz, p, ep - p);
+	_tcsncpy_s(dst, dst_sz, p, ep - p);
 	return dst;
 }
 
 // get linearized path
 // src のパスから「.」や「..」を取り除いて直列化したパスを複製
 // dst=NULL は禁止
-LPTSTR GetLinearizedPath(LPTSTR dst, int sz, LPCTSTR src)
+LPTSTR GetLinearizedPath(LPTSTR dst, size_t dst_sz, LPCTSTR src)
 {
 	LPTSTR sp, ep, p, p2;
 	int n;
 
 	sp = (LPTSTR)src;
 	ep = sp + _tcslen(sp);
-	_tcscpy_s(dst, sz, _T(""));
+	_tcscpy_s(dst, dst_sz, _T(""));
 	if (sp[0] == _T('\\') && sp[1] == _T('\\')) {
 		sp += 2;
 		while (*sp) {
@@ -648,7 +666,7 @@ LPTSTR GetLinearizedPath(LPTSTR dst, int sz, LPCTSTR src)
 			}
 			sp++;
 		}
-		_tcsncpy_s(dst, sz, src, sp - src);
+		_tcsncpy_s(dst, dst_sz, src, sp - src);
 	}
 	p = p2 = sp;
 	while (p <= ep) {
@@ -669,7 +687,7 @@ LPTSTR GetLinearizedPath(LPTSTR dst, int sz, LPCTSTR src)
 				*p2 = 0;
 			}
 			else {
-				_tcsncat_s(dst, sz, sp, p - sp);
+				_tcsncat_s(dst, dst_sz, sp, p - sp);
 				n = _tcslen(dst) - 1;
 				if (n >= 0 && dst[n] == _T('/'))
 					dst[n] = _T('\\');
@@ -686,7 +704,7 @@ LPTSTR GetLinearizedPath(LPTSTR dst, int sz, LPCTSTR src)
 // src が相対パスの場合は、base ファイルを基準とする
 // dst=NULL は禁止
 //「/」文字は対応していない
-LPTSTR GetAbsolutePath(LPTSTR dst, int sz, LPCTSTR src, LPCTSTR base)
+LPTSTR GetAbsolutePath(LPTSTR dst, size_t dst_sz, LPCTSTR src, LPCTSTR base)
 {
 	TCHAR buf[MAX_PATH];
 	LPTSTR p;
@@ -700,7 +718,7 @@ LPTSTR GetAbsolutePath(LPTSTR dst, int sz, LPCTSTR src, LPCTSTR base)
 		}
 	}
 	_tcscat_s(buf, sizeof(buf) / sizeof(buf[0]), src);
-	return GetLinearizedPath(dst, sz, buf);
+	return GetLinearizedPath(dst, dst_sz, buf);
 }
 
 // get related path
@@ -709,7 +727,7 @@ LPTSTR GetAbsolutePath(LPTSTR dst, int sz, LPCTSTR src, LPCTSTR base)
 //ただし「..」は最大 lv 個までとし、それ以上の場合は絶対パスのままとする
 // dst=NULL は禁止
 //「/」文字は対応していない
-LPTSTR GetRelatedPath(LPTSTR dst, int sz, LPCTSTR src, LPCTSTR base, int lv)
+LPTSTR GetRelatedPath(LPTSTR dst, size_t dst_sz, LPCTSTR src, LPCTSTR base, int lv)
 {
 	TCHAR buf[MAX_PATH];
 	int i, j, k;
@@ -727,14 +745,14 @@ LPTSTR GetRelatedPath(LPTSTR dst, int sz, LPCTSTR src, LPCTSTR base, int lv)
 		p = buf + i;
 	}
 
-	_tcscpy_s(dst, sz, _T(""));
+	_tcscpy_s(dst, dst_sz, _T(""));
 	if (j) {
 		i = j;
 		k = 0;
 		while (base[i]) {
 			if (k > lv) {
 				p = buf;
-				_tcscpy_s(dst, sz, _T(""));
+				_tcscpy_s(dst, dst_sz, _T(""));
 				break;
 			}
 			while (base[i] && base[i] != _T('\\')) i++;
@@ -742,27 +760,67 @@ LPTSTR GetRelatedPath(LPTSTR dst, int sz, LPCTSTR src, LPCTSTR base, int lv)
 				break;
 			i++;
 			if (dst[0]) {
-				_tcscat_s(dst, sz, _T("\\"));
+				_tcscat_s(dst, dst_sz, _T("\\"));
 			}
-			_tcscat_s(dst, sz, _T(".."));
+			_tcscat_s(dst, dst_sz, _T(".."));
 			k++;
 		}
 	}
 	if (dst[0] && p[0])
-		_tcscat_s(dst, sz, _T("\\"));
-	_tcscat_s(dst, sz, p);
+		_tcscat_s(dst, dst_sz, _T("\\"));
+	_tcscat_s(dst, dst_sz, p);
 	return dst;
+}
+
+LPTSTR GetContractPath(LPTSTR dst, size_t dst_sz, LPTSTR src)
+{
+	size_t src_sz;
+	LPTSTR buf;
+	size_t buf_sz;
+	int i;
+	LPCTSTR name;
+	LPCTSTR env_name[] = {
+		_T("LOCALAPPDATA"), _T("APPDATA"), 
+		_T("OneDrive"), _T("OneDriveConsumer"), 
+		_T("USERPROFILE"), _T("ALLUSERPROFILE"), 
+		_T("ProgramFiles(x86)"), _T("ProgramFiles"), 
+		_T("windir") 
+	};
+
+	if ((src == NULL) || (src[0] == 0))
+		return NULL;
+
+	src_sz = _tcsclen(src);
+	buf = (PTSTR)malloc((src_sz + 1) * sizeof(TCHAR));
+
+	for (i = 0; i < sizeof(env_name)/sizeof(env_name[0]); i ++)
+	{
+		name = env_name[i];
+		if (GetEnvironmentVariable(name, buf, src_sz + 1) == 0)
+			continue;
+		buf_sz = _tcsclen(buf);
+		if (buf[0] == 0)
+			continue;
+		if ((buf_sz == 0) || (_tcsnicmp(src, buf, buf_sz) != 0))
+			continue;
+		_tcscpy(buf, src+buf_sz);
+		_sntprintf(dst, dst_sz, _T("%%%s%%%s"), name, buf);
+		free(buf);
+		return dst;
+	}
+	free(buf);
+	return src;
 }
 
 // get file name
 // src のパスから拡張子を除いたファイルの名前を取得
 // dst=NULL は禁止
-LPTSTR GetFileName(LPTSTR dst, int sz, LPCTSTR src)
+LPTSTR GetFileName(LPTSTR dst, int dst_sz, LPCTSTR src)
 {
 	LPTSTR p;
 	p = FindFileName(src);
 	if (p) {
-		_tcscpy_s(dst, sz, p);
+		_tcscpy_s(dst, dst_sz, p);
 		p = _tcsrchr(dst, '.');
 		if (p) {
 			*p = 0;
@@ -778,12 +836,12 @@ LPTSTR GetFileName(LPTSTR dst, int sz, LPCTSTR src)
 //「.」は含まない
 //無い場合は NULL を返す
 //パス区切り文字「\」「/」は認識しない
-LPTSTR GetFileExt(LPTSTR dst, int sz, LPTSTR src)
+LPTSTR GetFileExt(LPTSTR dst, int dst_sz, LPTSTR src)
 {
 	LPTSTR p;
 	p = FindFileExt(src);
 	if (p) {
-		_tcscpy_s(dst, sz, ++p);
+		_tcscpy_s(dst, dst_sz, ++p);
 		return dst;
 	}
 	return NULL;

@@ -56,8 +56,9 @@ extern "C"
         ID_MACROFN              = 5,
         ID_UILANGUAGEFILE       = 6,
         ID_UILANGUAGEFILE_INI   = 7,
-        ID_EXEDIR               = 8,
-        ID_LOGDIR               = 9,
+        ID_EXEDIR               = 8,   /* support v5 */
+        ID_LOGDIR               = 9,   /* support v5 */
+        ID_FILEDIR              = 10,
         ID_STRMAX,
     };
     LPTSTR TTXGetPath(PTTSet ts, UINT uid);
@@ -125,19 +126,22 @@ extern "C"
 
     /* build Œ^(src to dst) */
     ///get parent path
-    LPTSTR GetParentPath(LPTSTR dst, int sz, LPCTSTR src);
+    LPTSTR GetParentPath(LPTSTR dst, size_t dst_sz, LPCTSTR src);
 
     ///get path item name
-    LPTSTR GetPathName(LPTSTR dst, int sz, LPCTSTR src);
+    LPTSTR GetPathName(LPTSTR dst, size_t dst_sz, LPCTSTR src);
 
     ///get linearized path
-    LPTSTR GetLinearizedPath(LPTSTR dst, int sz, LPCTSTR src);
+    LPTSTR GetLinearizedPath(LPTSTR dst, size_t dst_sz, LPCTSTR src);
 
     ///get absolute path
-    LPTSTR GetAbsolutePath(LPTSTR dst, int sz, LPCTSTR src, LPCTSTR base);
+    LPTSTR GetAbsolutePath(LPTSTR dst, size_t dst_sz, LPCTSTR src, LPCTSTR base);
 
     ///get related path
-    LPTSTR GetRelatedPath(LPTSTR dst, int sz, LPCTSTR src, LPCTSTR base, int lv);
+    LPTSTR GetRelatedPath(LPTSTR dst, size_t dst_sz, LPCTSTR src, LPCTSTR base, int lv);
+
+    ///get contract path
+    LPTSTR GetContractPath(LPTSTR dst, size_t dst_sz, LPTSTR src);
 
     /* replase Œ^ */
     ///remove last slash from path
