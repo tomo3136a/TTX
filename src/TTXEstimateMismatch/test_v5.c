@@ -31,7 +31,7 @@ void DisplayTTTSet(HWND hWnd, PTTSet ts, WORD tt_version)
 {
 	CHAR buf[128];
 	PCHAR msg;
-	PWCHAR msgw;
+	//PWCHAR msgw;
 
 	msg = (PCHAR)malloc(BUF_SZ*sizeof(CHAR));
 	msg[0] = 0;
