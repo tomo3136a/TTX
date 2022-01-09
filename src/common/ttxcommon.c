@@ -803,8 +803,8 @@ LPTSTR GetContractPath(LPTSTR dst, size_t dst_sz, LPTSTR src)
 			continue;
 		if ((buf_sz == 0) || (_tcsnicmp(src, buf, buf_sz) != 0))
 			continue;
-		_tcscpy(buf, src+buf_sz);
-		_sntprintf(dst, dst_sz, _T("%%%s%%%s"), name, buf);
+		_tcscpy_s(buf, src_sz + 1, &src[buf_sz]);
+		_sntprintf_s(dst, dst_sz, dst_sz, _T("%%%s%%%s"), name, buf);
 		free(buf);
 		return dst;
 	}

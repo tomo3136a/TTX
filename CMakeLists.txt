@@ -2,7 +2,7 @@
 
 project(TTX VERSION 1.0.6)
 
-add_subdirectory(TTXAdditional)
+add_subdirectory(src)
 
 configure_file(
  LICENSE
