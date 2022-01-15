@@ -1,4 +1,5 @@
 rem build vs2019
+cd %~dp0
 
 cd ..
 pushd build_vs2019_*
