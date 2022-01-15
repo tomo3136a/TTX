@@ -959,58 +959,65 @@ static LRESULT CALLBACK ReportSettingProc(HWND dlg, UINT msg, WPARAM wParam, LPA
 		{
 		case IDC_MSG_BTN:
 			p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
-			buf = malloc(buf_sz*sizeof(TCHAR));
-			GetDlgItemText(dlg, IDC_MSG_PATH, buf, buf_sz);
-			OpenFileDlg(dlg, IDC_MSG_PATH, _T("説明ファイル"), _T(""), buf, p, 1);
-			free(buf);
+			OpenFileDlg(dlg, IDC_MSG_PATH, _T("説明ファイル"), _T(""), NULL, p, 1, FALSE);
+			//buf = malloc(buf_sz*sizeof(TCHAR));
+			//GetDlgItemText(dlg, IDC_MSG_PATH, buf, buf_sz);
+			//OpenFileDlg(dlg, IDC_MSG_PATH, _T("説明ファイル"), _T(""), buf, p, 1);
+			//free(buf);
 			TTXFree(&p);
 			return TRUE;
 		case IDC_BUTTON7:
 			p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
-			buf = malloc(buf_sz*sizeof(TCHAR));
-			GetDlgItemText(dlg, IDC_PATH7, buf, buf_sz);
-			OpenFileDlg(dlg, IDC_PATH7, _T("パターンファイル"), _T(""), buf, p, 1);
-			free(buf);
+			OpenFileDlg(dlg, IDC_PATH7, _T("パターンファイル"), _T(""), NULL, p, 1, FALSE);
+			// buf = malloc(buf_sz*sizeof(TCHAR));
+			// GetDlgItemText(dlg, IDC_PATH7, buf, buf_sz);
+			// OpenFileDlg(dlg, IDC_PATH7, _T("パターンファイル"), _T(""), buf, p, 1);
+			// free(buf);
 			TTXFree(&p);
 			return TRUE;
 		case IDC_BUTTON1:
 			p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
-			buf = malloc(buf_sz*sizeof(TCHAR));
-			GetDlgItemText(dlg, IDC_PATH1, buf, buf_sz);
-			OpenFileDlg(dlg, IDC_PATH1, _T("パターンファイル1"), _T(""), buf, p, 1);
-			free(buf);
+			OpenFileDlg(dlg, IDC_PATH1, _T("パターンファイル1"), _T(""), NULL, p, 1, FALSE);
+			// buf = malloc(buf_sz*sizeof(TCHAR));
+			// GetDlgItemText(dlg, IDC_PATH1, buf, buf_sz);
+			// OpenFileDlg(dlg, IDC_PATH1, _T("パターンファイル1"), _T(""), buf, p, 1);
+			// free(buf);
 			TTXFree(&p);
 			return TRUE;
 		case IDC_BUTTON2:
 			p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
-			buf = malloc(buf_sz*sizeof(TCHAR));
-			GetDlgItemText(dlg, IDC_PATH2, buf, buf_sz);
-			OpenFileDlg(dlg, IDC_PATH2, _T("パターンファイル2"), _T(""), buf, p, 1);
-			free(buf);
+			OpenFileDlg(dlg, IDC_PATH2, _T("パターンファイル2"), _T(""), NULL, p, 1, FALSE);
+			// buf = malloc(buf_sz*sizeof(TCHAR));
+			// GetDlgItemText(dlg, IDC_PATH2, buf, buf_sz);
+			// OpenFileDlg(dlg, IDC_PATH2, _T("パターンファイル2"), _T(""), buf, p, 1);
+			// free(buf);
 			TTXFree(&p);
 			return TRUE;
 		case IDC_BUTTON3:
 			p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
-			buf = malloc(buf_sz*sizeof(TCHAR));
-			GetDlgItemText(dlg, IDC_PATH3, buf, buf_sz);
-			OpenFileDlg(dlg, IDC_PATH3, _T("パターンファイル3"), _T(""), buf, p, 1);
-			free(buf);
+			OpenFileDlg(dlg, IDC_PATH3, _T("パターンファイル3"), _T(""), NULL, p, 1, FALSE);
+			// buf = malloc(buf_sz*sizeof(TCHAR));
+			// GetDlgItemText(dlg, IDC_PATH3, buf, buf_sz);
+			// OpenFileDlg(dlg, IDC_PATH3, _T("パターンファイル3"), _T(""), buf, p, 1);
+			// free(buf);
 			TTXFree(&p);
 			return TRUE;
 		case IDC_BUTTON4:
 			p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
-			buf = malloc(buf_sz*sizeof(TCHAR));
-			GetDlgItemText(dlg, IDC_PATH4, buf, buf_sz);
-			OpenFileDlg(dlg, IDC_PATH4, _T("パターンファイル4"), _T(""), buf, p, 1);
-			free(buf);
+			OpenFileDlg(dlg, IDC_PATH4, _T("パターンファイル4"), _T(""), NULL, p, 1, FALSE);
+			// buf = malloc(buf_sz*sizeof(TCHAR));
+			// GetDlgItemText(dlg, IDC_PATH4, buf, buf_sz);
+			// OpenFileDlg(dlg, IDC_PATH4, _T("パターンファイル4"), _T(""), buf, p, 1);
+			// free(buf);
 			TTXFree(&p);
 			return TRUE;
 		case IDC_BUTTON6:
 			p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
-			buf = malloc(buf_sz*sizeof(TCHAR));
-			GetDlgItemText(dlg, IDC_PATH6, buf, buf_sz);
-			OpenFileDlg(dlg, IDC_PATH6, _T("結果出力ファイル"), _T(""), buf, p, 1);
-			free(buf);
+			OpenFileDlg(dlg, IDC_PATH6, _T("結果出力ファイル"), _T(""), NULL, p, 1, FALSE);
+			// buf = malloc(buf_sz*sizeof(TCHAR));
+			// GetDlgItemText(dlg, IDC_PATH6, buf, buf_sz);
+			// OpenFileDlg(dlg, IDC_PATH6, _T("結果出力ファイル"), _T(""), buf, p, 1);
+			// free(buf);
 			TTXFree(&p);
 			return TRUE;
 

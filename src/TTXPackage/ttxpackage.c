@@ -763,25 +763,25 @@ static LRESULT CALLBACK PackageProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 		switch (LOWORD(wParam))
 		{
 		case IDC_BUTTON1:
-			GetDlgItemText(dlg, IDC_PATH1, path, MAX_PATH);
 			s = _T("対象フォルダを選択してください");
-			OpenFolderDlg(dlg, IDC_PATH1, s, path);
-			free(path);
+			OpenFolderDlg(dlg, IDC_PATH1, s, NULL, TRUE);
 			return TRUE;
 
 		case IDC_BUTTON5:
-			GetDlgItemText(dlg, IDC_PATH5, path, MAX_PATH);
 			s = _T("出力先を選択してください");
-			OpenFolderDlg(dlg, IDC_PATH5, s, path);
-			free(path);
+			OpenFolderDlg(dlg, IDC_PATH5, s, NULL, TRUE);
 			return TRUE;
 
 		case IDOK:
 			buf_sz = MAX_PATH;
 			buf = (LPTSTR)malloc(buf_sz*sizeof(TCHAR));
+			s = (LPTSTR)malloc(buf_sz*sizeof(TCHAR));
 			GetDlgItemText(dlg, IDC_NAME, name, sizeof(name)/sizeof(name[0]));
-			GetDlgItemText(dlg, IDC_PATH1, path, path_sz);
-			GetDlgItemText(dlg, IDC_PATH5, buf, buf_sz);
+			GetDlgItemText(dlg, IDC_PATH1, s, buf_sz);
+			ExpandEnvironmentStrings(s, path, path_sz);
+			GetDlgItemText(dlg, IDC_PATH5, s, buf_sz);
+			ExpandEnvironmentStrings(s, buf, buf_sz);
+			free(s);
 			flg = (IsDlgButtonChecked(dlg, IDC_CHECK2) == BST_CHECKED);
 			flg = make_package(name, path, buf, flg);
 			free(buf);

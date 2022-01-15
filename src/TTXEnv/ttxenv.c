@@ -186,8 +186,6 @@ static void PASCAL TTXWriteIniFile(TT_LPCTSTR fn, PTTSet ts)
 	path = NULL;
 	if (pvar->UseKeyCnf)
 	{
-		// GetRelatedPath(buf, sizeof(buf)/sizeof(buf[0]), 
-		// 	pvar->ts->KeyCnfFNW, pvar->ts->SetupFNameW, 0);
 		p1 = TTXGetPath(pvar->ts, ID_KEYCNFNM);
 		p2 = TTXGetPath(pvar->ts, ID_SETUPFNAME);
 		path_sz = _tcsnlen(p1, _TRUNCATE) + _tcsnlen(p2, _TRUNCATE) + 2;
@@ -202,8 +200,6 @@ static void PASCAL TTXWriteIniFile(TT_LPCTSTR fn, PTTSet ts)
 	path = NULL;
 	if (pvar->EnableEnv)
 	{
-		//GetRelatedPath(buf, sizeof(buf)/sizeof(buf[0]), 
-		//	pvar->SetupDir, pvar->ts->SetupFNameW, 0);
 		p1 = pvar->SetupDir;
 		p2 = TTXGetPath(pvar->ts, ID_SETUPFNAME);
 		path_sz = _tcsnlen(p1, _TRUNCATE) + _tcsnlen(p2, _TRUNCATE) + 2;
@@ -449,9 +445,9 @@ static LRESULT CALLBACK EnvCopyProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 		switch (LOWORD(wParam))
 		{
 		case IDC_BUTTON1:
-			GetDlgItemText(dlg, IDC_PATH1, buf, sizeof(buf)/sizeof(buf[0]));
+			//GetDlgItemText(dlg, IDC_PATH1, buf, sizeof(buf)/sizeof(buf[0]));
 			s = _T("複製先フォルダを選択してください");
-			OpenFolderDlg(dlg, IDC_PATH1, s, buf);
+			OpenFolderDlg(dlg, IDC_PATH1, s, NULL, FALSE);
 			return TRUE;
 
 		case IDC_CHECK1:
@@ -822,7 +818,7 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 		_tcscpy_s(path, sizeof(path)/sizeof(path[0]), p);
 		TTXFree(&p);
 		p = _T("設定ファイル(*.ini)\0*.ini\0\0");
-		if (OpenFileDlg(0, 0, _T("設定ファイル"), p, path, NULL, 0))
+		if (OpenFileDlg(0, 0, _T("設定ファイル"), p, path, NULL, 0, FALSE))
 		{
 			TTXSetPath(pvar->ts, ID_SETUPFNAME, path);
 			pvar->OverEnv = TRUE;

@@ -1250,42 +1250,53 @@ VOID SetDlgFont(HWND hWnd, UINT uItem, HFONT *phFont, LONG uH, LPTSTR szFont)
 // hWnd ウインドウが無いか editCtl が -1 の場合は、 UI コンポーネントは使用せず、 szPath を読み込む
 // szPath が NULL 以外の場合は szPath にも書き込む(サイズは MAX_PATH 以上であること)
 //成功した場合 TRUE を返す
-BOOL OpenFileDlg(HWND hWnd, UINT editCtl, LPTSTR szTitle, LPTSTR szFilter, LPTSTR szPath, LPTSTR fn, int n)
+BOOL OpenFileDlg(HWND hWnd, UINT editCtl, LPTSTR szTitle, LPTSTR szFilter, 
+				 LPTSTR szPath, LPTSTR fn, int lv, BOOL bContract)
 {
-	TCHAR szFile[MAX_PATH];
+	TCHAR buf[MAX_PATH];
+	TCHAR buf2[MAX_PATH];
 	OPENFILENAME ofn;
+	size_t buf_sz;
 
-	szFile[0] = 0;
+	buf[0] = 0;
+	buf_sz = sizeof(buf) / sizeof(buf[0]);
 
-	if (hWnd && editCtl != 0xffffffff) {
-		GetDlgItemText(hWnd, editCtl, szFile, sizeof(szFile) / sizeof(szFile[0]));
+	if (hWnd && (editCtl != 0xffffffff)) {
+		GetDlgItemText(hWnd, editCtl, buf, buf_sz);
 	}
 	else {
-		_tcscpy_s(szFile, sizeof(szFile) / sizeof(szFile[0]), szPath);
+		_tcscpy_s(buf, buf_sz, szPath);
 	}
+	if ((buf[0] == 0) && (fn != NULL)) {
+		_tcscpy_s(buf, buf_sz, fn);
+	}
+	ExpandEnvironmentStrings(buf, buf2, buf_sz);
 
 	memset(&ofn, 0, sizeof(ofn));
 	ofn.lStructSize = sizeof(OPENFILENAME);
 	ofn.hwndOwner = hWnd;
 	ofn.lpstrFilter = szFilter;
 	ofn.nFilterIndex = 1;
-	ofn.lpstrFile = szFile;
-	ofn.nMaxFile = sizeof(szFile) / sizeof(szFile[0]);
+	ofn.lpstrFile = buf2;
+	ofn.nMaxFile = buf_sz;
 	ofn.lpstrTitle = szTitle;
 	ofn.Flags = OFN_HIDEREADONLY | OFN_NODEREFERENCELINKS;
 
 	if (GetOpenFileName(&ofn)) {
 		if (fn) {
-			GetRelatedPath(szFile, sizeof(szFile) / sizeof(szFile[0]), ofn.lpstrFile, fn, n);
+			GetRelatedPath(buf, buf_sz, buf2, fn, lv);
 		}
 		else {
-			_tcscpy_s(szFile, sizeof(szFile) / sizeof(szFile[0]), ofn.lpstrFile);
+			_tcscpy_s(buf, buf_sz, buf2);
+		}
+		if (bContract) {
+			GetContractPath(buf, buf_sz, buf);
 		}
 		if (hWnd && editCtl != 0xffffffff) {
-			SetDlgItemText(hWnd, editCtl, szFile);
+			SetDlgItemText(hWnd, editCtl, buf);
 		}
 		if (szPath) {
-			_tcscpy_s(szPath, MAX_PATH, szFile);
+			_tcscpy_s(szPath, MAX_PATH, buf);
 		}
 		return TRUE;
 	}
@@ -1305,24 +1316,28 @@ static int CALLBACK setDefaultFolder(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM
 	return 0;
 }
 
-BOOL OpenFolderDlg(HWND hWnd, UINT editCtl, LPTSTR szTitle, LPTSTR szPath)
+BOOL OpenFolderDlg(HWND hWnd, UINT editCtl, LPTSTR szTitle, LPTSTR szPath, BOOL bContract)
 {
 	BROWSEINFO bi;
 	LPITEMIDLIST pidlRoot;
 	LPITEMIDLIST pidlBrowse;
 	TCHAR buf[MAX_PATH];
+	TCHAR buf2[MAX_PATH];
+	size_t buf_sz;
 	BOOL ret = FALSE;
 
+	buf_sz = sizeof(buf) / sizeof(buf[0]);
 	if (!SUCCEEDED(SHGetSpecialFolderLocation(hWnd, CSIDL_DESKTOP, &pidlRoot))) {
 		return FALSE;
 	}
 
 	if (hWnd && editCtl != 0xffffffff) {
-		GetDlgItemText(hWnd, editCtl, buf, sizeof(buf) / sizeof(buf[0]));
+		GetDlgItemText(hWnd, editCtl, buf, buf_sz);
 	}
 	else {
-		_tcscpy_s(buf, sizeof(buf) / sizeof(buf[0]), szPath);
+		_tcscpy_s(buf, buf_sz, szPath);
 	}
+	ExpandEnvironmentStrings(buf, buf2, buf_sz);
 
 	bi.hwndOwner = hWnd;
 	bi.pidlRoot = pidlRoot;
@@ -1333,9 +1348,16 @@ BOOL OpenFolderDlg(HWND hWnd, UINT editCtl, LPTSTR szTitle, LPTSTR szPath)
 	bi.lParam = (LPARAM)buf;
 	pidlBrowse = SHBrowseForFolder(&bi);
 	if (pidlBrowse != NULL) {
-		if (SHGetPathFromIDList(pidlBrowse, szPath)) {
+		if (SHGetPathFromIDList(pidlBrowse, buf2)) {
+			if (bContract)
+				GetContractPath(buf, buf_sz, buf2);
+			else
+				_tcscpy_s(buf, buf_sz, buf2);
 			if (hWnd && editCtl != 0xffffffff) {
-				SetDlgItemText(hWnd, editCtl, szPath);
+				SetDlgItemText(hWnd, editCtl, buf);
+			}
+			if (szPath != NULL) {
+				_tcscpy_s(szPath, buf_sz, buf);
 			}
 		}
 		CoTaskMemFree(pidlBrowse);

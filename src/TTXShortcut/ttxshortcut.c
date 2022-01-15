@@ -245,36 +245,44 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 		{
 		case IDC_CHECK1:
 			path = TTXGetPath(pvar->ts, ID_SETUPFNAME);
-			if (path != NULL)
-				GetContractPath(path, _tcsclen(path), path);
-			s = (IsDlgButtonChecked(dlg, IDC_CHECK1) == BST_CHECKED) ? path : _T("");
+			s = NULL;
+			if ((IsDlgButtonChecked(dlg, IDC_CHECK1) == BST_CHECKED) && (path))
+				s = GetContractPath(path, _tcsclen(path), path);
+			if (s == NULL)
+				CheckDlgButton(dlg, IDC_CHECK1, BST_UNCHECKED);
 			SetDlgItemText(dlg, IDC_PATH1, s);
 			TTXFree(&path);
 			return TRUE;
 
 		case IDC_CHECK2:
 			path = TTXGetPath(pvar->ts, ID_KEYCNFNM);
-			if (path != NULL)
-				GetContractPath(path, _tcsclen(path), path);
-			s = (IsDlgButtonChecked(dlg, IDC_CHECK2) == BST_CHECKED) ? path : _T("");
+			s = NULL;
+			if ((IsDlgButtonChecked(dlg, IDC_CHECK2) == BST_CHECKED) && (path))
+				s = GetContractPath(path, _tcsclen(path), path);
+			if (s == NULL)
+				CheckDlgButton(dlg, IDC_CHECK2, BST_UNCHECKED);
 			SetDlgItemText(dlg, IDC_PATH2, s);
 			TTXFree(&path);
 			return TRUE;
 
 		case IDC_CHECK3:
 			path = TTXGetPath(pvar->ts, ID_LOGFN);
-			if (path != NULL)
-				GetContractPath(path, _tcsclen(path), path);
-			s = (IsDlgButtonChecked(dlg, IDC_CHECK3) == BST_CHECKED) ? path : _T("");
+			s = NULL;
+			if ((IsDlgButtonChecked(dlg, IDC_CHECK3) == BST_CHECKED) && (path))
+				s = GetContractPath(path, _tcsclen(path), path);
+			if (s == NULL)
+				CheckDlgButton(dlg, IDC_CHECK3, BST_UNCHECKED);
 			SetDlgItemText(dlg, IDC_PATH3, s);
 			TTXFree(&path);
 			return TRUE;
 
 		case IDC_CHECK4:
 			path = TTXGetPath(pvar->ts, ID_MACROFN);
-			if (path != NULL)
-				GetContractPath(path, _tcsclen(path), path);
-			s = (IsDlgButtonChecked(dlg, IDC_CHECK4) == BST_CHECKED) ? path : _T("");
+			s = NULL;
+			if ((IsDlgButtonChecked(dlg, IDC_CHECK4) == BST_CHECKED) && (path))
+				s = GetContractPath(path, _tcsclen(path), path);
+			if (s == NULL)
+				CheckDlgButton(dlg, IDC_CHECK4, BST_UNCHECKED);
 			SetDlgItemText(dlg, IDC_PATH4, s);
 			TTXFree(&path);
 			return TRUE;
@@ -282,60 +290,39 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 		case IDC_BUTTON2:
 			path_sz = MAX_PATH;
 			path = (LPTSTR)malloc(path_sz*sizeof(TCHAR));
-			if (path)
-			{
-				GetDlgItemText(dlg, IDC_PATH2, path, path_sz);
+			if (!path)
+				return FALSE;
 				s = _T("キーマップファイルを選択してください");
-				OpenFileDlg(dlg, -1, s, _T("KeyMap(*.CNF)\0*.CNF\0"), path, path, 0);
-				SetDlgItemText(dlg, IDC_PATH2, GetContractPath(path, path_sz, path));
-				if (path[0])
-					CheckDlgButton(dlg, IDC_CHECK2, BST_CHECKED);
+			if (OpenFileDlg(dlg, IDC_PATH2, s, _T("KeyMap(*.CNF)\0*.CNF\0"), path, NULL, 0, TRUE))
+				CheckDlgButton(dlg, IDC_CHECK2, (path[0]) ? BST_CHECKED : BST_UNCHECKED);
 				free(path);
-			}
 			return TRUE;
 
 		case IDC_BUTTON3:
 			path_sz = MAX_PATH;
 			path = (LPTSTR)malloc(path_sz*sizeof(TCHAR));
-			if (path)
-			{
-				GetDlgItemText(dlg, IDC_PATH3, path, path_sz);
+			if (!path)
+				return FALSE;
 				s = _T("ログファイルを選択してください");
-				OpenFileDlg(dlg, -1, s, _T("Log(*.LOG)\0*.LOG\0"), path, path, 0);
-				SetDlgItemText(dlg, IDC_PATH3, GetContractPath(path, path_sz, path));
-				if (path[0])
-					CheckDlgButton(dlg, IDC_CHECK3, BST_CHECKED);
+			if (OpenFileDlg(dlg, IDC_PATH3, s, _T("Log(*.LOG)\0*.LOG\0"), path, NULL, 0, TRUE))
+				CheckDlgButton(dlg, IDC_CHECK3, (path[0]) ? BST_CHECKED : BST_UNCHECKED);
 				free(path);
-			}
 			return TRUE;
 
 		case IDC_BUTTON4:
 			path_sz = MAX_PATH;
 			path = (LPTSTR)malloc(path_sz*sizeof(TCHAR));
-			if (path)
-			{
-				GetDlgItemText(dlg, IDC_PATH4, path, path_sz);
+			if (!path)
+				return FALSE;
 				s = _T("マクロファイルを選択してください");
-				OpenFileDlg(dlg, -1, s, _T("Macro(*.TTL)\0*.TTL\0"), path, path, 0);
-				SetDlgItemText(dlg, IDC_PATH4, GetContractPath(path, path_sz, path));
-				if (path[0])
-					CheckDlgButton(dlg, IDC_CHECK4, BST_CHECKED);
+			if (OpenFileDlg(dlg, IDC_PATH4, s, _T("Macro(*.TTL)\0*.TTL\0"), path, NULL, 0, TRUE))
+				CheckDlgButton(dlg, IDC_CHECK4, (path[0]) ? BST_CHECKED : BST_UNCHECKED);
 				free(path);
-			}
 			return TRUE;
 
 		case IDC_BUTTON5:
-			path_sz = MAX_PATH;
-			path = (LPTSTR)malloc(path_sz*sizeof(TCHAR));
-			if (path)
-			{
-				GetDlgItemText(dlg, IDC_PATH5, path, path_sz);
 				s = _T("出力先を選択してください");
-				OpenFolderDlg(dlg, IDC_PATH5, s, path);
-				GetDlgItemText(dlg, IDC_PATH5, path, path_sz);
-				SetDlgItemText(dlg, IDC_PATH5, GetContractPath(path, path_sz, path));
-				free(path);
-			}
+			OpenFolderDlg(dlg, IDC_PATH5, s, NULL, TRUE);
 			return TRUE;
 
 		case IDOK:

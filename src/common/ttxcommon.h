@@ -212,10 +212,11 @@ extern "C"
     /* dialog */
     ///open to file select dialog
     BOOL OpenFileDlg(HWND hWnd, UINT editCtl, LPTSTR szTitle,
-                     LPTSTR szFilter, LPTSTR szPath, LPTSTR fn, int n);
+                     LPTSTR szFilter, LPTSTR szPath, LPTSTR fn, int lv, BOOL bContract);
 
     ///open to folder select dialog
-    BOOL OpenFolderDlg(HWND hWnd, UINT editCtl, LPTSTR szTitle, LPTSTR szPath);
+    BOOL OpenFolderDlg(HWND hWnd, UINT editCtl, LPTSTR szTitle, 
+                       LPTSTR szPath, BOOL bContract);
 
 #ifdef __cplusplus
 }

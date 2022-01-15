@@ -617,11 +617,10 @@ static LRESULT CALLBACK UserKeySettingProc(HWND dlg, UINT msg, WPARAM wParam, LP
 		InitKeyListDlg(dlg, path);
 
 		p = TTXGetPath(pvar->ts, ID_KEYCNFNM);
-		SetDlgItemText(dlg, IDC_PATH, p);
 		LoadKeyList(dlg, IDC_KEYLIST, p);
+		if (p != NULL)
+			SetDlgItemText(dlg, IDC_PATH, GetContractPath(p, _tcslen(p), p));
 		TTXFree(&p);
-		// KeyListProcOld = (WNDPROC)SetWindowLong(
-		// 	GetDlgItem(dlg, IDC_KEYLIST), GWLP_WNDPROC, (LONG)KeyListProc);
 		KeyListProcOld = (WNDPROC)SetWindowLongPtr(
 			GetDlgItem(dlg, IDC_KEYLIST), GWLP_WNDPROC, (LONG_PTR)KeyListProc);
 		MoveParentCenter(dlg);
@@ -694,14 +693,10 @@ static LRESULT CALLBACK UserKeySettingProc(HWND dlg, UINT msg, WPARAM wParam, LP
 			return TRUE;
 
 		case IDC_BUTTON_SEL:
-			buf_sz = MAX_PATH;
-			buf = (LPTSTR)malloc(buf_sz*sizeof(TCHAR));
-			if (!buf)
-				return FALSE;
-			GetDlgItemText(dlg, IDC_EDIT_STR, buf, (INT)buf_sz);
+			buf = TTXGetPath(pvar->ts, ID_HOMEDIR);
 			p = _T("マクロファイル(*.ttl)\0*.ttl\0\0");
-			OpenFileDlg(dlg, IDC_EDIT_STR, _T("マクロファイルを選択してください"), p, buf, NULL, 1);
-			free(buf);
+			OpenFileDlg(dlg, IDC_EDIT_STR, _T("マクロファイルを選択してください"), p, NULL, buf, 0, FALSE);
+			TTXFree(&buf);
 			return TRUE;
 
 		case IDC_BUTTON_ADD:
