@@ -4,10 +4,8 @@ rem vs2019
 rem cmake 3.19.6
 
 cd %~dp0
-set ptn=add_subdirectory(../TTX TTX)
-set dst=..\TTXAdditional\CMakeLists.txt
-find /C "%ptn%" %dst% 2>NUL >NUL
-if @%ERRORLEVEL%@==@1@ echo %ptn% >> %dst%
+find /C " TTX)" ..\TTXAdditional\CMakeLists.txt 2>NUL >NUL
+if @%ERRORLEVEL%@==@1@ type plugins.txt >> ..\TTXAdditional\CMakeLists.txt
 
 cd ..
 pushd libs
