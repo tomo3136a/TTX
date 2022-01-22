@@ -308,9 +308,9 @@ static void PASCAL TTXReadIniFile(TT_LPCTSTR fn, PTTSet ts)
 	pvar->connectStart = GetIniOnOff(_T(INISECTION), _T("ConnectStart"), FALSE, fn);
 	pvar->disconnectStop = GetIniOnOff(_T(INISECTION), _T("DisconnectStop"), FALSE, fn);
 
-	pvar->border[0] = GetIniNum(_T(INISECTION), _T("Border1"), 30, fn);
-	pvar->border[1] = GetIniNum(_T(INISECTION), _T("Border2"), 20, fn);
-	pvar->border[2] = GetIniNum(_T(INISECTION), _T("Border3"), 10, fn);
+	pvar->border[0] = GetIniNum(_T(INISECTION), _T("Border1"), 0, fn);
+	pvar->border[1] = GetIniNum(_T(INISECTION), _T("Border2"), 0, fn);
+	pvar->border[2] = GetIniNum(_T(INISECTION), _T("Border3"), 0, fn);
 	pvar->border[3] = GetIniNum(_T(INISECTION), _T("Border4"), 0, fn);
 }
 
@@ -383,7 +383,7 @@ static void UpdateMenuBar(HMENU hmenu, UINT uid, BOOL enable)
 	lang = UILang(pvar->ts->UILanguageFile);
 
 	RemoveMenu(hmenu, uid, MF_BYCOMMAND);
-	if (pvar->enableOnOff)
+	if (enable)
 	{
 		s = (lang == 2) ? _T("É^ÉCÉ}(&T)") : _T("&Timer");
 		AppendMenu(hmenu, MF_BYPOSITION, TTXMenuID(ID_MENUITEM), s);
