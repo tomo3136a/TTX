@@ -106,6 +106,8 @@ static void DrawTextToMenuBarRight(HWND hwnd, LPCTSTR text, int decoration)
 	MENUBARINFO mbi;
 	RECT rect;
 	HDC hDC;
+	// NONCLIENTMETRICS ncm;
+	// HFONT hFont, oldFont;
 
 	mbi.cbSize = sizeof(MENUBARINFO);
 	if (GetMenuBarInfo(hwnd, OBJID_MENU, 0, &mbi))
@@ -124,14 +126,20 @@ static void DrawTextToMenuBarRight(HWND hwnd, LPCTSTR text, int decoration)
 			SetBkColor(hDC, RGB(0, 255, 0));
 			break;
 		}
+		// ncm.cbSize = sizeof(NONCLIENTMETRICS);
+		// SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
+		// hFont = CreateFontIndirect(&ncm.lfMenuFont);
+		// oldFont = (HFONT)SelectObject(hDC, hFont);
 		GetWindowRect(hwnd, &rect);
 		rect.right = mbi.rcBar.right - rect.left - 30;
-		rect.left = rect.right - 50;
-		rect.top = mbi.rcBar.top - rect.top + 1;
-		rect.bottom = rect.top + 8;
-		DrawText(hDC, _T("               "), 15, &rect, DT_NOCLIP | DT_RIGHT);
+		rect.left = mbi.rcBar.right - rect.left - 80;
+		rect.bottom = mbi.rcBar.bottom - rect.top;
+		rect.top = mbi.rcBar.top - rect.top;
+		DrawText(hDC, _T("               "), 15, &rect, DT_RIGHT);
 		if (text)
-			DrawText(hDC, text, _tcslen(text), &rect, DT_NOCLIP | DT_RIGHT);
+			DrawText(hDC, text, _tcslen(text), &rect, DT_RIGHT);
+		// SelectObject(hDC, oldFont);
+		// DeleteObject(hFont);
 		ReleaseDC(hwnd, hDC);
 	}
 }
