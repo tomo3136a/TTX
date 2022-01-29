@@ -605,7 +605,7 @@ static LRESULT CALLBACK UserKeySettingProc(HWND dlg, UINT msg, WPARAM wParam, LP
 	size_t buf_sz;
 	LPTSTR buf;
 	int i;
-	LPTSTR p;
+	LPTSTR p, p2;
 
 	switch (msg)
 	{
@@ -693,9 +693,12 @@ static LRESULT CALLBACK UserKeySettingProc(HWND dlg, UINT msg, WPARAM wParam, LP
 			return TRUE;
 
 		case IDC_BUTTON_SEL:
+			buf_sz = MAX_PATH;
 			buf = TTXGetPath(pvar->ts, ID_HOMEDIR);
-			p = _T("マクロファイル(*.ttl)\0*.ttl\0\0");
-			OpenFileDlg(dlg, IDC_EDIT_STR, _T("マクロファイルを選択してください"), p, NULL, buf, 0, FALSE);
+			TTXDup(&buf, buf_sz, NULL);
+			p = _T("マクロファイルを選択してください");
+			p2 = _T("マクロファイル(*.ttl)\0*.ttl\0\0");
+			OpenFileDlg(dlg, IDC_EDIT_STR, p, p2, buf, PTF_CONTRACT);
 			TTXFree(&buf);
 			return TRUE;
 

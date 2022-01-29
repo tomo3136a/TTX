@@ -291,13 +291,13 @@ static void PASCAL TTXGetSetupHooks(TTXSetupHooks *hooks)
 
 // 		case IDC_BUTTON1:
 // 			GetDlgItemText(dlg, IDC_PATH1, buf, sizeof(buf));
-// 			OpenFolderDlg(dlg, IDC_PATH1, "環境フォルダを選択してください", buf);
+// 			OpenFolderDlg(dlg, IDC_PATH1, "環境フォルダを選択してください", buf, 0);
 // 			return TRUE;
 
 // 		case IDC_BUTTON2:
 // 			GetDlgItemText(dlg, IDC_PATH2, buf, sizeof(buf));
 // 			p = "キーボード設定ファイル(*.cnf)\0*.cnf\0\0";
-// 			OpenFileDlg(dlg, IDC_PATH2, "キーマップファイル", p, buf);
+// 			OpenFileDlg(dlg, IDC_PATH2, "キーマップファイル", p, buf, 0);
 // 			return TRUE;
 
 // 		case IDOK:
@@ -447,7 +447,7 @@ static LRESULT CALLBACK EnvCopyProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 		case IDC_BUTTON1:
 			//GetDlgItemText(dlg, IDC_PATH1, buf, sizeof(buf)/sizeof(buf[0]));
 			s = _T("複製先フォルダを選択してください");
-			OpenFolderDlg(dlg, IDC_PATH1, s, NULL, FALSE);
+			OpenFolderDlg(dlg, IDC_PATH1, s, NULL, 0);
 			return TRUE;
 
 		case IDC_CHECK1:
@@ -741,9 +741,10 @@ static void PASCAL TTXModifyPopupMenu(HMENU menu)
 static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 {
 	MENUITEMINFO mii;
-	TCHAR path[MAX_PATH];
+	LPTSTR path;
+	size_t path_sz;
 	TCHAR name[32];
-	LPTSTR p;
+	LPTSTR p, p2;
 
 	pvar->hwnd = hWin;
 
@@ -801,11 +802,14 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 		p = _tcschr(name, _T('+'));
 		if (p)
 		{
-			GetAbsolutePath(path, sizeof(path)/sizeof(path[0]), pvar->SetupDir, pvar->SetupFile);
-			CombinePath(path, sizeof(path)/sizeof(path[0]), (p + 2));
-			_tcscat_s(path, sizeof(path)/sizeof(path[0]), _T(".INI"));
+			path_sz = MAX_PATH;
+			TTXDup(&path, path_sz, NULL);
+			GetAbsolutePath(path, path_sz, pvar->SetupDir, pvar->SetupFile);
+			CombinePath(path, path_sz, (p + 2));
+			_tcscat_s(path, path_sz, _T(".INI"));
 			RemovePathSlash(path);
 			TTXSetPath(pvar->ts, ID_SETUPFNAME, path);
+			TTXFree(&path);
 			pvar->OverEnv = TRUE;
 			SendMessage(hWin, WM_USER_ACCELCOMMAND, IdCmdRestoreSetup, 0);
 		}
@@ -814,13 +818,15 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 
 	if (cmd == ID_MENUITEM + MENUITEM_NUM)
 	{
-		p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
-		_tcscpy_s(path, sizeof(path)/sizeof(path[0]), p);
-		TTXFree(&p);
-		p = _T("設定ファイル(*.ini)\0*.ini\0\0");
-		if (OpenFileDlg(0, 0, _T("設定ファイル"), p, path, NULL, 0, FALSE))
+		path_sz = MAX_PATH;
+		path = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+		TTXDup(&path, path_sz, NULL);
+		p = _T("設定ファイル");
+		p2 = _T("設定ファイル(*.ini)\0*.ini\0\0");
+		if (OpenFileDlg(0, 0, p, p2, path, 0))
 		{
 			TTXSetPath(pvar->ts, ID_SETUPFNAME, path);
+			TTXFree(&path);
 			pvar->OverEnv = TRUE;
 			SendMessage(hWin, WM_USER_ACCELCOMMAND, IdCmdRestoreSetup, 0);
 		}

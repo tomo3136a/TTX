@@ -621,13 +621,13 @@ BOOL make_package(LPTSTR name, LPTSTR src, LPTSTR dst, BOOL bSetup)
 {
 	HANDLE hFile;
 	LPTSTR tmp;
-	INT tmp_sz;
+	size_t tmp_sz;
 	LPTSTR lst;
-	INT lst_sz;
+	size_t lst_sz;
 	LPTSTR path;
-	INT path_sz;
+	size_t path_sz;
 	LPTSTR buf;
-	INT buf_sz;
+	size_t buf_sz;
 	DWORD dwWriteSize;
 	LPTSTR s;
 	LPSTR ss;
@@ -715,7 +715,7 @@ BOOL make_package(LPTSTR name, LPTSTR src, LPTSTR dst, BOOL bSetup)
 	}
 
 	//destroy templary folder
-	//DeleteDirectory(tmp);
+	DeleteDirectory(tmp);
 
 	free(lst);
 	free(tmp);
@@ -730,10 +730,9 @@ static LRESULT CALLBACK PackageProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 {
 	LPITEMIDLIST pidl;
 	TCHAR name[64];
+	size_t path_sz;
 	LPTSTR path;
-	INT path_sz;
 	LPTSTR buf;
-	INT buf_sz;
 	LPTSTR s;
 	BOOL flg;
 
@@ -742,67 +741,60 @@ static LRESULT CALLBACK PackageProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 	case WM_INITDIALOG:
 		SetDlgItemTextA(dlg, IDC_NAME, pvar->ts->Title);
 		path_sz = MAX_PATH;
-		path = (LPTSTR)malloc(path_sz*sizeof(TCHAR));
-		s = TTXGetPath(pvar->ts, ID_SETUPFNAME);
-		GetParentPath(path, path_sz, s);
-		TTXFree(&s);
+		path = TTXGetPath(pvar->ts, ID_SETUPFNAME);
+		TTXDup(&path, path_sz, NULL);
+		RemoveFileName(path);
+		GetContractPath(path, path_sz, path);
 		SetDlgItemText(dlg, IDC_PATH1, path);
 		if (SHGetSpecialFolderLocation(NULL, CSIDL_DESKTOP, &pidl) == NOERROR)
 		{
 			SHGetPathFromIDList(pidl, path);
 			CoTaskMemFree(pidl);
+			GetContractPath(path, path_sz, path);
 			SetDlgItemText(dlg, IDC_PATH5, path);
 		}
-		free(path);
+		TTXFree(&path);
 		MoveParentCenter(dlg);
 		return TRUE;
 
 	case WM_COMMAND:
-		path_sz = MAX_PATH;
-		path = (LPTSTR)malloc(path_sz*sizeof(TCHAR));
 		switch (LOWORD(wParam))
 		{
 		case IDC_BUTTON1:
 			s = _T("対象フォルダを選択してください");
-			OpenFolderDlg(dlg, IDC_PATH1, s, NULL, TRUE);
+			OpenFolderDlg(dlg, IDC_PATH1, s, NULL, PTF_CONTRACT);
 			return TRUE;
 
 		case IDC_BUTTON5:
 			s = _T("出力先を選択してください");
-			OpenFolderDlg(dlg, IDC_PATH5, s, NULL, TRUE);
+			OpenFolderDlg(dlg, IDC_PATH5, s, NULL, PTF_CONTRACT);
 			return TRUE;
 
 		case IDOK:
-			buf_sz = MAX_PATH;
-			buf = (LPTSTR)malloc(buf_sz*sizeof(TCHAR));
-			s = (LPTSTR)malloc(buf_sz*sizeof(TCHAR));
+			path_sz = MAX_PATH;
+			path = (LPTSTR)malloc(path_sz*sizeof(TCHAR));
+			buf = (LPTSTR)malloc(path_sz*sizeof(TCHAR));
+			s = (LPTSTR)malloc(path_sz*sizeof(TCHAR));
 			GetDlgItemText(dlg, IDC_NAME, name, sizeof(name)/sizeof(name[0]));
-			GetDlgItemText(dlg, IDC_PATH1, s, buf_sz);
+			GetDlgItemText(dlg, IDC_PATH1, s, path_sz);
 			ExpandEnvironmentStrings(s, path, path_sz);
-			GetDlgItemText(dlg, IDC_PATH5, s, buf_sz);
-			ExpandEnvironmentStrings(s, buf, buf_sz);
+			GetDlgItemText(dlg, IDC_PATH5, s, path_sz);
+			ExpandEnvironmentStrings(s, buf, path_sz);
 			free(s);
 			flg = (IsDlgButtonChecked(dlg, IDC_CHECK2) == BST_CHECKED);
 			flg = make_package(name, path, buf, flg);
 			free(buf);
-			GetTempPath(path_sz, path);
-			_tcscat_s(path, path_sz, _T("tt_"));
-			_tcscat_s(path, path_sz, name);
+			free(path);
 			if (flg)
 			{
-				s = _T("パッケージ %s を作成しました。\n\n作成先： %s\n");
-				_sntprintf_s(pvar->UIMsg, sizeof(pvar->UIMsg)/sizeof(pvar->UIMsg[0]), _TRUNCATE, s, name, path);
-				free(path);
-			}
-			else
-			{
-				s = _T("パッケージ %s を作成出来ませんでした。\n\n作成先： %s\n");
-				_sntprintf_s(pvar->UIMsg, sizeof(pvar->UIMsg)/sizeof(pvar->UIMsg[0]), _TRUNCATE, s, name, path);
-				MessageBox(dlg, pvar->UIMsg, _T("Tera Term"), MB_OK | MB_ICONEXCLAMATION);
-				free(path);
+				s = _T("パッケージ %s を作成しました。");
+				_sntprintf_s(pvar->UIMsg, sizeof(pvar->UIMsg)/sizeof(pvar->UIMsg[0]), _TRUNCATE, s, name);
+				EndDialog(dlg, IDOK);
 				return TRUE;
 			}
-			EndDialog(dlg, IDOK);
+			s = _T("パッケージ %s を作成出来ませんでした。");
+			_sntprintf_s(pvar->UIMsg, sizeof(pvar->UIMsg)/sizeof(pvar->UIMsg[0]), _TRUNCATE, s, name);
+			MessageBox(dlg, pvar->UIMsg, _T("Tera Term"), MB_OK | MB_ICONEXCLAMATION);
 			return TRUE;
 
 		case IDCANCEL:

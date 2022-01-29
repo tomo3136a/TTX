@@ -27,196 +27,222 @@
 #define TTXID "C11H17N3O8"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-    /* ttx support */
-    ///TTX load test
-    BOOL TTXIgnore(int order, LPCTSTR name, WORD version);
+/* ttx support */
+/// TTX load test
+BOOL TTXIgnore(int order, LPCTSTR name, WORD version);
 
-    //token command line parameter
-    LPTSTR TTXGetParam(LPTSTR buf, size_t sz, LPTSTR param);
+// token command line parameter
+LPTSTR TTXGetParam(LPTSTR buf, size_t sz, LPTSTR param);
 
-    //get UI language ID(1=English, 2=Japanese)
-    UINT UILang(LPSTR lang);
+// get UI language ID(1=English, 2=Japanese)
+UINT UILang(LPSTR lang);
 
-    ///get Menu ID offset
-    UINT TTXMenuID(UINT uid);
-    UINT TTXMenuOrgID(UINT uid);
+/// get Menu ID offset
+UINT TTXMenuID(UINT uid);
+UINT TTXMenuOrgID(UINT uid);
 
-    LPTSTR TTXGetModuleFileName(HMODULE hModule);
+LPTSTR TTXGetModuleFileName(HMODULE hModule);
 
-    //path string
-    enum {
-        ID_HOMEDIR              = 1,
-        ID_SETUPFNAME           = 2,
-        ID_KEYCNFNM             = 3,
-        ID_LOGFN                = 4,
-        ID_MACROFN              = 5,
-        ID_UILANGUAGEFILE       = 6,
-        ID_UILANGUAGEFILE_INI   = 7,
-        ID_EXEDIR               = 8,   /* support v5 */
-        ID_LOGDIR               = 9,   /* support v5 */
-        ID_FILEDIR              = 10,
-        ID_STRMAX,
-    };
-    LPTSTR TTXGetPath(PTTSet ts, UINT uid);
-    BOOL TTXSetPath(PTTSet ts, UINT uid, LPTSTR s);
+// path string
+enum {
+	ID_HOMEDIR = 1,
+	ID_SETUPFNAME = 2,
+	ID_KEYCNFNM = 3,
+	ID_LOGFN = 4,
+	ID_MACROFN = 5,
+	ID_UILANGUAGEFILE = 6,
+	ID_UILANGUAGEFILE_INI = 7,
+	ID_EXEDIR = 8, /* support v5 */
+	ID_LOGDIR = 9, /* support v5 */
+	ID_FILEDIR = 10,
+	ID_STRMAX,
+};
+LPTSTR TTXGetPath(PTTSet ts, UINT uid);
+BOOL TTXSetPath(PTTSet ts, UINT uid, LPTSTR s);
 
-    /* string */
-    LPSTR WC2MB(UINT cp, LPWSTR pwzSrc);
-    inline LPSTR WC2ACP(LPWSTR pwzSrc){ return WC2MB(CP_ACP, pwzSrc); }
-    inline LPSTR WC2UTF8(LPWSTR pwzSrc){ return WC2MB(CP_UTF8, pwzSrc); }
+/* string */
+LPSTR WC2MB(UINT cp, LPWSTR pwzSrc);
+inline LPSTR WC2ACP(LPWSTR pwzSrc)
+{
+	return WC2MB(CP_ACP, pwzSrc);
+}
+inline LPSTR WC2UTF8(LPWSTR pwzSrc)
+{
+	return WC2MB(CP_UTF8, pwzSrc);
+}
 
-    LPWSTR MB2WC(UINT cp, LPSTR pszSrc);
-    inline LPWSTR ACP2WC(LPSTR pszSrc){ return MB2WC(CP_ACP, pszSrc); }
-    inline LPWSTR UTF82WC(LPSTR pszSrc){ return MB2WC(CP_UTF8, pszSrc); }
+LPWSTR MB2WC(UINT cp, LPSTR pszSrc);
+inline LPWSTR ACP2WC(LPSTR pszSrc)
+{
+	return MB2WC(CP_ACP, pszSrc);
+}
+inline LPWSTR UTF82WC(LPSTR pszSrc)
+{
+	return MB2WC(CP_UTF8, pszSrc);
+}
 
 #ifdef TT4
-    inline LPSTR toMB(LPTSTR pszSrc){ return _tcsdup(pszSrc); }
-    inline LPTSTR toTC(LPSTR pszSrc){ return _tcsdup(pszSrc); }
+inline LPSTR toMB(LPTSTR pszSrc)
+{
+	return _tcsdup(pszSrc);
+}
+inline LPTSTR toTC(LPSTR pszSrc)
+{
+	return _tcsdup(pszSrc);
+}
 #else
-    inline LPSTR toMB(LPTSTR pszSrc){ return WC2MB(CP_ACP, pszSrc); }
-    inline LPTSTR toTC(LPSTR pszSrc){ return MB2WC(CP_ACP, pszSrc); }
+inline LPSTR toMB(LPTSTR pszSrc)
+{
+	return WC2MB(CP_ACP, pszSrc);
+}
+inline LPTSTR toTC(LPSTR pszSrc)
+{
+	return MB2WC(CP_ACP, pszSrc);
+}
 #endif /* TT4 */
 
-    BOOL TTXFree(LPVOID *pBuf);
+BOOL TTXDup(LPTSTR *pszBuf, size_t sz, LPTSTR szSrc);
+BOOL TTXFree(LPVOID *pBuf);
 
-    ///文字列中に文字を検索し次のポインタを返す
-    LPTSTR strskip(LPTSTR p, TCHAR c);
+///文字列中に文字を検索し次のポインタを返す
+LPTSTR strskip(LPTSTR p, TCHAR c);
 
-    /* string set */
-    ///連結文字列定義
-    typedef LPTSTR strset_t;
+/* string set */
+///連結文字列定義
+typedef LPTSTR strset_t;
 
-    ///連結文字列から順次切り出す
-    LPTSTR StrSetTok(strset_t p, strset_t *ctx);
+///連結文字列から順次切り出す
+LPTSTR StrSetTok(strset_t p, strset_t *ctx);
 
-    ///連結文字列のサイズを取得する
-    int StrSetSize(strset_t p, int *cnt);
+///連結文字列のサイズを取得する
+int StrSetSize(strset_t p, int *cnt);
 
-    ///連結文字列からキーワードの連結文字列作成
-    int StrSetKeys(strset_t dst, strset_t src);
+///連結文字列からキーワードの連結文字列作成
+int StrSetKeys(strset_t dst, strset_t src);
 
-    ///連結文字列からキーワードのインデックス取得
-    int StrSetFindIndex(strset_t p, LPTSTR k);
+///連結文字列からキーワードのインデックス取得
+int StrSetFindIndex(strset_t p, LPTSTR k);
 
-    ///連結文字列からキーワードで検索し文字列取得
-    LPTSTR StrSetFindKey(strset_t p, LPTSTR k);
+///連結文字列からキーワードで検索し文字列取得
+LPTSTR StrSetFindKey(strset_t p, LPTSTR k);
 
-    ///連結文字列から値で検索し文字列取得
-    LPTSTR StrSetFindVal(strset_t p, LPTSTR v);
+///連結文字列から値で検索し文字列取得
+LPTSTR StrSetFindVal(strset_t p, LPTSTR v);
 
-    ///連結文字列からn番目の文字列を取得する
-    LPTSTR StrSetAt(strset_t p, int n);
+///連結文字列からn番目の文字列を取得する
+LPTSTR StrSetAt(strset_t p, int n);
 
-    /* path */
-    // fileapi.h は使わないようなので代替え実装、互換性はない
+/* path */
+// fileapi.h は使わないようなので代替え実装、互換性はない
 
-    /* find 型 */
-    ///find file name address
-    LPTSTR FindFileName(LPCTSTR path);
+/* find 型 */
+/// find file name address
+LPTSTR FindFileName(LPCTSTR path);
 
-    ///find file extension address
-    LPTSTR FindFileExt(LPCTSTR path);
+/// find file extension address
+LPTSTR FindFileExt(LPCTSTR path);
 
-    ///find path component path address
-    LPTSTR FindPathNextComponent(LPCTSTR path);
+/// find path component path address
+LPTSTR FindPathNextComponent(LPCTSTR path);
 
-    /* build 型(src to dst) */
-    ///get parent path
-    LPTSTR GetParentPath(LPTSTR dst, size_t dst_sz, LPCTSTR src);
+/* build 型(src to dst) */
+/// get parent path
+LPTSTR GetParentPath(LPTSTR dst, size_t dst_sz, LPCTSTR src);
 
-    ///get path item name
-    LPTSTR GetPathName(LPTSTR dst, size_t dst_sz, LPCTSTR src);
+/// get path item name
+LPTSTR GetPathName(LPTSTR dst, size_t dst_sz, LPCTSTR src);
 
-    ///get linearized path
-    LPTSTR GetLinearizedPath(LPTSTR dst, size_t dst_sz, LPCTSTR src);
+/// get linearized path
+LPTSTR GetLinearizedPath(LPTSTR dst, size_t dst_sz, LPCTSTR src);
 
-    ///get absolute path
-    LPTSTR GetAbsolutePath(LPTSTR dst, size_t dst_sz, LPCTSTR src, LPCTSTR base);
+/// get absolute path
+LPTSTR GetAbsolutePath(LPTSTR dst, size_t dst_sz, LPCTSTR src, LPCTSTR base);
 
-    ///get related path
-    LPTSTR GetRelatedPath(LPTSTR dst, size_t dst_sz, LPCTSTR src, LPCTSTR base, int lv);
+/// get related path
+LPTSTR GetRelatedPath(LPTSTR dst, size_t dst_sz, LPCTSTR src, LPCTSTR base, int lv);
 
-    ///get contract path
-    LPTSTR GetContractPath(LPTSTR dst, size_t dst_sz, LPTSTR src);
+/// get contract path
+LPTSTR GetContractPath(LPTSTR dst, size_t dst_sz, LPTSTR src);
 
-    /* replase 型 */
-    ///remove last slash from path
-    LPTSTR RemovePathSlash(LPTSTR path);
+/* replase 型 */
+/// remove last slash from path
+LPTSTR RemovePathSlash(LPTSTR path);
 
-    ///remove last slash from path
-    LPTSTR RemoveFileName(LPTSTR path);
+/// remove last slash from path
+LPTSTR RemoveFileName(LPTSTR path);
 
-    ///remove last slash from path
-    LPTSTR RemoveFileExt(LPTSTR path);
+/// remove last slash from path
+LPTSTR RemoveFileExt(LPTSTR path);
 
-    ///combine path
-    LPTSTR CombinePath(LPTSTR path, int sz, LPCTSTR fn);
+/// combine path
+LPTSTR CombinePath(LPTSTR path, int sz, LPCTSTR fn);
 
-    /* test 型 */
-    ///test exist file
-    BOOL FileExists(LPCTSTR path);
+/* test 型 */
+/// test exist file
+BOOL FileExists(LPCTSTR path);
 
-    /* setting file */
-    ///セクション名の連結文字列取得(開放はfree(outp))
-    DWORD GetIniSects(strset_t *outp, DWORD sz, DWORD nsz, LPCTSTR fn);
+/* setting file */
+///セクション名の連結文字列取得(開放はfree(outp))
+DWORD GetIniSects(strset_t *outp, DWORD sz, DWORD nsz, LPCTSTR fn);
 
-    ///セクション内のキーワード名/値の連結文字列取得(開放はfree(outp))
-    DWORD GetIniStrSet(LPCTSTR sect, strset_t *outp, DWORD sz, DWORD nsz, LPCTSTR fn);
+///セクション内のキーワード名/値の連結文字列取得(開放はfree(outp))
+DWORD GetIniStrSet(LPCTSTR sect, strset_t *outp, DWORD sz, DWORD nsz, LPCTSTR fn);
 
-    ///セクション内のキーワード名の連結文字列取得(開放はfree(outp))
-    DWORD GetIniKeys(LPCTSTR sect, strset_t *outp, DWORD sz, DWORD nsz, LPCTSTR fn);
+///セクション内のキーワード名の連結文字列取得(開放はfree(outp))
+DWORD GetIniKeys(LPCTSTR sect, strset_t *outp, DWORD sz, DWORD nsz, LPCTSTR fn);
 
-    ///ON/OFF 設定を設定ファイルから取得
-    BOOL GetIniOnOff(LPCTSTR sect, LPCTSTR name, BOOL bDefault, LPCTSTR fn);
+/// ON/OFF 設定を設定ファイルから取得
+BOOL GetIniOnOff(LPCTSTR sect, LPCTSTR name, BOOL bDefault, LPCTSTR fn);
 
-    ///数値設定を設定ファイルから取得
-    UINT GetIniNum(LPCTSTR sect, LPCTSTR name, int nDefault, LPCTSTR fn);
+///数値設定を設定ファイルから取得
+UINT GetIniNum(LPCTSTR sect, LPCTSTR name, int nDefault, LPCTSTR fn);
 
-    ///文字列を設定ファイルから取得(開放はfree(outp))
-    DWORD GetIniString(LPCTSTR sect, LPCTSTR name, LPCTSTR sDefault,
-                       LPTSTR *outp, DWORD sz, DWORD nsz, LPCTSTR fn);
-    LPSTR GetIniStringA(LPCTSTR sect, LPCTSTR name, LPCTSTR sDefault, LPCTSTR fn);
+///文字列を設定ファイルから取得(開放はfree(outp))
+DWORD GetIniString(LPCTSTR sect, LPCTSTR name, LPCTSTR sDefault, LPTSTR *outp, DWORD sz, DWORD nsz, LPCTSTR fn);
+LPSTR GetIniStringA(LPCTSTR sect, LPCTSTR name, LPCTSTR sDefault, LPCTSTR fn);
 
-    ///OM/OFF 設定を設定ファイルに書き込む
-    BOOL WriteIniOnOff(LPCTSTR sect, LPCTSTR name, int bFlag, BOOL bEnable, LPCTSTR fn);
+/// OM/OFF 設定を設定ファイルに書き込む
+BOOL WriteIniOnOff(LPCTSTR sect, LPCTSTR name, int bFlag, BOOL bEnable, LPCTSTR fn);
 
-    ///数値設定を設定ファイルに書き込む
-    BOOL WriteIniNum(LPCTSTR sect, LPCTSTR name, int val, BOOL bEnable, LPCTSTR fn);
+///数値設定を設定ファイルに書き込む
+BOOL WriteIniNum(LPCTSTR sect, LPCTSTR name, int val, BOOL bEnable, LPCTSTR fn);
 
-    /* window control */
-    ///get right-bottom point from window item
-    VOID GetPointRB(HWND hWnd, UINT uItem, POINT *pt);
+/* window control */
+/// get right-bottom point from window item
+VOID GetPointRB(HWND hWnd, UINT uItem, POINT *pt);
 
-    ///move right-bottom point within window item
-    VOID MovePointRB(HWND hWnd, UINT uItem, POINT *ptRB, UINT uFlag);
+/// move right-bottom point within window item
+VOID MovePointRB(HWND hWnd, UINT uItem, POINT *ptRB, UINT uFlag);
 
-    ///get window size to point structure
-    VOID GetWindowSize(HWND hWnd, POINT *pt);
+/// get window size to point structure
+VOID GetWindowSize(HWND hWnd, POINT *pt);
 
-    ///set window size from point structure
-    VOID SetWindowSize(HWND hWnd, POINT *pt);
+/// set window size from point structure
+VOID SetWindowSize(HWND hWnd, POINT *pt);
 
-    ///move window relative direction
-    VOID SetHomePosition(HWND hWnd, HWND hWndBase, UINT uPos);
+/// move window relative direction
+VOID SetHomePosition(HWND hWnd, HWND hWndBase, UINT uPos);
 
-    ///adjust window position to center of parent window
-    VOID MoveParentCenter(HWND hWnd);
+/// adjust window position to center of parent window
+VOID MoveParentCenter(HWND hWnd);
 
-    ///create dialog font and set to phFont (require to delete item after)
-    VOID SetDlgFont(HWND hWnd, UINT uItem, HFONT *phFont, LONG uH, LPTSTR szFont);
+/// create dialog font and set to phFont (require to delete item after)
+VOID SetDlgFont(HWND hWnd, UINT uItem, HFONT *phFont, LONG uH, LPTSTR szFont);
 
-    /* dialog */
-    ///open to file select dialog
-    BOOL OpenFileDlg(HWND hWnd, UINT editCtl, LPTSTR szTitle,
-                     LPTSTR szFilter, LPTSTR szPath, LPTSTR fn, int lv, BOOL bContract);
+/* dialog */
+enum {
+	PTF_CONTRACT = 16,
+	PTF_SETTPATH = 32,
+	PTF_GETPATH = 64
+};
+/// open to file select dialog
+BOOL OpenFileDlg(HWND hWnd, UINT editCtl, LPTSTR szTitle, LPTSTR szFilter, LPTSTR szPath, UINT uFlag);
 
-    ///open to folder select dialog
-    BOOL OpenFolderDlg(HWND hWnd, UINT editCtl, LPTSTR szTitle, 
-                       LPTSTR szPath, BOOL bContract);
+/// open to folder select dialog
+BOOL OpenFolderDlg(HWND hWnd, UINT editCtl, LPTSTR szTitle, LPTSTR szPath, UINT uFlag);
 
 #ifdef __cplusplus
 }

@@ -317,8 +317,9 @@ static void PASCAL TTXCloseFile(TTXFileHooks *hooks)
 static LRESULT CALLBACK SettingProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	LPTSTR buf;
-	int buf_sz;
+	size_t buf_sz;
 	LPTSTR path;
+	LPTSTR s, s2;
 
 	buf_sz = 4100;
 
@@ -332,22 +333,17 @@ static LRESULT CALLBACK SettingProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
-		//{use file selector}
 		case IDC_BUTTON1:
-			path = TTXGetPath(pvar->ts, ID_SETUPFNAME);
-			buf = (LPTSTR)malloc(buf_sz*siezof(buf[0]));
-			GetDlgItemText(dlg, IDC_PATH1, buf, buf_sz);
-			OpenFileDlg(dlg, IDC_PATH1, _T("ファイル"), 
-				_T("File(*.txt)\0*.txt\0"), buf, path, 0);
-			free(buf);
-			TTXFree(&path);
+			//{use file selector}
+			s = _T("ファイル");
+			s2 = _T("File(*.txt)\0*.txt\0");
+			OpenFileDlg(dlg, IDC_PATH1, s, s2, NULL, PTF_CONTRACT);
 			return TRUE;
 
-		//{use folder selector}
 		case IDC_BUTTON2:
-			buf = (LPTSTR)malloc(buf_sz*sizeof(buf[0]));
-			OpenFolderDlg(dlg, IDC_PATH2, _T("フォルダ"), buf);
-			free(buf);
+			//{use folder selector}
+			s = _T("フォルダ");
+			OpenFolderDlg(dlg, IDC_PATH2, s, NULL, PTF_CONTRACT);
 			return TRUE;
 
 		case IDOK:

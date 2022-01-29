@@ -212,7 +212,7 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 	int path_sz;
 	LPTSTR buf;
 	int buf_sz;
-	LPTSTR s;
+	LPTSTR s, s2;
 	TCHAR name[64];
 	UINT wKey;
 
@@ -266,6 +266,7 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 			return TRUE;
 
 		case IDC_CHECK3:
+			path_sz = MAX_PATH;
 			path = TTXGetPath(pvar->ts, ID_LOGFN);
 			s = NULL;
 			if ((IsDlgButtonChecked(dlg, IDC_CHECK3) == BST_CHECKED) && (path))
@@ -289,40 +290,54 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 
 		case IDC_BUTTON2:
 			path_sz = MAX_PATH;
-			path = (LPTSTR)malloc(path_sz*sizeof(TCHAR));
-			if (!path)
-				return FALSE;
-				s = _T("キーマップファイルを選択してください");
-			if (OpenFileDlg(dlg, IDC_PATH2, s, _T("KeyMap(*.CNF)\0*.CNF\0"), path, NULL, 0, TRUE))
+			path = TTXGetPath(pvar->ts, ID_KEYCNFNM);
+			TTXDup(&path, path_sz, NULL);
+			s = _T("キーマップファイルを選択してください");
+			s2 = _T("KeyMap(*.CNF)\0*.CNF\0All Files(*.*)\0*.*\0");
+			if (OpenFileDlg(dlg, IDC_PATH2, s, s2, path, PTF_CONTRACT))
 				CheckDlgButton(dlg, IDC_CHECK2, (path[0]) ? BST_CHECKED : BST_UNCHECKED);
-				free(path);
+			TTXFree(&path);
 			return TRUE;
 
 		case IDC_BUTTON3:
 			path_sz = MAX_PATH;
-			path = (LPTSTR)malloc(path_sz*sizeof(TCHAR));
-			if (!path)
-				return FALSE;
-				s = _T("ログファイルを選択してください");
-			if (OpenFileDlg(dlg, IDC_PATH3, s, _T("Log(*.LOG)\0*.LOG\0"), path, NULL, 0, TRUE))
+			path = TTXGetPath(pvar->ts, ID_LOGFN);
+			TTXDup(&path, path_sz, NULL);
+			if (!path[0])
+			{
+				s = TTXGetPath(pvar->ts, ID_LOGDIR);
+				TTXDup(&path, path_sz, s);
+				CombinePath(path, path_sz, _T("TERATERM.LOG"));
+				TTXFree(&s);
+			}
+			s = _T("ログファイルを選択してください");
+			s2 = _T("Log(*.LOG)\0*.LOG\0All Files(*.*)\0*.*\0");
+			if (OpenFileDlg(dlg, IDC_PATH3, s, s2, path, PTF_CONTRACT))
 				CheckDlgButton(dlg, IDC_CHECK3, (path[0]) ? BST_CHECKED : BST_UNCHECKED);
-				free(path);
+			TTXFree(&path);
 			return TRUE;
 
 		case IDC_BUTTON4:
 			path_sz = MAX_PATH;
-			path = (LPTSTR)malloc(path_sz*sizeof(TCHAR));
-			if (!path)
-				return FALSE;
-				s = _T("マクロファイルを選択してください");
-			if (OpenFileDlg(dlg, IDC_PATH4, s, _T("Macro(*.TTL)\0*.TTL\0"), path, NULL, 0, TRUE))
+			path = TTXGetPath(pvar->ts, ID_MACROFN);
+			TTXDup(&path, path_sz, NULL);
+			if (!path[0])
+			{
+				s = TTXGetPath(pvar->ts, ID_HOMEDIR);
+				TTXDup(&path, path_sz, s);
+				CombinePath(path, path_sz, _T("MACRO.TTL"));
+				TTXFree(&s);
+			}
+			s = _T("マクロファイルを選択してください");
+			s2 = _T("Macro(*.TTL)\0*.TTL\0All Files(*.*)\0*.*\0");
+			if (OpenFileDlg(dlg, IDC_PATH4, s, s2, path, PTF_CONTRACT))
 				CheckDlgButton(dlg, IDC_CHECK4, (path[0]) ? BST_CHECKED : BST_UNCHECKED);
-				free(path);
+			TTXFree(&path);
 			return TRUE;
 
 		case IDC_BUTTON5:
-				s = _T("出力先を選択してください");
-			OpenFolderDlg(dlg, IDC_PATH5, s, NULL, TRUE);
+			s = _T("出力先を選択してください");
+			OpenFolderDlg(dlg, IDC_PATH5, s, NULL, PTF_CONTRACT);
 			return TRUE;
 
 		case IDOK:
