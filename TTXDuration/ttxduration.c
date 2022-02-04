@@ -35,6 +35,7 @@
 #define IdDurationTimer 3002
 
 #define TIMER_INTERVAL 200
+#define BORDER_NUM 4
 
 static HANDLE hInst; /* Instance handle of TTX*.DLL */
 
@@ -66,7 +67,7 @@ typedef struct
 	BOOL connectStart;
 	BOOL disconnectStop;
 
-	DWORD border[4];
+	DWORD border[BORDER_NUM];
 
 } TInstVar;
 
@@ -79,6 +80,8 @@ static TInstVar InstVar;
 
 static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 {
+	int i;
+
 	pvar->ts = ts;
 	pvar->cv = cv;
 	pvar->skip = FALSE;
@@ -93,10 +96,8 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 	pvar->connectStart = FALSE;
 	pvar->disconnectStop = FALSE;
 
-	pvar->border[0] = 0;
-	pvar->border[1] = 0;
-	pvar->border[2] = 0;
-	pvar->border[3] = 0;
+	for (i = 0; i < BORDER_NUM; i ++)
+		pvar->border[i] = 0;
 }
 
 ///////////////////////////////////////////////////////////////
@@ -159,7 +160,7 @@ static void CALLBACK DurationTimerProc(HWND hwnd, UINT msg, UINT_PTR ev, DWORD n
 
 	border = 0;
 	decoration = 0;
-	for (i = 0; i < sizeof(pvar->border) / sizeof(pvar->border[0]); i++)
+	for (i = 0; i < BORDER_NUM; i++)
 	{
 		if ((border >= pvar->border[i]) || (pvar->border[i] > duration))
 			continue;
@@ -307,6 +308,9 @@ static void PASCAL TTXCloseFile(TTXFileHooks *hooks)
 
 static void PASCAL TTXReadIniFile(TT_LPCTSTR fn, PTTSet ts)
 {
+	int i;
+	TCHAR name[16];
+
 	if (!pvar->skip)
 		(pvar->origReadIniFile)(fn, ts);
 
@@ -316,14 +320,18 @@ static void PASCAL TTXReadIniFile(TT_LPCTSTR fn, PTTSet ts)
 	pvar->connectStart = GetIniOnOff(_T(INISECTION), _T("ConnectStart"), FALSE, fn);
 	pvar->disconnectStop = GetIniOnOff(_T(INISECTION), _T("DisconnectStop"), FALSE, fn);
 
-	pvar->border[0] = GetIniNum(_T(INISECTION), _T("Border1"), 0, fn);
-	pvar->border[1] = GetIniNum(_T(INISECTION), _T("Border2"), 0, fn);
-	pvar->border[2] = GetIniNum(_T(INISECTION), _T("Border3"), 0, fn);
-	pvar->border[3] = GetIniNum(_T(INISECTION), _T("Border4"), 0, fn);
+	for (i = 0; i < BORDER_NUM; i ++)
+	{
+		_sntprintf(name, 16, _T("Border%d"), (i + 1));
+		pvar->border[i] = GetIniNum(_T(INISECTION), name, 0, fn);
+	}
 }
 
 static void PASCAL TTXWriteIniFile(TT_LPCTSTR fn, PTTSet ts)
 {
+	int i;
+	TCHAR name[16];
+
 	(pvar->origWriteIniFile)(fn, ts);
 
 	WriteIniOnOff(_T(INISECTION), _T("EnableOnOff"), pvar->enableOnOff, FALSE, fn);
@@ -332,10 +340,11 @@ static void PASCAL TTXWriteIniFile(TT_LPCTSTR fn, PTTSet ts)
 	WriteIniOnOff(_T(INISECTION), _T("ConnectStart"), pvar->connectStart, FALSE, fn);
 	WriteIniOnOff(_T(INISECTION), _T("DisconnectStop"), pvar->disconnectStop, FALSE, fn);
 
-	WriteIniNum(_T(INISECTION), _T("Border1"), pvar->border[0], FALSE, fn);
-	WriteIniNum(_T(INISECTION), _T("Border2"), pvar->border[1], FALSE, fn);
-	WriteIniNum(_T(INISECTION), _T("Border3"), pvar->border[2], FALSE, fn);
-	WriteIniNum(_T(INISECTION), _T("Border4"), pvar->border[3], FALSE, fn);
+	for (i = 0; i < BORDER_NUM; i ++)
+	{
+		_sntprintf(name, 16, _T("Border%d"), (i + 1));
+		WriteIniNum(_T(INISECTION), name, pvar->border[i], FALSE, fn);
+	}
 }
 
 static void PASCAL TTXParseParam(TT_LPTSTR Param, PTTSet ts, PCHAR DDETopic)
