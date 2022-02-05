@@ -34,6 +34,8 @@ typedef struct
 	//menu
 	HMENU HelpMenu;
 
+	PTSTR SetupFName;
+
 } TInstVar;
 
 static TInstVar FAR *pvar;
@@ -47,6 +49,8 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 {
 	pvar->ts = ts;
 	pvar->cv = cv;
+
+	pvar->SetupFName = TTXGetPath(ts, ID_SETUPFNAME);
 }
 
 ///////////////////////////////////////////////////////////////
@@ -367,15 +371,12 @@ static LRESULT CALLBACK SettingProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 {
 	static BOOL bUpdate = FALSE;
 	LV_HITTESTINFO lvinfo;
-	LPTSTR p;
 
 	switch (msg)
 	{
 	case WM_INITDIALOG:
 		bUpdate = FALSE;
-		p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
-		LoadListView(dlg, IDC_LISTVIEW, p);
-		TTXFree(&p);
+		LoadListView(dlg, IDC_LISTVIEW, pvar->SetupFName);
 		MoveParentCenter(dlg);
 		return TRUE;
 
@@ -406,9 +407,7 @@ static LRESULT CALLBACK SettingProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 		case IDOK:
 			if (bUpdate)
 			{
-				p = TTXGetPath(pvar->ts, ID_SETUPFNAME);
-				SaveListView(dlg, IDC_LISTVIEW, p);
-				TTXFree(&p);
+				SaveListView(dlg, IDC_LISTVIEW, pvar->SetupFName);
 				EndDialog(dlg, IDOK);
 				return TRUE;
 			}
@@ -435,7 +434,7 @@ static void PASCAL TTXModifyMenu(HMENU menu)
 	idx = GetMenuItemCount(menu) - 1;
 	pvar->HelpMenu = GetSubMenu(menu, idx);
 
-	s = (lang == 2) ? _T("TTX 機能一覧(&L)") : _T("TTX &list");
+	s = (lang == 2) ? _T("TTX プラグイン一覧(&L)") : _T("TTX plugin &list");
 	InsertMenu(pvar->HelpMenu, 2, MF_BYPOSITION, TTXMenuID(ID_MENUITEM), s);
 }
 
