@@ -236,7 +236,7 @@ void LoadListView(HWND dlg, UINT uid, LPTSTR fn)
 	memset(&lvcol, 0, sizeof(LVCOLUMN));
 	lvcol.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 	lvcol.fmt = LVCFMT_LEFT;
-	lvcol.cx = 130;
+	lvcol.cx = 150;
 	lvcol.pszText = (lang == 2) ? _T("–¼‘O") : _T("name");
 	lvcol.iSubItem = 0;
 	ListView_InsertColumn(hWnd, 0, &lvcol);
@@ -369,15 +369,23 @@ void UpdateListView(HWND dlg, UINT uid, int idx)
 //
 static LRESULT CALLBACK SettingProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+	static POINT ptListView, ptBtn;
 	static BOOL bUpdate = FALSE;
 	LV_HITTESTINFO lvinfo;
 
 	switch (msg)
 	{
 	case WM_INITDIALOG:
+		GetPointRB(dlg, IDC_LISTVIEW, &ptListView);
+		GetPointRB(dlg, IDOK, &ptBtn);
 		bUpdate = FALSE;
 		LoadListView(dlg, IDC_LISTVIEW, pvar->SetupFName);
 		MoveParentCenter(dlg);
+		return TRUE;
+
+	case WM_SIZE:
+		MovePointRB(dlg, IDC_LISTVIEW, &ptListView, RB_RIGHT | RB_BOTTOM);
+		MovePointRB(dlg, IDOK, &ptBtn, RB_LEFT | RB_RIGHT | RB_TOP | RB_BOTTOM);
 		return TRUE;
 
 	case WM_NOTIFY:
