@@ -59,3 +59,5 @@ Debug/
 _old/
 *.bak
 *.vdproj
+
+_*/
