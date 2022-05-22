@@ -19,7 +19,7 @@
 #ifdef _TTX_VERSION_SUPPORT
 #include "ttxversion.h"
 #else
-#define TTXInitVersion()
+#define TTXInitVersion(v)
 #define TS(a, b) (a->b)
 #endif
 
@@ -70,7 +70,6 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 	pvar->ConnectMsg = FALSE;
 	pvar->Reconnect = FALSE;
 	pvar->ReconnectWait = 0;
-	TTXInitVersion();
 }
 
 ///////////////////////////////////////////////////////////////
@@ -304,6 +303,9 @@ BOOL __declspec(dllexport) PASCAL FAR TTXBind(WORD Version, TTXExports *exports)
 
 	if (TTXIgnore(ORDER, _T(INISECTION), 0))
 		return TRUE;
+
+	TTXInitVersion(0);
+	if(!TEST_TS(AutoComPortReconnect)){return FALSE;}
 
 	if (size > exports->size)
 	{

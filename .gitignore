@@ -62,3 +62,6 @@ _old/
 *.vdproj
 
 _*/
+
+ttxversion_db.h
+_*

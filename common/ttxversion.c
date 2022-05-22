@@ -52,10 +52,10 @@ static WORD TTRunningVersion()
 
 	free(lpBuf);
 
-	return major * 10000 + minor;
+	return major * 1000 + minor;
 }
 
-void TTXInitVersion()
+void TTXInitVersion(WORD version)
 {
-	tt_version = TTRunningVersion();
+	tt_version = (version) ? version : TTRunningVersion();
 }
