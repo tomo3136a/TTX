@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.8)
 
-project(TTXPackage)
+project(TTXCommon)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/")
 
@@ -11,44 +11,30 @@ add_definitions(-DUNICODE -D_UNICODE)
 endif()
 
 set(SRC
-  resource.h
-  verinfo.h
-  ttxpackage.c
-  ttxpackage.rc
+  ttxcommon.h
+  ttxcommon.c
+  ttxversion.c
+  stringlist.c
   )
 
 include_directories(
   ../../teraterm/teraterm
   ../../teraterm/common
-  ../common
   )
 
 add_library(
-  TTXPackage SHARED
+  TTXCommon STATIC
   ${SRC}
   )
 
 set_target_properties(
-  TTXPackage
+  TTXCommon
   PROPERTIES
   PREFIX ""
   )
 
 target_link_libraries(
-  TTXPackage
+  TTXCommon
   #
   gdi32
-  TTXCommon
-  )
-
-configure_file(
-  ../common/verinfo.h.in
-  verinfo.h
-  @ONLY
-  )
-
-install(
-  TARGETS TTXPackage
-  RUNTIME
-  DESTINATION .
   )

@@ -12,8 +12,6 @@ endif()
 
 set(SRC
   resource.h
-  ../common/ttxcommon.h
-  ../common/ttxcommon.c
   verinfo.h
   ttxuserkey.c
   ttxuserkey.rc
@@ -40,6 +38,7 @@ target_link_libraries(
   TTXUserKey
   #
   gdi32
+  TTXCommon
   )
 
 configure_file(

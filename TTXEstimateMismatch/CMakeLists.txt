@@ -17,8 +17,6 @@ set(TT_VERSION "5")
 endif()
 
 set(SRC
-  ../common/ttxcommon.h
-  ../common/ttxcommon.c
   ttxestimatemismatch.c
   test_v${TT_VERSION}.c
   readme.md
@@ -46,6 +44,7 @@ target_link_libraries(
   #
   version
   gdi32
+  TTXCommon
   )
 
 install(

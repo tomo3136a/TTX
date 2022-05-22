@@ -12,8 +12,6 @@ endif()
 
 set(SRC
   resource.h
-  ../common/ttxcommon.h
-  ../common/ttxcommon.c
   verinfo.h
   ttxplugin.c
   ttxplugin.rc
@@ -42,6 +40,7 @@ target_link_libraries(
   #
   version
   gdi32
+  TTXCommon
   )
 
 configure_file(

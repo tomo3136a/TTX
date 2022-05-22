@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.8)
 
-project(TTXPackage)
+project(TTXTest_Exports)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/")
 
@@ -11,10 +11,8 @@ add_definitions(-DUNICODE -D_UNICODE)
 endif()
 
 set(SRC
-  resource.h
   verinfo.h
-  ttxpackage.c
-  ttxpackage.rc
+  ttxtest_exports.c
   )
 
 include_directories(
@@ -24,20 +22,21 @@ include_directories(
   )
 
 add_library(
-  TTXPackage SHARED
+  TTXTest_Exports SHARED
   ${SRC}
   )
 
 set_target_properties(
-  TTXPackage
+  TTXTest_Exports
   PROPERTIES
   PREFIX ""
   )
 
 target_link_libraries(
-  TTXPackage
+  TTXTest_Exports
   #
   gdi32
+  ttpcmn
   TTXCommon
   )
 
@@ -48,7 +47,7 @@ configure_file(
   )
 
 install(
-  TARGETS TTXPackage
+  TARGETS TTXTest_Exports
   RUNTIME
   DESTINATION .
   )

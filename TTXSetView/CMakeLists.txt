@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.8)
 
-project(TTXPackage)
+project(TTXSetView)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/")
 
@@ -13,8 +13,8 @@ endif()
 set(SRC
   resource.h
   verinfo.h
-  ttxpackage.c
-  ttxpackage.rc
+  ttxsetview.c
+  ttxsetview.rc
   )
 
 include_directories(
@@ -24,18 +24,18 @@ include_directories(
   )
 
 add_library(
-  TTXPackage SHARED
+  TTXSetView SHARED
   ${SRC}
   )
 
 set_target_properties(
-  TTXPackage
+  TTXSetView
   PROPERTIES
   PREFIX ""
   )
 
 target_link_libraries(
-  TTXPackage
+  TTXSetView
   #
   gdi32
   TTXCommon
@@ -48,7 +48,7 @@ configure_file(
   )
 
 install(
-  TARGETS TTXPackage
+  TARGETS TTXSetView
   RUNTIME
   DESTINATION .
   )

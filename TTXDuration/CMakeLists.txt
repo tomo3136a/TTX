@@ -11,8 +11,6 @@ add_definitions(-DUNICODE -D_UNICODE)
 endif()
 
 set(SRC
-  ../common/ttxcommon.h
-  ../common/ttxcommon.c
   verinfo.h
   ttxduration.c
   ttxduration.rc
@@ -40,6 +38,7 @@ target_link_libraries(
   TTXDuration
   #
   gdi32
+  TTXCommon
   )
 
 configure_file(

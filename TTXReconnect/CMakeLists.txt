@@ -11,10 +11,6 @@ add_definitions(-DUNICODE -D_UNICODE)
 endif()
 
 set(SRC
-  ../common/ttxcommon.h
-  ../common/ttxcommon.c
-  ../common/ttxversion.h
-  ../common/ttxversion.c
   verinfo.h
   ttxreconnect.c
   ttxreconnect.rc
@@ -43,6 +39,7 @@ target_link_libraries(
   #
   version
   gdi32
+  TTXCommon
   )
 
 configure_file(

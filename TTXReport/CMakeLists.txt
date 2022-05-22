@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.8)
 
 project(TTXReport)
 
@@ -12,10 +12,6 @@ endif()
 
 set(SRC
   resource.h
-  ../common/ttxcommon.h
-  ../common/ttxcommon.c
-  ../common/stringlist.h
-  ../common/stringlist.c
   verinfo.h
   ttxreport.c
   ttxreport.rc
@@ -42,6 +38,7 @@ target_link_libraries(
   TTXReport
   #
   gdi32
+  TTXCommon
   )
 
 configure_file(
