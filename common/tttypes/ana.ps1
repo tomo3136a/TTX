@@ -81,7 +81,9 @@ filter Export-CStructCsv($outpath){begin{$old=$null}process{
     $e=$d|select struct,name,type,type_size,number,size,adj,offset,next
     $e|Set-CSize $f
     $g=$struct_lst|%{$v=$_;$e|?{$_.struct -eq $v}}
-    if (-not $old -or (Compare-Object $old $g)){
+    #if (-not $old -or (Compare-Object $old $g)){
+    if (-not $old -or $true){
+        $_.v|Out-Host
         $v1=[int]($_.v/1000);$v2=$_.v%1000;
         $g|select "struct","type","offset","size","name"|Export-Csv "${outpath}/v${v1}_${v2}.csv" -NoTypeInformation    
     }
@@ -90,5 +92,5 @@ filter Export-CStructCsv($outpath){begin{$old=$null}process{
 
 $file_lst=ls ./source/v*.h
 $version_lst=$file_lst|%{$_.fullname}|Get-SourceVersion|sort -Unique
-mkdir ./data -Force|Out-Null
-$version_lst|Get-SourceSet "./source"|Export-CStructCsv "./data"
+mkdir ./_data -Force|Out-Null
+$version_lst|Get-SourceSet "./source"|Export-CStructCsv "./_data"
