@@ -322,7 +322,7 @@ static void PASCAL TTXReadIniFile(TT_LPCTSTR fn, PTTSet ts)
 
 	for (i = 0; i < BORDER_NUM; i ++)
 	{
-		_sntprintf(name, 16, _T("Border%d"), (i + 1));
+		_sntprintf_s(name, 16, _TRUNCATE, _T("Border%d"), (i + 1));
 		pvar->border[i] = GetIniNum(_T(INISECTION), name, 0, fn);
 	}
 }
@@ -342,7 +342,7 @@ static void PASCAL TTXWriteIniFile(TT_LPCTSTR fn, PTTSet ts)
 
 	for (i = 0; i < BORDER_NUM; i ++)
 	{
-		_sntprintf(name, 16, _T("Border%d"), (i + 1));
+		_sntprintf_s(name, 16, _TRUNCATE, _T("Border%d"), (i + 1));
 		WriteIniNum(_T(INISECTION), name, pvar->border[i], FALSE, fn);
 	}
 }
