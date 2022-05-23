@@ -152,6 +152,9 @@ LPTSTR TTXGetPath(PTTSet ts, UINT uid)
         case ID_UILANGUAGEFILE_INI:
 			s = ts->UILanguageFile_ini;
 			break;
+        case ID_LOGDEFAULTPATH:
+			s = ts->LogDefaultPath;
+			break;
         case ID_EXEDIR:
 			s = RemoveFileName(TTXGetModuleFileName(0));
 			break;
@@ -188,6 +191,9 @@ LPTSTR TTXGetPath(PTTSet ts, UINT uid)
 			break;
         case ID_UILANGUAGEFILE_INI:
 			s = ts->UILanguageFileW_ini;
+			break;
+        case ID_LOGDEFAULTPATH:
+			s = ts->LogDefaultPathW;
 			break;
         case ID_EXEDIR:
 			s = ts->ExeDirW;

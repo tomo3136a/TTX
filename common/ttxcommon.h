@@ -55,9 +55,10 @@ enum {
 	ID_MACROFN = 5,
 	ID_UILANGUAGEFILE = 6,
 	ID_UILANGUAGEFILE_INI = 7,
-	ID_EXEDIR = 8, /* support v5 */
-	ID_LOGDIR = 9, /* support v5 */
-	ID_FILEDIR = 10,
+	ID_LOGDEFAULTPATH = 8,
+	ID_EXEDIR = 9, /* support v5 */
+	ID_LOGDIR = 10, /* support v5 */
+	ID_FILEDIR = 11,
 	ID_STRMAX,
 };
 LPTSTR TTXGetPath(PTTSet ts, UINT uid);
