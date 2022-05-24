@@ -635,7 +635,7 @@ BOOL make_package(LPTSTR name, LPTSTR src, LPTSTR dst, BOOL bSetup)
 	//create tempolary folder
 	tmp_sz = MAX_PATH;
 	tmp = (LPTSTR)malloc(tmp_sz*sizeof(TCHAR));
-	GetTempPath(tmp_sz, tmp);
+	GetTempPath((DWORD)tmp_sz, tmp);
 	_tcscat_s(tmp, tmp_sz, _T("tt_"));
 	_tcscat_s(tmp, tmp_sz, name);
 	CreateDirectory(tmp, NULL);
@@ -776,10 +776,10 @@ static LRESULT CALLBACK PackageProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lP
 			buf = (LPTSTR)malloc(path_sz*sizeof(TCHAR));
 			s = (LPTSTR)malloc(path_sz*sizeof(TCHAR));
 			GetDlgItemText(dlg, IDC_NAME, name, sizeof(name)/sizeof(name[0]));
-			GetDlgItemText(dlg, IDC_PATH1, s, path_sz);
-			ExpandEnvironmentStrings(s, path, path_sz);
-			GetDlgItemText(dlg, IDC_PATH5, s, path_sz);
-			ExpandEnvironmentStrings(s, buf, path_sz);
+			GetDlgItemText(dlg, IDC_PATH1, s, (int)path_sz);
+			ExpandEnvironmentStrings(s, path, (DWORD)path_sz);
+			GetDlgItemText(dlg, IDC_PATH5, s, (int)path_sz);
+			ExpandEnvironmentStrings(s, buf, (DWORD)path_sz);
 			free(s);
 			flg = (IsDlgButtonChecked(dlg, IDC_CHECK2) == BST_CHECKED);
 			flg = make_package(name, path, buf, flg);

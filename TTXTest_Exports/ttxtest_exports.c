@@ -83,9 +83,9 @@ static TInstVar InstVar;
 #define DBG_VIEW(fn,fmt,...) {\
 	TCHAR title[256];\
 	TCHAR buf[256];\
-	DWORD dw = (DWORD)(pvar->cv->HWin);\
+	HWND hwnd = pvar->cv->HWin;\
 	_sntprintf_s(title, 256, 256, fn _T("() %d"), tt_version);\
-	_sntprintf_s(buf, 256, 256, _T("cv->HWin=%d\n\n") fmt, dw, __VA_ARGS__);\
+	_sntprintf_s(buf, 256, 256, _T("cv->HWin=%p\n\n") fmt, hwnd, __VA_ARGS__);\
 	MessageBox(0, buf, title, MB_OK | MB_ICONINFORMATION);\
 }
 

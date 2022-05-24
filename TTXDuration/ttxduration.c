@@ -138,7 +138,7 @@ static void DrawTextToMenuBarRight(HWND hwnd, LPCTSTR text, int decoration)
 		rect.top = mbi.rcBar.top - rect.top;
 		DrawText(hDC, _T("               "), 15, &rect, DT_RIGHT);
 		if (text)
-			DrawText(hDC, text, _tcslen(text), &rect, DT_RIGHT);
+			DrawText(hDC, text, (int)_tcslen(text), &rect, DT_RIGHT);
 		// SelectObject(hDC, oldFont);
 		// DeleteObject(hFont);
 		ReleaseDC(hwnd, hDC);

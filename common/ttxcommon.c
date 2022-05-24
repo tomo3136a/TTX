@@ -110,7 +110,7 @@ UINT UILang(LPSTR lang)
 
 LPTSTR TTXGetModuleFileName(HMODULE hModule)
 {
-	size_t buf_sz;
+	DWORD buf_sz;
 	LPTSTR buf;
 
 	buf_sz = MAX_PATH + 1;
@@ -673,7 +673,7 @@ LPTSTR GetPathName(LPTSTR dst, size_t dst_sz, LPCTSTR src)
 LPTSTR GetLinearizedPath(LPTSTR dst, size_t dst_sz, LPCTSTR src)
 {
 	LPTSTR sp, ep, p, p2;
-	int n;
+	INT_PTR n;
 
 	if ((dst == NULL) || (src == NULL))
 		return NULL;
@@ -825,7 +825,7 @@ LPTSTR GetContractPath(LPTSTR dst, size_t dst_sz, LPTSTR src)
 	for (i = 0; i < sizeof(env_name)/sizeof(env_name[0]); i ++)
 	{
 		name = env_name[i];
-		if (GetEnvironmentVariable(name, buf, src_sz + 1) == 0)
+		if (GetEnvironmentVariable(name, buf, (DWORD)src_sz + 1) == 0)
 			continue;
 		buf_sz = _tcsclen(buf);
 		if (buf[0] == 0)
@@ -922,7 +922,7 @@ LPTSTR RemoveFileExt(LPTSTR path)
 // combine path
 // path ‚ÉŽq—v‘f fn ‚ð˜AŒ‹
 // path=NULL ‚Í‹ÖŽ~
-LPTSTR CombinePath(LPTSTR path, int sz, LPCTSTR fn)
+LPTSTR CombinePath(LPTSTR path, size_t sz, LPCTSTR fn)
 {
 	RemovePathSlash(path);
 	_tcscat_s(path, sz, _T("\\"));
@@ -1285,7 +1285,7 @@ BOOL OpenFileDlg(HWND hWnd, UINT editCtl, LPTSTR szTitle, LPTSTR szFilter,
 	TCHAR path[MAX_PATH];
 	TCHAR buf[MAX_PATH];
 	OPENFILENAME ofn;
-	size_t path_sz;
+	DWORD path_sz;
 
 	path_sz = sizeof(path) / sizeof(path[0]);
 
@@ -1341,7 +1341,7 @@ BOOL OpenFolderDlg(HWND hWnd, UINT editCtl, LPTSTR szTitle, LPTSTR szPath, UINT 
 	LPITEMIDLIST pidlBrowse;
 	TCHAR buf[MAX_PATH];
 	TCHAR buf2[MAX_PATH];
-	size_t buf_sz;
+	DWORD buf_sz;
 	BOOL ret = FALSE;
 
 	buf_sz = sizeof(buf) / sizeof(buf[0]);

@@ -18,7 +18,7 @@ extern "C"
     typedef struct _TStringList
     {
         struct _TStringList *nxt;
-        int len;
+        size_t len;
         char str[0];
     } TStringList, *PStringList, **PPStringList;
 

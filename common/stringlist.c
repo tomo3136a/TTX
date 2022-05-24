@@ -32,7 +32,7 @@ void ClearStringList(PPStringList p)
 void AddStringList(PPStringList p, PCHAR s)
 {
 	while (*p) p = &((*p)->nxt);
-	int sz = strnlen_s(s, 1024 - 1 - sizeof(TStringList));
+	size_t sz = strnlen_s(s, 1024 - 1 - sizeof(TStringList));
 	*p = (PStringList)malloc(sizeof(TStringList) + sz + 1);
 	(*p)->len = sz;
 	(*p)->nxt = NULL;

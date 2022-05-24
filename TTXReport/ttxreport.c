@@ -185,10 +185,11 @@ static void PASCAL TTXReadIniFile(TT_LPCTSTR fn, PTTSet ts)
 {
 	TCHAR name[20];
 	LPTSTR buf;
-	int buf_sz;
+	size_t buf_sz;
 	LPTSTR ctx;
 	LPTSTR p;
-	int seq, nxt, cmd, sub, sz;
+	int seq, nxt, cmd, sub;
+	size_t sz;
 	int i;
 
 	if (!pvar->skip)
@@ -490,7 +491,7 @@ VOID UpdateReportMsg(HWND hWnd)
 	if (hFile != INVALID_HANDLE_VALUE)
 	{
 		sz = _tcsnlen(buf, _TRUNCATE);
-		if (ReadFile(hFile, buf + sz, 1024 - sz, &dwSize, NULL))
+		if (ReadFile(hFile, buf + sz, 1024 - (DWORD)sz, &dwSize, NULL))
 			buf[sz + dwSize - 1] = _T('\0');
 		CloseHandle(hFile);
 	}
@@ -583,7 +584,7 @@ void SaveInfoLog(LPTSTR szFile)
 	struct tm tm_local;
 	HANDLE hFile;
 	DWORD dwSize;
-	int sz;
+	size_t sz;
 
 	if (!pvar->ChangeReport)
 		return;
@@ -598,18 +599,18 @@ void SaveInfoLog(LPTSTR szFile)
 	GetDlgItemText(report_dialog, IDC_LOG, buf, 1024);
 	sz = _tcsnlen(buf, _TRUNCATE);
 	if (sz)
-		WriteFile(hFile, buf, sz, &dwSize, NULL);
+		WriteFile(hFile, buf, (DWORD)sz, &dwSize, NULL);
 
 	GetDlgItemText(report_dialog, IDC_STATUS, buf, 1024);
 	sz = _tcsnlen(buf, _TRUNCATE);
 	if (sz)
-		WriteFile(hFile, buf, sz, &dwSize, NULL);
+		WriteFile(hFile, buf, (DWORD)sz, &dwSize, NULL);
 
 	time(&time_local);
 	localtime_s(&tm_local, &time_local);
 	_tcsftime(buf, sizeof(buf)/sizeof(buf[0]), 
 		_T("\r\n%Y-%m-%d %H:%M:%S\r\n\r\n"), &tm_local);
-	WriteFile(hFile, buf, _tcsnlen(buf, _TRUNCATE), 
+	WriteFile(hFile, buf, (DWORD)_tcsnlen(buf, _TRUNCATE), 
 		&dwSize, NULL);
 
 	CloseHandle(hFile);

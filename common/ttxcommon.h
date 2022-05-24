@@ -179,7 +179,7 @@ LPTSTR RemoveFileName(LPTSTR path);
 LPTSTR RemoveFileExt(LPTSTR path);
 
 /// combine path
-LPTSTR CombinePath(LPTSTR path, int sz, LPCTSTR fn);
+LPTSTR CombinePath(LPTSTR path, size_t sz, LPCTSTR fn);
 
 /* test Œ^ */
 /// test exist file
