@@ -354,6 +354,18 @@ LPWSTR MB2WC(UINT cp, LPSTR pszSrc)
 	return NULL;
 }
 
+LPVOID TTXAlloc(size_t sz)
+{
+	return malloc(sz);
+}
+
+BOOL TTXFree(LPVOID *pBuf)
+{
+	free(*pBuf);
+	pBuf = NULL;
+	return TRUE;
+}
+
 BOOL TTXDup(LPTSTR *pBuf, size_t sz, LPTSTR szSrc)
 {
 	LPTSTR szOrg;
@@ -361,18 +373,11 @@ BOOL TTXDup(LPTSTR *pBuf, size_t sz, LPTSTR szSrc)
 	LPTSTR s;
 
 	szOrg = *pBuf;
-	szDst = (LPTSTR)malloc((sz + 1) * sizeof(TCHAR));
+	szDst = (LPTSTR)TTXAlloc((sz + 1) * sizeof(TCHAR));
 	s = (szSrc) ? szSrc : (szOrg) ? szOrg : _T("");
 	_tcscpy_s(szDst, sz + 1, s);
 	TTXFree(pBuf);
 	*pBuf = szDst;
-	return TRUE;
-}
-
-BOOL TTXFree(LPVOID *pBuf)
-{
-	free(*pBuf);
-	pBuf = NULL;
 	return TRUE;
 }
 

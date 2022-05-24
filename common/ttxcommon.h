@@ -46,6 +46,11 @@ UINT TTXMenuOrgID(UINT uid);
 
 LPTSTR TTXGetModuleFileName(HMODULE hModule);
 
+/// memory allocate
+LPVOID TTXAlloc(size_t sz);
+BOOL TTXFree(LPVOID *pBuf);
+BOOL TTXDup(LPTSTR *pszBuf, size_t sz, LPTSTR szSrc);
+
 // path string
 enum {
 	ID_HOMEDIR = 1,
@@ -104,9 +109,6 @@ inline LPTSTR toTC(LPSTR pszSrc)
 	return MB2WC(CP_ACP, pszSrc);
 }
 #endif /* TT4 */
-
-BOOL TTXDup(LPTSTR *pszBuf, size_t sz, LPTSTR szSrc);
-BOOL TTXFree(LPVOID *pBuf);
 
 ///ï∂éöóÒíÜÇ…ï∂éöÇåüçıÇµéüÇÃÉ|ÉCÉìÉ^Çï‘Ç∑
 LPTSTR strskip(LPTSTR p, TCHAR c);
