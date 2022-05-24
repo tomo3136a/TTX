@@ -3,6 +3,11 @@
 $default_define=@{"MAX_PATH"=260;"MAXPATHLEN"=256;"LF_FACESIZE"=32;"MAX_UIMSG"=1024;}
 $type_lst=@("tttset","TComVar")   #,"TGetHNRec","TKeyMap"
 $out_file="../ttxversion_db.h"
+$subst_lst=@("eterm_lookfeel_t","eterm_lookfeel2_t","cygterm_t","cygterm2_t")
+$struct1_lst=$subst_lst+@("tttset")
+$struct2_lst=@("TComVar")
+$struct_lst=$subst_lst+$type_lst
+#$struct_lst=$subst_lst+@("tttset","TGetHNRec","TComVar")
 
 #### source set
 filter Get-SourceVersion{
@@ -72,7 +77,8 @@ filter Get-CStructCode{
             if ($st){"} ${st}_${v};";""}
             "typedef struct {"
         }
-        $s1=$ss[1] -replace "\."," " -replace "(eterm_lookfeel_t|cygterm_t)","`$1_${v}"
+        $m="("+($subst_lst -join "|")+")"
+        $s1=$ss[1] -replace "\."," " -replace $m,"`$1_${v}"
         if($s1 -match "\(\*\)"){
             $s2=$s1 -split " ";
             $s3=$s2[-1];
@@ -114,10 +120,10 @@ function make_source($src){
 }
 
 ## main program
-$file_lst=ls ./source/v*.h
-$lst=$file_lst|%{$_.fullname}|Get-SourceVersion|sort -Unique|Get-SourceSet "./source"
-$col1=$lst|Get-CStruct @("eterm_lookfeel_t","cygterm_t","tttset")
-$col2=$lst|Get-CStruct @("TComVar")
+$file_lst=ls ./_source/v*.h
+$lst=$file_lst|%{$_.fullname}|Get-SourceVersion|sort -Unique|Get-SourceSet "./_source"
+$col1=$lst|Get-CStruct $struct1_lst
+$col2=$lst|Get-CStruct $struct2_lst
 $src=($col1|Get-CStructCode)+($col2|Get-CStructCode)
 make_source($src)|Out-File $out_file
 
@@ -131,7 +137,7 @@ $m=@{};($col1+$col2)|sort {$_.v} -Descending|%{$v=$_.v;$_.d|%{
 $m.Keys|%{"#define {0} {1}" -f $_,$m[$_]}|sort|Out-File $out_file -Append
 ""|Out-File $out_file -Append
 
-@("eterm_lookfeel_t","cygterm_t","tttset","TComVar")|%{
+$struct_lst|%{
     $t=$_.ToUpper()
     "#define TEST_${t}(v,mb) (v>=${t}_VER_##mb)"
 }|Out-File $out_file -Append

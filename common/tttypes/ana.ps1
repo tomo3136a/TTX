@@ -90,7 +90,7 @@ filter Export-CStructCsv($outpath){begin{$old=$null}process{
     $old=$g
 }}
 
-$file_lst=ls ./source/v*.h
+$file_lst=ls ./_source/v*.h
 $version_lst=$file_lst|%{$_.fullname}|Get-SourceVersion|sort -Unique
 mkdir ./_data -Force|Out-Null
-$version_lst|Get-SourceSet "./source"|Export-CStructCsv "./_data"
+$version_lst|Get-SourceSet "./_source"|Export-CStructCsv "./_data"
