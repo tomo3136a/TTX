@@ -1,8 +1,8 @@
 ﻿cmake_minimum_required(VERSION 3.8)
 
-project(TTXCommon)
+set(PACKAGE_NAME "TTXCommon")
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/")
+project(${PACKAGE_NAME})
 
 if(TT4)
 add_definitions(-DTT4)
@@ -11,30 +11,33 @@ add_definitions(-DUNICODE -D_UNICODE)
 endif()
 
 set(SRC
-  ttxcommon.h
   ttxcommon.c
   ttxversion.c
   stringlist.c
   )
 
-include_directories(
-  ../../teraterm/teraterm
-  ../../teraterm/common
-  )
-
 add_library(
-  TTXCommon STATIC
+  ${PACKAGE_NAME} STATIC
   ${SRC}
   )
 
 set_target_properties(
-  TTXCommon
+  ${PACKAGE_NAME}
   PROPERTIES
   PREFIX ""
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/"
+  )
+
+target_include_directories(
+  ${PACKAGE_NAME}
+  PRIVATE
+  ../../teraterm/teraterm
+  ../../teraterm/common
   )
 
 target_link_libraries(
-  TTXCommon
+  ${PACKAGE_NAME}
+  PRIVATE
   #
   gdi32
   )

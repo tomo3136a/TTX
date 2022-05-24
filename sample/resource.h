@@ -2,7 +2,7 @@
 // Microsoft Visual C++ で生成されたインクルード ファイル。
 // ttx{xxx}.rc で使用
 //
-#define IDD_{XXX}                       2001
+#define IDD_SETUP_SAMPLE                2001
 
 #define IDC_CHECK1                      2021
 #define IDC_PATH1                       2022

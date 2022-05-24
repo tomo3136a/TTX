@@ -1,12 +1,11 @@
 /*
- * Tera Term {xxx} Extension
+ * Tera Term sample Extension
  * (C) {year} {author}
  */
 
 #include "teraterm.h"
 #include "tttypes.h"
 #include "ttplugin.h"
-#include "tt_res.h"
 //#include <windows.h>
 
 #include <stdlib.h>
@@ -21,7 +20,7 @@
 //{order_number}
 #define ORDER 6000
 
-#define INISECTION "TTX{xxx}"
+#define INISECTION "TTXSAMPLE"
 
 //{menu nunber}
 #define ID_MENUITEM 56000+0
@@ -99,16 +98,16 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 //{when use ReadIniFile hook}
 static void PASCAL TTXReadIniFile(TT_LPCTSTR FName, PTTSet ts)
 {
-	TCHAR s[20]; //{use fixed size string}
+	// TCHAR s[20]; //{use fixed size string}
 
 	LPTSTR buf;	//{use flexible string}
-	int buf_sz; //{use flexible string}
+	// int buf_sz; //{use flexible string}
 
 	LPTSTR ctx; //{use string parse ","}
 	LPTSTR p;
 
-	int seq, nxt, cmd, sub, sz;
-	int i;
+	// int seq, nxt, cmd, sub, sz;
+	// int i;
 
 	if (!pvar->skip) //{when use ParseParam hook}
 		(pvar->origReadIniFile)(FName, ts);
@@ -148,7 +147,7 @@ static void PASCAL TTXReadIniFile(TT_LPCTSTR FName, PTTSet ts)
 //{when use WriteIniFile hook}
 static void PASCAL TTXWriteIniFile(TT_LPTSTR FName, PTTSet ts)
 {
-	TCHAR name[20]; //{valiable member name}
+	// TCHAR name[20]; //{valiable member name}
 
 	LPTSTR buf;	//{use string}
 	int buf_sz; //{use string}
@@ -316,9 +315,9 @@ static void PASCAL TTXCloseFile(TTXFileHooks *hooks)
 //
 static LRESULT CALLBACK SettingProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	LPTSTR buf;
+	// LPTSTR buf;
 	size_t buf_sz;
-	LPTSTR path;
+	// LPTSTR path;
 	LPTSTR s, s2;
 
 	buf_sz = 4100;
@@ -386,7 +385,7 @@ static void PASCAL TTXModifyMenu(HMENU menu)
 //{when use dinamical menu}
 static void PASCAL TTXModifyPopupMenu(HMENU menu)
 {
-	UINT uflag;
+	// UINT uflag;
 
 	if (menu == pvar->SetupMenu)
 	{
@@ -407,7 +406,7 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 	{
 	case ID_MENUITEM:
  		//setup dialog
- 		switch (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_SETUP_xxx),
+ 		switch (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_SETUP_SAMPLE),
 							   hWin, SettingProc, (LPARAM)NULL))
 		{
 		case IDOK:

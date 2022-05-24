@@ -1,8 +1,8 @@
 ﻿cmake_minimum_required(VERSION 3.8)
 
-project(TTXPackage)
+set(PACKAGE_NAME "TTXPackage")
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/")
+project(${PACKAGE_NAME})
 
 if(TT4)
 add_definitions(-DTT4)
@@ -11,33 +11,33 @@ add_definitions(-DUNICODE -D_UNICODE)
 endif()
 
 set(SRC
-  resource.h
-  verinfo.h
   ttxpackage.c
   ttxpackage.rc
   )
 
-include_directories(
+add_library(
+  ${PACKAGE_NAME} SHARED
+  ${SRC}
+  )
+
+set_target_properties(
+  ${PACKAGE_NAME}
+  PROPERTIES
+  PREFIX ""
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/"
+  )
+
+target_include_directories(
+  ${PACKAGE_NAME}
+  PRIVATE
   ../../teraterm/teraterm
   ../../teraterm/common
   ../common
   )
 
-add_library(
-  TTXPackage SHARED
-  ${SRC}
-  )
-
-set_target_properties(
-  TTXPackage
-  PROPERTIES
-  PREFIX ""
-  )
-
 target_link_libraries(
-  TTXPackage
-  #
-  gdi32
+  ${PACKAGE_NAME}
+  PRIVATE
   TTXCommon
   )
 
@@ -48,7 +48,7 @@ configure_file(
   )
 
 install(
-  TARGETS TTXPackage
+  TARGETS ${PACKAGE_NAME}
   RUNTIME
   DESTINATION .
   )
