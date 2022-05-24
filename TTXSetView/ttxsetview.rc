@@ -1,0 +1,69 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+#include "windows.h"
+#include "verinfo.h"
+
+/////////////////////////////////////////////////////////////////////////////
+// “??{?? (“??{) resources
+
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+#pragma code_page(932)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_VIEW_DIALOG DIALOGEX 0, 0, 349, 281
+STYLE DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_THICKFRAME
+CAPTION "Sets"
+FONT 9, "Tahoma", 400, 0, 0x0
+BEGIN
+    LTEXT           "バージョン：",IDC_STATIC,6,6,34,8
+    COMBOBOX        IDC_COMBO_VER,47,5,46,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "クラス：",IDC_STATIC,116,6,34,8
+    COMBOBOX        IDC_COMBO_TYPE,147,5,46,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "更新",IDC_UPDATE,292,5,50,14
+    CONTROL         "",IDC_LISTVIEW,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,6,24,336,230
+    DEFPUSHBUTTON   "OK",IDOK,292,261,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION TTX_FILE_VERSION
+ PRODUCTVERSION TTX_PRODUCT_VERSION
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName", "tomo3136a"
+            VALUE "FileDescription", "Tera Term Set View Extension"
+            VALUE "FileVersion", TTX_FILE_VERSION_TEXT
+            VALUE "InternalName", "TTXSETVIEW"
+            VALUE "LegalCopyright", "(C) 2022 tomo3136a"
+            VALUE "OriginalFilename", "TTXSETVIEW.DLL"
+            VALUE "ProductName", "TTX"
+            VALUE "ProductVersion", TTX_PRODUCT_VERSION_TEXT
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
