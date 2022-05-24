@@ -95,38 +95,6 @@ static TInstVar InstVar;
 #define __FUNCTIONT__ __FUNCTIONW__
 #endif /* TT4 */
 
-// static void WinListView()
-// {
-// 	TCHAR msg[1024];
-// 	TCHAR buf[256];
-// 	DWORD dw1;
-// 	DWORD dw2;
-
-// 	dw1 = (DWORD)(pvar->cv->HWin);
-// 	int n = GetRegisteredWindowCount();
-// 	_sntprintf_s(msg, 1024, 1024, _T("WindowList: cv->HWin=%d\n"), dw1);
-
-// 	for (int i = 0; i < n; i ++)
-// 	{
-// 		HWND hwnd = GetNthWin(i);
-// 		dw2 = (DWORD)(hwnd);
-// 		_sntprintf_s(buf, 256, 256, _T("    [%d]=%d\n"), i, dw2);
-// 		_tcscat_s(msg, 1024, buf);
-
-// 	}
-// 	MessageBox(0, msg, _T("test plugin"), MB_OK | MB_ICONINFORMATION);
-// }
-
-// void WINAPI NotifyMessage(PComVar cv, const char *msg, const char *title, DWORD flag)
-// {
-// 	wchar_t *titleW = ToWcharA(title);
-// 	wchar_t *msgW = ToWcharA(msg);
-// 	NotifyMessageW(cv, msgW, titleW, flag);
-// 	free(titleW);
-// 	free(msgW);
-// }
-
-
 ///////////////////////////////////////////////////////////////
 
 static void PASCAL TTXInit(PTTSet ts, PComVar cv)
@@ -174,11 +142,24 @@ static BOOL PASCAL TTXGetHostName(HWND WndParent, PGetHNRec GetHNRec)
 	return pvar->GetHostName(WndParent, GetHNRec);
 }
 
+static BOOL _TTXChangeDirectory(HWND WndParent, PTSTR CurDir)
+{
+	DBG_VIEW(__FUNCTIONT__, _T("hwnd=%p\n (CurDir=%s)"), WndParent, CurDir);
+	return TRUE;
+}
+#ifdef TT4
+static BOOL PASCAL TTXChangeDirectory(HWND WndParent, PCHAR CurDir)
+{
+	_TTXChangeDirectory(WndParent, CurDir);
+	return pvar->ChangeDirectory(WndParent, CurDir);
+}
+#else /* TT4 */
 static BOOL PASCAL TTXChangeDirectory(HWND WndParent, PTTSet ts)
 {
-	DBG_VIEW(__FUNCTIONT__, _T("hwnd=%p\nts=%p (pvar->ts=%p)"), WndParent, ts, pvar->ts);
+	_TTXChangeDirectory(WndParent, ts->FileDirW);
 	return pvar->ChangeDirectory(WndParent, ts);
 }
+#endif /* TT4 */
 
 static BOOL PASCAL TTXAboutDialog(HWND WndParent)
 {
@@ -301,34 +282,154 @@ static void PASCAL TTXGetSetupHooks(TTXSetupHooks *hooks)
 
 ///////////////////////////////////////////////////////////////
 
+static int PASCAL TTXclosesocket(SOCKET s)
+{
+	return pvar->Pclosesocket(s);
+}
+static int PASCAL TTXconnect(SOCKET s, const struct sockaddr *name, int namelen)
+{
+	return pvar->Pconnect(s, name, namelen);
+}
+static u_long PASCAL TTXhtonl(u_long hostlong)
+{
+	return pvar->Phtonl(hostlong);
+}
+static u_short PASCAL TTXhtons(u_short hostshort)
+{
+	return pvar->Phtons(hostshort);
+}
+static unsigned long PASCAL TTXinet_addr(const char * cp)
+{
+	return pvar->Pinet_addr(cp);
+}
+static int PASCAL TTXioctlsocket(SOCKET s, long cmd, u_long *argp)
+{
+	return pvar->Pioctlsocket(s, cmd, argp);
+}
+static int PASCAL TTXrecv(SOCKET s, char * buf, int len, int flags)
+{
+	return pvar->Precv(s, buf, len, flags);
+}
+static int PASCAL TTXselect(int nfds, fd_set *readfds, fd_set *writefds,
+   fd_set *exceptfds, const struct timeval *timeout)
+{
+	return pvar->Pselect(nfds, readfds, writefds, exceptfds, timeout);
+}
+static int PASCAL TTXsend(SOCKET s, const char * buf, int len, int flags)
+{
+	return pvar->Psend(s, buf, len, flags);
+}
+static int PASCAL TTXsetsockopt(SOCKET s, int level, int optname,
+   const char * optval, int optlen)
+{
+	return pvar->Psetsockopt(s, level, optname, optval, optlen);
+}
+static SOCKET PASCAL TTXsocket(int af, int type, int protocol)
+{
+	return pvar->Psocket(af, type, protocol);
+}
+static int PASCAL TTXWSAAsyncSelect(SOCKET s, HWND hWnd, u_int wMsg, long lEvent)
+{
+	return pvar->PWSAAsyncSelect(s, hWnd, wMsg, lEvent);
+}
+static HANDLE PASCAL TTXWSAAsyncGetHostByName(HWND hWnd, u_int wMsg, const char * name, char * buf, int buflen)
+{
+	return pvar->PWSAAsyncGetHostByName(hWnd, wMsg, name, buf, buflen);
+}
+static int PASCAL TTXWSACancelAsyncRequest(HANDLE hAsyncTaskHandle)
+{
+	return pvar->PWSACancelAsyncRequest(hAsyncTaskHandle);
+}
+static int PASCAL TTXWSAGetLastError(void)
+{
+	return pvar->PWSAGetLastError();
+}
+static HANDLE PASCAL TTXWSAAsyncGetAddrInfo(HWND hWnd, unsigned int wMsg, const char * hostname,
+   const char * portname, struct addrinfo * hints,
+   struct addrinfo * * res)
+{
+	return pvar->PWSAAsyncGetAddrInfo(hWnd, wMsg, hostname, portname, hints, res);
+}
+static void PASCAL TTXfreeaddrinfo(struct addrinfo *ai)
+{
+	pvar->Pfreeaddrinfo(ai);
+	return;
+}
+
 static void PASCAL TTXOpenTCP(TTXSockHooks *hooks)
 {
 	// printf("TTXOpenTCP %d\n", ORDER);
 	DBG_VIEW(__FUNCTIONT__, _T("%s"), _T("hooks"));
-	
-	// Tclosesocket Pclosesocket;
-	// Tconnect Pconnect;
-	// Thtonl Phtonl;
-	// Thtons Phtons;
-	// Tinet_addr Pinet_addr;
-	// Tioctlsocket Pioctlsocket;
-	// Trecv Precv;
-	// Tselect Pselect;
-	// Tsend Psend;
-	// Tsetsockopt Psetsockopt;
-	// Tsocket Psocket;
-	// TWSAAsyncSelect PWSAAsyncSelect;
-	// TWSAAsyncGetHostByName PWSAAsyncGetHostByName;
-	// TWSACancelAsyncRequest PWSACancelAsyncRequest;
-	// TWSAGetLastError PWSAGetLastError;
-	// Tfreeaddrinfo Pfreeaddrinfo;
-	// TWSAAsyncGetAddrInfo PWSAAsyncGetAddrInfo;
+	pvar->Pclosesocket = *hooks->Pclosesocket;
+	pvar->Pconnect = *hooks->Pconnect;
+	pvar->Phtonl = *hooks->Phtonl;
+	pvar->Phtons = *hooks->Phtons;
+	pvar->Pinet_addr = *hooks->Pinet_addr;
+	pvar->Pioctlsocket = *hooks->Pioctlsocket;
+	pvar->Precv = *hooks->Precv;
+	pvar->Pselect = *hooks->Pselect;
+	pvar->Psend = *hooks->Psend;
+	pvar->Psetsockopt = *hooks->Psetsockopt;
+	pvar->Psocket = *hooks->Psocket;
+	pvar->PWSAAsyncSelect = *hooks->PWSAAsyncSelect;
+	pvar->PWSAAsyncGetHostByName = *hooks->PWSAAsyncGetHostByName;
+	pvar->PWSACancelAsyncRequest = *hooks->PWSACancelAsyncRequest;
+	pvar->PWSAGetLastError = *hooks->PWSAGetLastError;
+	if (HAS_TTXHOOK(freeaddrinfo)) {
+		pvar->Pfreeaddrinfo = *hooks->Pfreeaddrinfo;
+	}
+	if (HAS_TTXHOOK(WSAAsyncGetAddrInfo)) {
+		pvar->PWSAAsyncGetAddrInfo = *hooks->PWSAAsyncGetAddrInfo;
+	}
+
+	*hooks->Pclosesocket = TTXclosesocket;
+	*hooks->Pconnect = TTXconnect;
+	*hooks->Phtonl = TTXhtonl;
+	*hooks->Phtons = TTXhtons;
+	*hooks->Pinet_addr = TTXinet_addr;
+	*hooks->Pioctlsocket = TTXioctlsocket;
+	*hooks->Precv = TTXrecv;
+	*hooks->Pselect = TTXselect;
+	*hooks->Psend = TTXsend;
+	*hooks->Psetsockopt = TTXsetsockopt;
+	*hooks->Psocket = TTXsocket;
+	*hooks->PWSAAsyncSelect = TTXWSAAsyncSelect;
+	*hooks->PWSAAsyncGetHostByName = TTXWSAAsyncGetHostByName;
+	*hooks->PWSACancelAsyncRequest = TTXWSACancelAsyncRequest;
+	*hooks->PWSAGetLastError = TTXWSAGetLastError;
+	if (HAS_TTXHOOK(freeaddrinfo)) {
+		*hooks->Pfreeaddrinfo = TTXfreeaddrinfo;
+	}
+	if (HAS_TTXHOOK(WSAAsyncGetAddrInfo)) {
+		*hooks->PWSAAsyncGetAddrInfo = TTXWSAAsyncGetAddrInfo;
+	}
 }
 
 static void PASCAL TTXCloseTCP(TTXSockHooks *hooks)
 {
 	// printf("TTXCloseTCP %d\n", ORDER);
 	DBG_VIEW(__FUNCTIONT__, _T("%s"), _T("hooks"));
+	*hooks->Pclosesocket = pvar->Pclosesocket;
+	*hooks->Pconnect = pvar->Pconnect;
+	*hooks->Phtonl = pvar->Phtonl;
+	*hooks->Phtons = pvar->Phtons;
+	*hooks->Pinet_addr = pvar->Pinet_addr;
+	*hooks->Pioctlsocket = pvar->Pioctlsocket;
+	*hooks->Precv = pvar->Precv;
+	*hooks->Pselect = pvar->Pselect;
+	*hooks->Psend = pvar->Psend;
+	*hooks->Psetsockopt = pvar->Psetsockopt;
+	*hooks->Psocket = pvar->Psocket;
+	*hooks->PWSAAsyncSelect = pvar->PWSAAsyncSelect;
+	*hooks->PWSAAsyncGetHostByName = pvar->PWSAAsyncGetHostByName;
+	*hooks->PWSACancelAsyncRequest = pvar->PWSACancelAsyncRequest;
+	*hooks->PWSAGetLastError = pvar->PWSAGetLastError;
+	if (HAS_TTXHOOK(freeaddrinfo)) {
+		*hooks->Pfreeaddrinfo = pvar->Pfreeaddrinfo;
+	}
+	if (HAS_TTXHOOK(WSAAsyncGetAddrInfo)) {
+		*hooks->PWSAAsyncGetAddrInfo = pvar->PWSAAsyncGetAddrInfo;
+	}
 }
 
 static BOOL PASCAL TTXTReadFile(HANDLE FHandle, LPVOID Buff, DWORD ReadSize, LPDWORD ReadBytes, LPOVERLAPPED ReadOverLap)
@@ -422,7 +523,6 @@ static void PASCAL TTXSetCommandLine(TT_LPTSTR cmd, int cmdlen, PGetHNRec rec)
 	DBG_VIEW(__FUNCTIONT__, _T("cmd=%s, len=%d\nGetHNRec=%p"), cmdW, cmdlen, rec);
 	END_TTX_STR(cmd);
 }
-
 
 ///////////////////////////////////////////////////////////////
 

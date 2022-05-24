@@ -33,8 +33,8 @@
 // #define TTXHOOK_VER_TReadFile 4063
 // #define TTXHOOK_VER_TWriteFile 4063
 
-#define TTXHOOK_VER_Tfreeaddrinfo 4068
-#define TTXHOOK_VER_TWSAAsyncGetAddrInfo 4068
+#define TTXHOOK_VER_freeaddrinfo 4068
+#define TTXHOOK_VER_WSAAsyncGetAddrInfo 4068
 
 #define TTXHOOK_VER_TTXFileHooks 4068
 #define EXPORTS_VER_TTXSetCommandLine 5000

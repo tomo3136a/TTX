@@ -104,7 +104,11 @@ static void test_tttypes_3(WORD mjr, WORD mnr)
 
 	if(TEST_TS(UILanguageFileW)){
 		langW1 = TS(pvar->ts,UILanguageFileW_ini);
+#ifdef TT4
+		langW2 = u"";
+#else /* TT4 */
 		langW2 = pvar->ts->UILanguageFileW_ini;
+#endif /* TT4 */
 		_snwprintf_s(
 			bufW, sizeof(bufW)/sizeof(bufW[0]), _TRUNCATE, 
 			u"[UILanguageFileW_ini]\n  ->:   %s\n  TS(): %s", 
