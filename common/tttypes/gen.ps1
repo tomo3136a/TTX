@@ -29,6 +29,35 @@ filter Get-CStructName{begin{$s=0;$n=""}process{
     }elseif($s -and $_ -match "}"){$s=0;
         if(($n+$_) -match "(\w+)([\{\};]|\s)*$"){$Matches[1]}}
 }}
+filter Remove-CComment{begin{$s=0}process{$v=$_
+    if($s -eq 1){if($v -match "\*/"){$v=$v -replace "^.*\*/","";$s=0}}
+    if($s -eq 0){
+        $v=$v -replace "//.*$","" -replace "/\*.*\*/",""
+        if ($v -match "/\*"){$s=1;$v=$v -replace "/\*.*$",""}
+        $v=$v.trim()
+        if($v.length -ne 0){$v}
+    }
+}}
+filter Remove-CElse{begin{$s=0}process{
+    if($_ -match "#else"){$s=1}elseif($_ -match "#endif"){$s=0}elseif($s -eq 0){$_}
+}}
+filter Format-CStruct($col=@()){begin{$s=0;$i=0}process{
+    if($_ -match "struct[^{]*{"){$s=$s+1
+    }elseif($s -and $_ -match "}"){$s=$s-1;if($s -eq 0){$i=$i+1}
+    }elseif($s -and $_ -match "^\s*([^/;#]+)"){$v=$Matches[1].trim();$vv=$v
+        $v=$v -replace "FAR\s*\*","*"
+        $v=$v -replace "(const|unsigned|struct|enum)\s+(\w+)","`$1_`$2"
+        $v=$v -replace "\s+(\*+)","`$1 "
+        $t,$v=$v -split " ",2
+        if($v -match "\(\*(\w+)"){
+             $t=$t+($v -replace $Matches[1],"" -replace "\s+\w+","" -replace "\s+","")
+             $v=$Matches[1]
+        }
+        $v=$v -replace "\s+",""
+        $v.Split(",")|%{$col[$i]+" "+$t+" "+$_}
+    }
+}}
+filter Format-CArray{$_ -replace "(\w+)\s(\w+)\[((?:\d+|\w+|[-()*+])+)\]","`$1 `$2[] `$3" -replace "\[(\w+)\]","*`$1"}
 function CStructMember($v){
     $v=$v -replace "\]\s+\[","][" -replace "FAR\s*\*","*"
     $v=$v -replace "\s+[*]\s*|[*]\s+","* " -replace "\s*,\s*",","
@@ -50,22 +79,17 @@ filter Get-CDefine($m_base){
 }
 filter Set-CDefine($m){
     $s=$_;while($s -match "\[[^A-Za-z]*([A-Za-z]\w+)"){$n=$Matches[1];$s=$s -replace $n,$m[$n]}
-    if($s -match "\[([^\]]+)\]"){$n=$Matches[1];$s -replace ($n -replace "([()*-+])","`\`$1"),(Invoke-Expression $n)}else{$s}
+    if($s -match "\[([^\]]+)\]"){$n=$Matches[1];$s -replace ($n -replace "([-()*+])","`\`$1"),(Invoke-Expression $n)}else{$s}
 }
-filter Remove-Else{begin{$s=0}process{if($_ -match "#else"){$s=1}elseif($_ -match "#endif"){$s=0}elseif($s -eq 0){$_}}}
 filter Get-CStruct($types){begin{$old=$null}process{
-    $a=((gc $_.pa -Encoding Oem)+(gc $_.pb -Encoding Oem))|Remove-Else
+    $a=((gc $_.pa -Encoding Oem)+(gc $_.pb -Encoding Oem))|Remove-CComment|Remove-CElse
     $b=$a|Get-CStructName
-    $c=$a|Get-CDefine $default_define
-    $d=$a|%{$st=0;$i=0}{
-        if($_ -match "struct[^{]*{"){$st=1
-        }elseif($st -and $_ -match "}"){$st=0;$i=$i+1
-        }elseif($st -and $_ -match "^\s*([^/;#]+)"){
-            CStructMember($Matches[1].Trim())|%{"{0} {1}" -f $b[$i],$_}
-        }
-    }
+    $c=$a|Format-CStruct $b
+	$v=$_.v
+    $d=$c|%{$_ -replace "sizeof\([^*]+\*\)","4"}|%{$_ -replace "TTTSet\*","tttset_${v}*"}
     $e=$types|%{$f=$_;$d|?{$_ -match "^${f}"}}
-    $g=$e|Set-CDefine($c)
+    $f=$a|Get-CDefine $default_define
+    $g=$e|Set-CDefine $f|%{$_ -replace "(enum|unsigned|struct)_","`$1 "}
     if (-not $old -or (Compare-Object $old $g)){@{v=$_.v;d=$g}}
     $old=$g
 }}
