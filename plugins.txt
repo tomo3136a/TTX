@@ -1,3 +1,5 @@
+project(TTX VERSION 2.0.0)
+
 add_subdirectory(../TTX/common TTXCommon)
 set_target_properties(TTXCommon PROPERTIES FOLDER TTX)
 
@@ -6,9 +8,6 @@ set_target_properties(TTXSample PROPERTIES FOLDER TTX)
 
 add_subdirectory(../TTX/TTXPlugin TTXPlugin)
 set_target_properties(TTXPlugin PROPERTIES FOLDER TTX)
-
-#add_subdirectory(../TTX/TTXEstimateMismatch TTXEstimateMismatch)
-#set_target_properties(TTXEstimateMismatch PROPERTIES FOLDER TTX)
 
 add_subdirectory(../TTX/TTXShortcut TTXShortcut)
 set_target_properties(TTXShortcut PROPERTIES FOLDER TTX)
@@ -31,8 +30,8 @@ set_target_properties(TTXPackage PROPERTIES FOLDER TTX)
 add_subdirectory(../TTX/TTXReport TTXReport)
 set_target_properties(TTXReport PROPERTIES FOLDER TTX)
 
-add_subdirectory(../TTX/TTXTest_TTTypes TTXTest_TTTypes)
-set_target_properties(TTXTest_TTTypes PROPERTIES FOLDER TTX)
-
 add_subdirectory(../TTX/TTXTest_Exports TTXTest_Exports)
 set_target_properties(TTXTest_Exports PROPERTIES FOLDER TTX)
+
+add_subdirectory(../TTX/TTXTest_TTTypes TTXTest_TTTypes)
+set_target_properties(TTXTest_TTTypes PROPERTIES FOLDER TTX)

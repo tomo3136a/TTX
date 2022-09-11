@@ -1,0 +1,26 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+#include "windows.h"
+
+/////////////////////////////////////////////////////////////////////////////
+// “ú–{Œê (“ú–{) resources
+
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+#pragma code_page(932)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_INFOVIEW_DIALOG DIALOGEX 0, 0, 145, 221
+STYLE DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_THICKFRAME
+CAPTION "Information view"
+FONT 9, "Tahoma", 400, 0, 0x0
+BEGIN
+    LTEXT           "",IDC_MSG,6,6,132,0
+    EDITTEXT        IDC_LOG,6,12,132,188,ES_MULTILINE | ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,6,204,50,14, NOT WS_TABSTOP
+    LTEXT           "",IDC_STS,66,207,72,12
+END

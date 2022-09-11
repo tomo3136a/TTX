@@ -5,6 +5,22 @@
 
 #include <windows.h>
 
+#ifdef TT4
+#define __FUNCTIONT__ __FUNCTION__
+#else /* TT4 */
+#define __FUNCTIONT__ __FUNCTIONW__
+#endif /* TT4 */
+
+#include "infoview.h"
+
+#define DBG_VIEW(fn, fmt, ...)                                                      \
+	{                                                                               \
+		TCHAR *buf = (TCHAR *)malloc(sizeof(TCHAR)*1024);                           \
+		_sntprintf_s(buf, 1024, 1024, fn _T(": ") fmt _T("\r\n") , __VA_ARGS__);    \
+        WriteInfoView(buf);                                                         \
+        free(buf);                                                                  \
+	}
+
 #ifdef __cplusplus
 extern "C"
 {

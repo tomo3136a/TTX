@@ -12,7 +12,9 @@ endif()
 
 set(SRC
   ttxtest_exports.c
-  )
+  ttxtest_exports.rc
+  ../common/common.rc
+)
 
 add_library(
   ${PACKAGE_NAME} SHARED

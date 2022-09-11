@@ -6,7 +6,6 @@
 #include "teraterm.h"
 #include "tttypes.h"
 #include "ttplugin.h"
-#include "ttcommon.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -15,12 +14,13 @@
 
 #include "ttxcommon.h"
 #include "ttxversion.h"
+#include "ttxdebug.h"
 
 #define ORDER 6020
 
 #define INISECTION "TTXTest_Exports"
 
-#define ID_MENUITEM 5800
+#define ID_MENUITEM 5801
 
 static HANDLE hInst; /* Instance handle of TTX*.DLL */
 
@@ -28,6 +28,7 @@ typedef struct {
 	PTTSet ts;
 	PComVar cv;
 
+	/* ttdialog */
 	PSetupTerminal SetupTerminal;
 	PSetupWin SetupWin;
 	PSetupKeyboard SetupKeyboard;
@@ -41,6 +42,7 @@ typedef struct {
 	PWindowWindow WindowWindow;
 	PTTDLGSetUILanguageFile TTDLGSetUILanguageFile;
 
+	/* ttsetup */
 	PReadIniFile ReadIniFile;
 	PWriteIniFile WriteIniFile;
 	PReadKeyboardCnf ReadKeyboardCnf;
@@ -48,6 +50,7 @@ typedef struct {
 	PAddHostToList AddHostToList;
 	PParseParam ParseParam;
 
+	/* ttwsk */
 	Tclosesocket Pclosesocket;
 	Tconnect Pconnect;
 	Thtonl Phtonl;
@@ -66,6 +69,7 @@ typedef struct {
 	Tfreeaddrinfo Pfreeaddrinfo;
 	TWSAAsyncGetAddrInfo PWSAAsyncGetAddrInfo;
 
+	/* ttfileio */
 	TCreateFile PCreateFile;
 	TCloseFile PCloseFile;
 	TReadFile PReadFile;
@@ -80,71 +84,56 @@ static TInstVar InstVar;
 
 ///////////////////////////////////////////////////////////////
 
-#define DBG_VIEW(fn,fmt,...) {\
-	TCHAR title[256];\
-	TCHAR buf[256];\
-	HWND hwnd = pvar->cv->HWin;\
-	_sntprintf_s(title, 256, 256, fn _T("() %d"), tt_version);\
-	_sntprintf_s(buf, 256, 256, _T("cv->HWin=%p\n\n") fmt, hwnd, __VA_ARGS__);\
-	MessageBox(0, buf, title, MB_OK | MB_ICONINFORMATION);\
-}
-
-#ifdef TT4
-#define __FUNCTIONT__ __FUNCTION__
-#else /* TT4 */
-#define __FUNCTIONT__ __FUNCTIONW__
-#endif /* TT4 */
-
-///////////////////////////////////////////////////////////////
-
 static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 {
 	pvar->ts = ts;
 	pvar->cv = cv;
-	DBG_VIEW(__FUNCTIONT__, _T("%s"), _T(""));
+	InitInfoView();
+	DBG_VIEW(__FUNCTIONT__, _T("ts=%p cv=%p"), ts, cv);
 }
 
 ///////////////////////////////////////////////////////////////
 
 static BOOL PASCAL TTXSetupTerminal(HWND WndParent, PTTSet ts)
 {
-	DBG_VIEW(__FUNCTIONT__, _T("hwnd=%p\nts=%p (pvar->ts=%p)"), WndParent, ts, pvar->ts);
+	DBG_VIEW(__FUNCTIONT__, _T("hwnd=%p ts=%p\r\n  (pvar->ts=%p)"), WndParent, ts, pvar->ts);
 	return pvar->SetupTerminal(WndParent, ts);
 }
 
 static BOOL PASCAL TTXSetupWin(HWND WndParent, PTTSet ts)
 {
-	DBG_VIEW(__FUNCTIONT__, _T("hwnd=%p\nts=%p (pvar->ts=%p)"), WndParent, ts, pvar->ts);
+	DBG_VIEW(__FUNCTIONT__, _T("hwnd=%p ts=%p\r\n  (pvar->ts=%p)"), WndParent, ts, pvar->ts);
 	return pvar->SetupWin(WndParent, ts);
 }
 
 static BOOL PASCAL TTXSetupKeyboard(HWND WndParent, PTTSet ts)
 {
-	DBG_VIEW(__FUNCTIONT__, _T("hwnd=%p\nts=%p (pvar->ts=%p)"), WndParent, ts, pvar->ts);
+	DBG_VIEW(__FUNCTIONT__, _T("hwnd=%p ts=%p\r\n  (pvar->ts=%p)"), WndParent, ts, pvar->ts);
 	return pvar->SetupKeyboard(WndParent, ts);
 }
 
 static BOOL PASCAL TTXSetupSerialPort(HWND WndParent, PTTSet ts)
 {
-	DBG_VIEW(__FUNCTIONT__, _T("hwnd=%p\nts=%p (pvar->ts=%p)"), WndParent, ts, pvar->ts);
+	DBG_VIEW(__FUNCTIONT__, _T("hwnd=%p ts=%p\r\n  (pvar->ts=%p)"), WndParent, ts, pvar->ts);
 	return pvar->SetupSerialPort(WndParent, ts);
 }
 
 static BOOL PASCAL TTXSetupTCPIP(HWND WndParent, PTTSet ts)
 {
-	DBG_VIEW(__FUNCTIONT__, _T("hwnd=%p\nts=%p (pvar->ts=%p)"), WndParent, ts, pvar->ts);
+	DBG_VIEW(__FUNCTIONT__, _T("hwnd=%p ts=%p\r\n  (pvar->ts=%p)"), WndParent, ts, pvar->ts);
 	return pvar->SetupTCPIP(WndParent, ts);
 }
 
 static BOOL PASCAL TTXGetHostName(HWND WndParent, PGetHNRec GetHNRec)
 {
-	DBG_VIEW(__FUNCTIONT__, _T("hwnd=%p\nGetHNRec=%p"), WndParent, GetHNRec);
+	DBG_VIEW(__FUNCTIONT__, _T("hwnd=%p GetHNRec=%p"), WndParent, GetHNRec);
+	//TODO: convert format of GetHNRec
 	return pvar->GetHostName(WndParent, GetHNRec);
 }
 
 static BOOL _TTXChangeDirectory(HWND WndParent, PTSTR CurDir)
 {
-	DBG_VIEW(__FUNCTIONT__, _T("hwnd=%p\n (CurDir=%s)"), WndParent, CurDir);
+	DBG_VIEW(__FUNCTIONT__, _T("hwnd=%p\r\n  CurDir=%s"), WndParent, CurDir);
 	return TRUE;
 }
 #ifdef TT4
@@ -153,7 +142,7 @@ static BOOL PASCAL TTXChangeDirectory(HWND WndParent, PCHAR CurDir)
 	_TTXChangeDirectory(WndParent, CurDir);
 	return pvar->ChangeDirectory(WndParent, CurDir);
 }
-#else /* TT4 */
+#else  /* TT4 */
 static BOOL PASCAL TTXChangeDirectory(HWND WndParent, PTTSet ts)
 {
 	_TTXChangeDirectory(WndParent, ts->FileDirW);
@@ -169,25 +158,26 @@ static BOOL PASCAL TTXAboutDialog(HWND WndParent)
 
 static BOOL PASCAL TTXChooseFontDlg(HWND WndParent, LPLOGFONT LogFont, PTTSet ts)
 {
-	DBG_VIEW(__FUNCTIONT__, _T("hwnd=%p\nLogFont=%p\nts=%p (pvar->ts=%p)"), WndParent, LogFont, ts, pvar->ts);
+	DBG_VIEW(__FUNCTIONT__, _T("hwnd=%p LogFont=%p ts=%p\r\n  (pvar->ts=%p)"), WndParent, LogFont, ts, pvar->ts);
 	return pvar->ChooseFontDlg(WndParent, LogFont, ts);
 }
 
 static BOOL PASCAL TTXSetupGeneral(HWND WndParent, PTTSet ts)
 {
-	DBG_VIEW(__FUNCTIONT__, _T("hwnd=%p\nts=%p (pvar->ts=%p)"), WndParent, ts, pvar->ts);
+	DBG_VIEW(__FUNCTIONT__, _T("hwnd=%p ts=%p\r\n  (pvar->ts=%p)"), WndParent, ts, pvar->ts);
 	return pvar->SetupGeneral(WndParent, ts);
 }
 
 static BOOL PASCAL TTXWindowWindow(HWND WndParent, PBOOL Close)
 {
-	DBG_VIEW(__FUNCTIONT__, _T("hwnd=%p\nClose=%p"), WndParent, Close);
+	DBG_VIEW(__FUNCTIONT__, _T("hwnd=%p Close=%p"), WndParent, Close);
 	return pvar->WindowWindow(WndParent, Close);
 }
 
 static void PASCAL TTXGetUIHooks(TTXUIHooks *hooks)
 {
-	//DBG_VIEW(__FUNCTIONT__, _T("%s"), _T(""));
+	HWND hWnd = GetActiveWindow();
+	DBG_VIEW(__FUNCTIONT__, _T("hwnd=%p hInst=%p"), hWnd, hInst);
 	pvar->SetupTerminal = *hooks->SetupTerminal;
 	pvar->SetupWin = *hooks->SetupWin;
 	pvar->SetupKeyboard = *hooks->SetupKeyboard;
@@ -211,6 +201,12 @@ static void PASCAL TTXGetUIHooks(TTXUIHooks *hooks)
 	*hooks->ChooseFontDlg = TTXChooseFontDlg;
 	*hooks->SetupGeneral = TTXSetupGeneral;
 	*hooks->WindowWindow = TTXWindowWindow;
+	{
+		TCHAR title[64];
+		_sntprintf_s(title, 64, 64, _T("build=%d.%d running=%d"), 
+			TT_VERSION_MAJOR, TT_VERSION_MINOR, tt_version);
+		OpenInfoView(hInst, hWnd, title);
+	}
 }
 
 ///////////////////////////////////////////////////////////////
@@ -218,7 +214,7 @@ static void PASCAL TTXGetUIHooks(TTXUIHooks *hooks)
 static void PASCAL TTXReadIniFile(TT_LPCTSTR FName, PTTSet ts)
 {
 	BEGIN_TTX_STR(FName);
-	DBG_VIEW(__FUNCTIONT__, _T("FName=%s\nts=%p (pvar->ts=%p)"), FNameW, ts, pvar->ts);
+	DBG_VIEW(__FUNCTIONT__, _T("FName=%s\r\n  ts=%p (pvar->ts=%p)"), FNameW, ts, pvar->ts);
 	END_TTX_STR(FName);
 	pvar->ReadIniFile(FName, ts);
 }
@@ -226,7 +222,7 @@ static void PASCAL TTXReadIniFile(TT_LPCTSTR FName, PTTSet ts)
 static void PASCAL TTXWriteIniFile(TT_LPCTSTR FName, PTTSet ts)
 {
 	BEGIN_TTX_STR(FName);
-	DBG_VIEW(__FUNCTIONT__, _T("FName=%s\nts=%p (pvar->ts=%p)"), FNameW, ts, pvar->ts);
+	DBG_VIEW(__FUNCTIONT__, _T("FName=%s\r\n  ts=%p (pvar->ts=%p)"), FNameW, ts, pvar->ts);
 	END_TTX_STR(FName);
 	pvar->WriteIniFile(FName, ts);
 }
@@ -234,7 +230,7 @@ static void PASCAL TTXWriteIniFile(TT_LPCTSTR FName, PTTSet ts)
 static void PASCAL TTXReadKeyboardCnf(TT_LPCTSTR FName, PKeyMap KeyMap, BOOL ShowWarning)
 {
 	BEGIN_TTX_STR(FName);
-	DBG_VIEW(__FUNCTIONT__, _T("FName=%s\nKepMap=%p\nShowWarning=%d"), FNameW, KeyMap, ShowWarning);
+	DBG_VIEW(__FUNCTIONT__, _T("FName=%s\r\n  KeyMap=%p ShowWarning=%d"), FNameW, KeyMap, ShowWarning);
 	END_TTX_STR(FName);
 	pvar->ReadKeyboardCnf(FName, KeyMap, ShowWarning);
 }
@@ -242,7 +238,7 @@ static void PASCAL TTXReadKeyboardCnf(TT_LPCTSTR FName, PKeyMap KeyMap, BOOL Sho
 static void PASCAL TTXCopyHostList(TT_LPCTSTR IniSrc, TT_LPCTSTR IniDest)
 {
 	BEGIN_TTX_STR2(IniSrc, IniDest);
-	DBG_VIEW(__FUNCTIONT__, _T("src=%s dst=%s"), IniSrcW, IniDestW);
+	DBG_VIEW(__FUNCTIONT__, _T("src=%s\r\n  dst=%s"), IniSrcW, IniDestW);
 	END_TTX_STR2(IniSrc, IniDest);
 	pvar->CopyHostList(IniSrc, IniDest);
 }
@@ -250,7 +246,7 @@ static void PASCAL TTXCopyHostList(TT_LPCTSTR IniSrc, TT_LPCTSTR IniDest)
 static void PASCAL TTXAddHostToList(TT_LPCTSTR FName, TT_LPCTSTR Host)
 {
 	BEGIN_TTX_STR2(FName, Host);
-	DBG_VIEW(__FUNCTIONT__, _T("FName=%s\nHost=%s"), FNameW, HostW);
+	DBG_VIEW(__FUNCTIONT__, _T("FName=%s\r\n  Host=%s"), FNameW, HostW);
 	END_TTX_STR2(FName, Host);
 	pvar->AddHostToList(FName, Host);
 }
@@ -258,13 +254,14 @@ static void PASCAL TTXAddHostToList(TT_LPCTSTR FName, TT_LPCTSTR Host)
 static void PASCAL TTXParseParam(TT_LPTSTR Param, PTTSet ts, PCHAR DDETopic)
 {
 	BEGIN_TTX_STR(Param);
-	DBG_VIEW(__FUNCTIONT__, _T("param=%s\nts=%p (pvar->ts=%p)"), ParamW, ts, pvar->ts);
+	DBG_VIEW(__FUNCTIONT__, _T("param=%s\r\n  ts=%p (pvar->ts=%p)"), ParamW, ts, pvar->ts);
 	END_TTX_STR(Param);
 	pvar->ParseParam(Param, ts, DDETopic);
 }
 
 static void PASCAL TTXGetSetupHooks(TTXSetupHooks *hooks)
 {
+	//DBG_VIEW(__FUNCTIONT__, _T("hooks=%p"), hooks);
 	pvar->AddHostToList = *hooks->AddHostToList;
 	pvar->CopyHostList = *hooks->CopyHostList;
 	pvar->ParseParam = *hooks->ParseParam;
@@ -298,7 +295,7 @@ static u_short PASCAL TTXhtons(u_short hostshort)
 {
 	return pvar->Phtons(hostshort);
 }
-static unsigned long PASCAL TTXinet_addr(const char * cp)
+static unsigned long PASCAL TTXinet_addr(const char *cp)
 {
 	return pvar->Pinet_addr(cp);
 }
@@ -306,21 +303,20 @@ static int PASCAL TTXioctlsocket(SOCKET s, long cmd, u_long *argp)
 {
 	return pvar->Pioctlsocket(s, cmd, argp);
 }
-static int PASCAL TTXrecv(SOCKET s, char * buf, int len, int flags)
+static int PASCAL TTXrecv(SOCKET s, char *buf, int len, int flags)
 {
 	return pvar->Precv(s, buf, len, flags);
 }
-static int PASCAL TTXselect(int nfds, fd_set *readfds, fd_set *writefds,
-   fd_set *exceptfds, const struct timeval *timeout)
+static int PASCAL TTXselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
+							const struct timeval *timeout)
 {
 	return pvar->Pselect(nfds, readfds, writefds, exceptfds, timeout);
 }
-static int PASCAL TTXsend(SOCKET s, const char * buf, int len, int flags)
+static int PASCAL TTXsend(SOCKET s, const char *buf, int len, int flags)
 {
 	return pvar->Psend(s, buf, len, flags);
 }
-static int PASCAL TTXsetsockopt(SOCKET s, int level, int optname,
-   const char * optval, int optlen)
+static int PASCAL TTXsetsockopt(SOCKET s, int level, int optname, const char *optval, int optlen)
 {
 	return pvar->Psetsockopt(s, level, optname, optval, optlen);
 }
@@ -332,7 +328,7 @@ static int PASCAL TTXWSAAsyncSelect(SOCKET s, HWND hWnd, u_int wMsg, long lEvent
 {
 	return pvar->PWSAAsyncSelect(s, hWnd, wMsg, lEvent);
 }
-static HANDLE PASCAL TTXWSAAsyncGetHostByName(HWND hWnd, u_int wMsg, const char * name, char * buf, int buflen)
+static HANDLE PASCAL TTXWSAAsyncGetHostByName(HWND hWnd, u_int wMsg, const char *name, char *buf, int buflen)
 {
 	return pvar->PWSAAsyncGetHostByName(hWnd, wMsg, name, buf, buflen);
 }
@@ -344,9 +340,8 @@ static int PASCAL TTXWSAGetLastError(void)
 {
 	return pvar->PWSAGetLastError();
 }
-static HANDLE PASCAL TTXWSAAsyncGetAddrInfo(HWND hWnd, unsigned int wMsg, const char * hostname,
-   const char * portname, struct addrinfo * hints,
-   struct addrinfo * * res)
+static HANDLE PASCAL TTXWSAAsyncGetAddrInfo(HWND hWnd, unsigned int wMsg, const char *hostname, const char *portname,
+											struct addrinfo *hints, struct addrinfo **res)
 {
 	return pvar->PWSAAsyncGetAddrInfo(hWnd, wMsg, hostname, portname, hints, res);
 }
@@ -358,8 +353,7 @@ static void PASCAL TTXfreeaddrinfo(struct addrinfo *ai)
 
 static void PASCAL TTXOpenTCP(TTXSockHooks *hooks)
 {
-	// printf("TTXOpenTCP %d\n", ORDER);
-	DBG_VIEW(__FUNCTIONT__, _T("%s"), _T("hooks"));
+	DBG_VIEW(__FUNCTIONT__, _T("hooks=%p"), hooks);
 	pvar->Pclosesocket = *hooks->Pclosesocket;
 	pvar->Pconnect = *hooks->Pconnect;
 	pvar->Phtonl = *hooks->Phtonl;
@@ -407,8 +401,7 @@ static void PASCAL TTXOpenTCP(TTXSockHooks *hooks)
 
 static void PASCAL TTXCloseTCP(TTXSockHooks *hooks)
 {
-	// printf("TTXCloseTCP %d\n", ORDER);
-	DBG_VIEW(__FUNCTIONT__, _T("%s"), _T("hooks"));
+	DBG_VIEW(__FUNCTIONT__, _T("hooks=%p"), hooks);
 	*hooks->Pclosesocket = pvar->Pclosesocket;
 	*hooks->Pconnect = pvar->Pconnect;
 	*hooks->Phtonl = pvar->Phtonl;
@@ -432,33 +425,40 @@ static void PASCAL TTXCloseTCP(TTXSockHooks *hooks)
 	}
 }
 
-static BOOL PASCAL TTXTReadFile(HANDLE FHandle, LPVOID Buff, DWORD ReadSize, LPDWORD ReadBytes, LPOVERLAPPED ReadOverLap)
+static BOOL PASCAL TTXTReadFile(HANDLE FHandle, LPVOID Buff, DWORD ReadSize, LPDWORD ReadBytes,
+								LPOVERLAPPED ReadOverLap)
 {
-	DBG_VIEW(__FUNCTIONT__, _T("%s"), _T("hooks"));
-   return FALSE;
+	DBG_VIEW(__FUNCTIONT__, _T("FHandle=%p"), FHandle);
+	// TODO:
+	return FALSE;
 }
 
-static BOOL PASCAL TTXTWriteFile(HANDLE FHandle, LPCVOID Buff, DWORD WriteSize, LPDWORD WriteBytes, LPOVERLAPPED WriteOverLap)
+static BOOL PASCAL TTXTWriteFile(HANDLE FHandle, LPCVOID Buff, DWORD WriteSize, LPDWORD WriteBytes,
+								 LPOVERLAPPED WriteOverLap)
 {
-	DBG_VIEW(__FUNCTIONT__, _T("%s"), _T("hooks"));
-    return FALSE;
+	DBG_VIEW(__FUNCTIONT__, _T("FHandle=%p"), FHandle);
+	// TODO:
+	return FALSE;
 }
 
-static HANDLE PASCAL TTXTCreateFile(LPCTSTR FName, DWORD AcMode, DWORD ShMode, LPSECURITY_ATTRIBUTES SecAttr, DWORD CreateDisposition, DWORD FileAttr, HANDLE Template)
+static HANDLE PASCAL TTXTCreateFile(LPCTSTR FName, DWORD AcMode, DWORD ShMode, LPSECURITY_ATTRIBUTES SecAttr,
+									DWORD CreateDisposition, DWORD FileAttr, HANDLE Template)
 {
-	DBG_VIEW(__FUNCTIONT__, _T("%s"), _T("hooks"));
- 	return 0;
+	DBG_VIEW(__FUNCTIONT__, _T("FName=%s\r\n  ..."), FName);
+	// TODO:
+	return 0;
 }
 
 static BOOL PASCAL TTXTCloseFile(HANDLE FHandle)
 {
-	DBG_VIEW(__FUNCTIONT__, _T("%s"), _T("hooks"));
- 	return FALSE;
+	DBG_VIEW(__FUNCTIONT__, _T("FHandle=%p"), FHandle);
+	// TODO:
+	return FALSE;
 }
 
 static void PASCAL TTXOpenFile(TTXFileHooks *hooks)
 {
-	DBG_VIEW(__FUNCTIONT__, _T("%s"), _T("hooks"));
+	DBG_VIEW(__FUNCTIONT__, _T("hooks=%p"), hooks);
 	if (HAS_TTXHOOK(TTXFileHooks)) {
 		pvar->PCreateFile = *hooks->PCreateFile;
 		pvar->PCloseFile = *hooks->PCloseFile;
@@ -474,7 +474,7 @@ static void PASCAL TTXOpenFile(TTXFileHooks *hooks)
 
 static void PASCAL TTXCloseFile(TTXFileHooks *hooks)
 {
-	DBG_VIEW(__FUNCTIONT__, _T("%s"), _T("hooks"));
+	DBG_VIEW(__FUNCTIONT__, _T("hooks=%p"), hooks);
 	if (HAS_TTXHOOK(TTXFileHooks)) {
 		*hooks->PCreateFile = pvar->PCreateFile;
 		*hooks->PCloseFile = pvar->PCloseFile;
@@ -494,19 +494,28 @@ static void PASCAL TTXSetWinSize(int rows, int cols)
 
 static void PASCAL TTXModifyMenu(HMENU menu)
 {
-	//DBG_VIEW(__FUNCTIONT__, _T("menu=%p"), menu);
-	HMENU hmenu = GetSubMenu(menu, ID_HELPMENU);
-	AppendMenu(hmenu, MF_ENABLED, ID_MENUITEM, _T("&test"));
+	int idx = GetMenuItemCount(menu) - 1;
+	HMENU hmenu = GetSubMenu(menu, idx);
+	InsertMenu(hmenu, 2, MF_BYPOSITION, ID_MENUITEM, _T("&Exports"));
+	DBG_VIEW(__FUNCTIONT__, _T("menu=%p, hmenu=%p"), menu, hmenu);
 }
 
 static void PASCAL TTXModifyPopupMenu(HMENU menu)
 {
-	//DBG_VIEW(__FUNCTIONT__, _T("menu=%s"), menu);
+	DBG_VIEW(__FUNCTIONT__, _T("menu=%p"), menu);
 }
 
 static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 {
 	DBG_VIEW(__FUNCTIONT__, _T("hwnd=%p, cmd=%d"), hWin, cmd);
+	if (cmd == ID_MENUITEM){
+		if (IsOpenInfoView()){
+			CloseInfoView();
+		}
+		else {
+			OpenInfoView(hInst, hWin, NULL);
+		}
+	}
 	return 0;
 }
 
@@ -520,7 +529,9 @@ static void PASCAL TTXEnd(void)
 static void PASCAL TTXSetCommandLine(TT_LPTSTR cmd, int cmdlen, PGetHNRec rec)
 {
 	BEGIN_TTX_STR(cmd);
-	DBG_VIEW(__FUNCTIONT__, _T("cmd=%s, len=%d\nGetHNRec=%p"), cmdW, cmdlen, rec);
+	DBG_VIEW(__FUNCTIONT__, _T("cmd=%s\r\n  len=%d GetHNRec=%p"), cmdW, cmdlen, rec);
+	// TODO: convert format GetHNRec
+	//_tcscpy_s(cmd, cmdlen, cmdW);
 	END_TTX_STR(cmd);
 }
 
@@ -554,10 +565,22 @@ BOOL __declspec(dllexport) PASCAL FAR TTXBind(WORD Version, TTXExports *exports)
 	/* do version checking if necessary */
 	/* if (Version!=TTVERSION) return FALSE; */
 
-	if (TTXIgnore(ORDER, _T(INISECTION), 0))
+	if (TTXIgnore(ORDER, _T(INISECTION), Version))
 		return TRUE;
-	
-	TTXInitVersion(0);
+
+	TTXInitVersion(Version);
+#if 0
+	{
+		TCHAR buf[256];
+		_sntprintf_s(buf, 256, 256,
+					 _T("Build version=%d.%d\n")
+					 _T("TTVERSION=%d\n")
+					 _T("TTXBind().Version=%d\n")
+					 _T("TTXCommon.tt_version=%d\n"),
+					 TT_VERSION_MAJOR, TT_VERSION_MINOR, TTVERSION, Version, tt_version);
+		MessageBox(0, buf, _T(INISECTION) _T(" ") __FUNCTIONT__ _T("()"), MB_OK | MB_ICONINFORMATION);
+	}
+#endif
 
 	if (size > exports->size) {
 		size = exports->size;

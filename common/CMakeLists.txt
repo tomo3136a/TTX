@@ -12,8 +12,11 @@ endif()
 
 set(SRC
   ttxcommon.c
+  ttxcmn_util.c
+  ttxcmn_ui.c
   ttxversion.c
   stringlist.c
+  infoview.c
   )
 
 add_library(

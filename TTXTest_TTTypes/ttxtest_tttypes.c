@@ -13,6 +13,8 @@
 
 #define ORDER 6000
 
+#define INISECTION "TTXTest_TTTypes"
+
 static HANDLE hInst; /* Instance handle of TTX*.DLL */
 
 typedef struct
@@ -178,12 +180,14 @@ BOOL __declspec(dllexport) PASCAL FAR TTXBind(WORD Version, TTXExports *exports)
 	/* tset tttset menber support old version at TTXBind() */
 	/* less then 4.63 (LogTypePlainText or UILanguageFile_ini) is FALSE */
 	/* FALSE result is not bind TTX */
-	if(!TEST_TS2(LogTypePlainText, Baud)) return FALSE;		/* test 2 entry */
+	//if(!TEST_TS(LogTypePlainText,Baud)) return FALSE;		/* test 2 entry */
+	if(!TEST_TS_2(LogTypePlainText,Baud)) return FALSE;		/* test 2 entry */
+	// if(!TEST_TS_N(LogTypePlainText,Baud)) return FALSE;		/* test 2 entry */
 	if(!TEST_TS(LogDefaultName)) return FALSE;				/* test 1 entry */
 	if(!TEST_TS(UILanguageFile_ini)) return FALSE;			/* test 1 entry */
 
-	// if (TTXIgnore(ORDER, _T(INISECTION), 0))
-	// 	return TRUE;
+	if (TTXIgnore(ORDER, _T(INISECTION), 0))
+		return TRUE;
 
 	if (size > exports->size)
 	{

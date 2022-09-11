@@ -16,6 +16,8 @@
 #include <tchar.h>
 
 #include "ttxcommon.h"
+#include "ttxcmn_util.h"
+#include "ttxcmn_ui.h"
 #include "stringlist.h"
 #include "resource.h"
 

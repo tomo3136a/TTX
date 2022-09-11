@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.8)
 
-project(TTX VERSION 1.0.6)
+project(TTX VERSION 2.0.0)
 
 add_subdirectory(common TTXCommon)
 set_target_properties(TTXCommon PROPERTIES FOLDER TTX)
@@ -10,9 +10,6 @@ set_target_properties(TTXSample PROPERTIES FOLDER TTX)
 
 add_subdirectory(TTXPlugin)
 set_target_properties(TTXPlugin PROPERTIES FOLDER TTX)
-
-#add_subdirectory(TTXEstimateMismatch)
-#set_target_properties(TTXEstimateMismatch PROPERTIES FOLDER TTX)
 
 add_subdirectory(TTXShortcut)
 set_target_properties(TTXShortcut PROPERTIES FOLDER TTX)
@@ -35,14 +32,11 @@ set_target_properties(TTXPackage PROPERTIES FOLDER TTX)
 add_subdirectory(TTXReport)
 set_target_properties(TTXReport PROPERTIES FOLDER TTX)
 
-add_subdirectory(TTXTest_TTTypes)
-set_target_properties(TTXTest_TTTypes PROPERTIES FOLDER TTX)
-
 add_subdirectory(TTXTest_Exports)
 set_target_properties(TTXTest_Exports PROPERTIES FOLDER TTX)
 
-# add_subdirectory(TTXSetView)
-# set_target_properties(TTXSetView PROPERTIES FOLDER TTX)
+add_subdirectory(TTXTest_TTTypes)
+set_target_properties(TTXTest_TTTypes PROPERTIES FOLDER TTX)
 
 configure_file(
  LICENSE

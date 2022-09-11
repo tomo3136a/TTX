@@ -12,8 +12,6 @@
 
 #include "ttxversion.h"
 
-WORD tt_version = 0;
-
 //same function with ttset::RunningVersion
 static WORD TTRunningVersion()
 {
@@ -57,5 +55,13 @@ static WORD TTRunningVersion()
 
 void TTXInitVersion(WORD version)
 {
-	tt_version = (version) ? version : TTRunningVersion();
+	if (version < 100) {
+		tt_version = TTRunningVersion();
+	}
+	else if (version < 1000) {
+		tt_version = (int)(version / 100) * 1000 + (version % 100);
+	}
+	else {
+		tt_version = version;
+	}
 }

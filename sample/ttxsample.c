@@ -15,6 +15,7 @@
 //{system_includes here}
 
 #include "ttxcommon.h"
+#include "ttxcmn_ui.h"
 #include "resource.h"
 
 //{order_number}

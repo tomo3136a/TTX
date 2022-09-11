@@ -6,6 +6,8 @@
 #ifndef _TTXCOMMOM_H
 #define _TTXCOMMOM_H
 
+#include <windows.h>
+
 #ifdef TT4
 #define TT_TCHAR CHAR
 #define TT_LPTSTR LPSTR
@@ -16,15 +18,12 @@
 #define TT_LPCTSTR const wchar_t *
 #endif /* TT4 */
 
-#include <windows.h>
+#define IS_TT4() (tt_version<5000)
 
-/* auto resize for dialog compornent by window resize */
-#define RB_LEFT 0x0001
-#define RB_TOP 0x0002
-#define RB_RIGHT 0x0004
-#define RB_BOTTOM 0x0008
-
-#define TTXID "C11H17N3O8"
+#define BEGIN_TTX_STR(m) LPTSTR m##W = (IS_TT4()) ? toTC((PCHAR)m) : m;
+#define END_TTX_STR(m) if (IS_TT4()) { TTXFree(&m##W); }
+#define BEGIN_TTX_STR2(m1,m2) BEGIN_TTX_STR(m1) BEGIN_TTX_STR(m2)
+#define END_TTX_STR2(m1,m2) END_TTX_STR(m1) END_TTX_STR(m2)
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,6 +31,7 @@ extern "C" {
 
 /* ttx support */
 /// TTX load test
+extern WORD tt_version;
 BOOL TTXIgnore(int order, LPCTSTR name, WORD version);
 
 // token command line parameter
@@ -60,10 +60,10 @@ enum {
 	ID_MACROFN = 5,
 	ID_UILANGUAGEFILE = 6,
 	ID_UILANGUAGEFILE_INI = 7,
-	ID_LOGDEFAULTPATH = 8,
-	ID_EXEDIR = 9, /* support v5 */
-	ID_LOGDIR = 10, /* support v5 */
-	ID_FILEDIR = 11,
+	ID_EXEDIR = 8, /* support v5 */
+	ID_LOGDIR = 9, /* support v5 */
+	ID_FILEDIR = 10,
+	ID_LOGDEFAULTPATH = 11,
 	ID_STRMAX,
 };
 LPTSTR TTXGetPath(PTTSet ts, UINT uid);
@@ -109,34 +109,6 @@ inline LPTSTR toTC(LPSTR pszSrc)
 	return MB2WC(CP_ACP, pszSrc);
 }
 #endif /* TT4 */
-
-///文字列中に文字を検索し次のポインタを返す
-LPTSTR strskip(LPTSTR p, TCHAR c);
-
-/* string set */
-///連結文字列定義
-typedef LPTSTR strset_t;
-
-///連結文字列から順次切り出す
-LPTSTR StrSetTok(strset_t p, strset_t *ctx);
-
-///連結文字列のサイズを取得する
-int StrSetSize(strset_t p, int *cnt);
-
-///連結文字列からキーワードの連結文字列作成
-int StrSetKeys(strset_t dst, strset_t src);
-
-///連結文字列からキーワードのインデックス取得
-int StrSetFindIndex(strset_t p, LPTSTR k);
-
-///連結文字列からキーワードで検索し文字列取得
-LPTSTR StrSetFindKey(strset_t p, LPTSTR k);
-
-///連結文字列から値で検索し文字列取得
-LPTSTR StrSetFindVal(strset_t p, LPTSTR v);
-
-///連結文字列からn番目の文字列を取得する
-LPTSTR StrSetAt(strset_t p, int n);
 
 /* path */
 // fileapi.h は使わないようなので代替え実装、互換性はない
@@ -187,6 +159,9 @@ LPTSTR CombinePath(LPTSTR path, size_t sz, LPCTSTR fn);
 /// test exist file
 BOOL FileExists(LPCTSTR path);
 
+///連結文字列定義
+typedef LPTSTR strset_t;
+
 /* setting file */
 ///セクション名の連結文字列取得(開放はfree(outp))
 DWORD GetIniSects(strset_t *outp, DWORD sz, DWORD nsz, LPCTSTR fn);
@@ -212,40 +187,6 @@ BOOL WriteIniOnOff(LPCTSTR sect, LPCTSTR name, int bFlag, BOOL bEnable, LPCTSTR 
 
 ///数値設定を設定ファイルに書き込む
 BOOL WriteIniNum(LPCTSTR sect, LPCTSTR name, int val, BOOL bEnable, LPCTSTR fn);
-
-/* window control */
-/// get right-bottom point from window item
-VOID GetPointRB(HWND hWnd, UINT uItem, POINT *pt);
-
-/// move right-bottom point within window item
-VOID MovePointRB(HWND hWnd, UINT uItem, POINT *ptRB, UINT uFlag);
-
-/// get window size to point structure
-VOID GetWindowSize(HWND hWnd, POINT *pt);
-
-/// set window size from point structure
-VOID SetWindowSize(HWND hWnd, POINT *pt);
-
-/// move window relative direction
-VOID SetHomePosition(HWND hWnd, HWND hWndBase, UINT uPos);
-
-/// adjust window position to center of parent window
-VOID MoveParentCenter(HWND hWnd);
-
-/// create dialog font and set to phFont (require to delete item after)
-VOID SetDlgFont(HWND hWnd, UINT uItem, HFONT *phFont, LONG uH, LPTSTR szFont);
-
-/* dialog */
-enum {
-	PTF_CONTRACT = 16,
-	PTF_SETTPATH = 32,
-	PTF_GETPATH = 64
-};
-/// open to file select dialog
-BOOL OpenFileDlg(HWND hWnd, UINT editCtl, LPTSTR szTitle, LPTSTR szFilter, LPTSTR szPath, UINT uFlag);
-
-/// open to folder select dialog
-BOOL OpenFolderDlg(HWND hWnd, UINT editCtl, LPTSTR szTitle, LPTSTR szPath, UINT uFlag);
 
 #ifdef __cplusplus
 }

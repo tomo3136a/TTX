@@ -17,6 +17,7 @@
 #include <tchar.h>
 
 #include "ttxcommon.h"
+#include "ttxcmn_ui.h"
 #include "resource.h"
 
 #define ORDER 6040
