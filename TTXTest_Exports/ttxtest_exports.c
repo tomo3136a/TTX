@@ -22,11 +22,16 @@
 
 #define ID_MENUITEM 5801
 
+#define TEST_FLAG_GETHNREC 0x0100
+#define TEST_FLAG_COMM     0x0200
+
 static HANDLE hInst; /* Instance handle of TTX*.DLL */
 
 typedef struct {
 	PTTSet ts;
 	PComVar cv;
+
+	DWORD flag;
 
 	/* ttdialog */
 	PSetupTerminal SetupTerminal;
@@ -88,6 +93,14 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 {
 	pvar->ts = ts;
 	pvar->cv = cv;
+
+	pvar->flag = TEST_FLAG_GETHNREC | TEST_FLAG_COMM;
+
+	pvar->PCreateFile = NULL;
+	pvar->PCloseFile = NULL;
+	pvar->PReadFile = NULL;
+	pvar->PWriteFile = NULL;
+
 	InitInfoView();
 	DBG_VIEW(__FUNCTIONT__, _T("ts=%p cv=%p"), ts, cv);
 }
@@ -124,11 +137,39 @@ static BOOL PASCAL TTXSetupTCPIP(HWND WndParent, PTTSet ts)
 	return pvar->SetupTCPIP(WndParent, ts);
 }
 
+VOID dbg_gethnrec(PGetHNRec GetHNRec)
+{
+	if (pvar->flag & TEST_FLAG_GETHNREC)
+	{
+		if (GetHNRec)
+		{
+			DBG_VIEW(_T("  GetHNRec"), _T("setupfn=%hs\r\n")
+				_T("    setupfnw=%s\r\n")
+				_T("    MaxComPort=%d ComPort=%d HostName=%s\r\n")
+				_T("    ProtocolFamily=%d PortType=%d TcpPort=%d\r\n")
+				_T("    Telnet=%d TelPort=%d"),
+				GetHNRec->SetupFN, GetHNRec->SetupFNW, 
+				GetHNRec->MaxComPort, GetHNRec->ComPort, GetHNRec->HostName, 
+				GetHNRec->ProtocolFamily, GetHNRec->PortType, GetHNRec->TCPPort, 
+				GetHNRec->Telnet, GetHNRec->TelPort);
+		}
+		else
+		{
+			DBG_VIEW(_T("  GetHNRec"), _T("(NULL)"));
+		}
+	}
+}
 static BOOL PASCAL TTXGetHostName(HWND WndParent, PGetHNRec GetHNRec)
 {
 	DBG_VIEW(__FUNCTIONT__, _T("hwnd=%p GetHNRec=%p"), WndParent, GetHNRec);
 	//TODO: convert format of GetHNRec
-	return pvar->GetHostName(WndParent, GetHNRec);
+
+	GetHNRec->HostName[0] = 0;
+	dbg_gethnrec(GetHNRec);
+	BOOL res = pvar->GetHostName(WndParent, GetHNRec);
+	if (res)
+		dbg_gethnrec(GetHNRec);
+	return res;
 }
 
 static BOOL _TTXChangeDirectory(HWND WndParent, PTSTR CurDir)
@@ -425,41 +466,136 @@ static void PASCAL TTXCloseTCP(TTXSockHooks *hooks)
 	}
 }
 
+VOID comm_setting(LPDCB pDCB){
+	const char *parities[] = {"none", "odd", "even", "mark", "space"};
+	const char *stop_bits[] = {"1", "1.5", "2"};
+	DBG_VIEW(__FUNCTIONT__, 
+		_T("BaudRate=%d BytesSize=%d StopBits=%hs Parity=%hs"), 
+		pDCB->BaudRate, pDCB->ByteSize, stop_bits[pDCB->StopBits], parities[pDCB->Parity]);
+}
+VOID comm_rcvmode(LPDCB pDCB)
+{
+	DBG_VIEW(__FUNCTIONT__, 
+		_T("fParity=%d fErrorChar=%d ErrorChar=%d fNull=%d EofChar=%d EvtChar=%d"),
+		pDCB->fParity, pDCB->fErrorChar, pDCB->ErrorChar, 
+		pDCB->fNull, pDCB->EofChar, pDCB->EvtChar);
+}
+VOID comm_cts_rts(LPDCB pDCB)
+{
+	const char *rts[] = {"DISABLE", "ENABLE", "HANDSHAKE", "TOGGLE"};
+	DBG_VIEW(__FUNCTIONT__, 
+		_T("fOutxCtsFlow=%d fRtsControl=%hs"),
+		pDCB->fOutxCtsFlow, rts[pDCB->fRtsControl]);
+}
+VOID comm_dsr_dtr(LPDCB pDCB)
+{
+	const char *dtr[] = {"DISABLE", "ENABLE", "HANDSHAKE"};
+	DBG_VIEW(__FUNCTIONT__, 
+		_T("fOutxDsrFlow=%d fDsrSensitivity=%d fDtrControl=%hs"),
+		pDCB->fOutxDsrFlow, pDCB->fDsrSensitivity, dtr[pDCB->fDtrControl]);
+}
+VOID comm_xonxoff(LPDCB pDCB)
+{
+	DBG_VIEW(__FUNCTIONT__, 
+		_T("fOutX=%d fInX=%d XoffChar=%d, XonChar=%d"),
+		pDCB->fOutX, pDCB->fInX, pDCB->XoffChar, pDCB->XonChar);
+}
+VOID comm_flowbuf(LPDCB pDCB)
+{
+	DBG_VIEW(__FUNCTIONT__, 
+		_T("fTXContinueOnXoff=%d XoffLim=%d XonLim=%d"),
+		pDCB->fTXContinueOnXoff, pDCB->XoffLim, pDCB->XonLim);
+}
+VOID comm_state(HANDLE FHandle)
+{
+	DCB dcb;
+    //COMMTIMEOUTS timeouts;
+
+    if (GetCommState(FHandle, &dcb)) {
+		comm_setting(&dcb);		/* setting */
+		comm_rcvmode(&dcb);		/* recive mode */
+		comm_cts_rts(&dcb);		/* CTS/RTS */
+		comm_dsr_dtr(&dcb);		/* DSR/DTR */
+		comm_xonxoff(&dcb);		/* XON/XOFF */
+		comm_flowbuf(&dcb);		/* flow buffer */
+	}
+}
+
+VOID comm_modem(HANDLE FHandle)
+{
+	DWORD sts;
+	GetCommModemStatus(FHandle, &sts);
+	DBG_VIEW(__FUNCTIONT__, 
+		_T("CTS=%d DSR=%d RING=%d RLSD=%d"),
+		((sts&MS_CTS_ON)?1:0), 
+		((sts&MS_DSR_ON)?1:0), 
+		((sts&MS_RING_ON)?1:0), 
+		((sts&MS_RLSD_ON)?1:0));
+}
+
 static BOOL PASCAL TTXTReadFile(HANDLE FHandle, LPVOID Buff, DWORD ReadSize, LPDWORD ReadBytes,
 								LPOVERLAPPED ReadOverLap)
 {
-	DBG_VIEW(__FUNCTIONT__, _T("FHandle=%p"), FHandle);
-	// TODO:
-	return FALSE;
+	//DBG_VIEW(__FUNCTIONT__, _T("FHandle=%p"), FHandle);
+	if (pvar->flag & TEST_FLAG_COMM)
+	{
+		comm_state(FHandle);
+		comm_modem(FHandle);
+	}
+	return pvar->PReadFile(FHandle, Buff, ReadSize, ReadBytes, ReadOverLap);
 }
 
 static BOOL PASCAL TTXTWriteFile(HANDLE FHandle, LPCVOID Buff, DWORD WriteSize, LPDWORD WriteBytes,
 								 LPOVERLAPPED WriteOverLap)
 {
-	DBG_VIEW(__FUNCTIONT__, _T("FHandle=%p"), FHandle);
-	// TODO:
-	return FALSE;
+	//DBG_VIEW(__FUNCTIONT__, _T("FHandle=%p"), FHandle);
+	if (pvar->flag & TEST_FLAG_COMM)
+	{
+		comm_state(FHandle);
+		comm_modem(FHandle);
+	}
+	return pvar->PWriteFile(FHandle, Buff, WriteSize, WriteBytes, WriteOverLap);
 }
 
 static HANDLE PASCAL TTXTCreateFile(LPCTSTR FName, DWORD AcMode, DWORD ShMode, LPSECURITY_ATTRIBUTES SecAttr,
 									DWORD CreateDisposition, DWORD FileAttr, HANDLE Template)
 {
-	DBG_VIEW(__FUNCTIONT__, _T("FName=%s\r\n  ..."), FName);
-	// TODO:
-	return 0;
+	DBG_VIEW(__FUNCTIONT__, _T("FName=%s FNameA=%hs\r\n")
+		_T("  AcMode=%08x ShMode=%08x SecAttr=%p CreateDisposition=%d\r\n")
+		_T("  FileAttr=%08x Template=%p\r\n")
+		_T("  (pvar->PCreateFile=%p [CreateFileA=%p CreateFileW=%p])"),
+		FName, (char*)FName,
+		AcMode, ShMode, SecAttr, CreateDisposition, FileAttr, Template,
+		pvar->PCreateFile, CreateFileA , CreateFileW);
+	HANDLE FHandle = pvar->PCreateFile(FName, AcMode, ShMode, SecAttr, CreateDisposition, FileAttr, Template);
+	comm_state(FHandle);
+	comm_modem(FHandle);
+	return FHandle;
 }
 
 static BOOL PASCAL TTXTCloseFile(HANDLE FHandle)
 {
-	DBG_VIEW(__FUNCTIONT__, _T("FHandle=%p"), FHandle);
-	// TODO:
-	return FALSE;
+	DBG_VIEW(__FUNCTIONT__, _T("FHandle=%p\r\n  pvar->PCloseFile=%p CloseHandle=%p"),
+		FHandle, pvar->PCloseFile, CloseHandle);
+	comm_state(FHandle);
+	comm_modem(FHandle);
+	return pvar->PCloseFile(FHandle);
 }
 
 static void PASCAL TTXOpenFile(TTXFileHooks *hooks)
 {
-	DBG_VIEW(__FUNCTIONT__, _T("hooks=%p"), hooks);
 	if (HAS_TTXHOOK(TTXFileHooks)) {
+		DBG_VIEW(__FUNCTIONT__, _T("hooks=%p\r\n")
+			_T("  pvar->PCreateFile=%p hooks->PCreateFile=%p\r\n")
+			_T("  pvar->PCloseFile=%p hooks->PCloseFile=%p\r\n")
+			_T("  pvar->PReadFile=%p hooks->PReadFile=%p\r\n")
+			_T("  pvar->PWriteFile=%p hooks->PWriteFile=%p"),
+			hooks,
+			pvar->PCreateFile, *hooks->PCreateFile,
+			pvar->PCloseFile, *hooks->PCloseFile,
+			pvar->PReadFile, *hooks->PReadFile,
+			pvar->PWriteFile, *hooks->PWriteFile);
+
 		pvar->PCreateFile = *hooks->PCreateFile;
 		pvar->PCloseFile = *hooks->PCloseFile;
 		pvar->PReadFile = *hooks->PReadFile;
@@ -470,16 +606,31 @@ static void PASCAL TTXOpenFile(TTXFileHooks *hooks)
 		*hooks->PReadFile = TTXTReadFile;
 		*hooks->PWriteFile = TTXTWriteFile;
 	}
+	else {
+		DBG_VIEW(__FUNCTIONT__, _T("hooks=%p"),	hooks);
+	}
 }
 
 static void PASCAL TTXCloseFile(TTXFileHooks *hooks)
 {
 	DBG_VIEW(__FUNCTIONT__, _T("hooks=%p"), hooks);
 	if (HAS_TTXHOOK(TTXFileHooks)) {
-		*hooks->PCreateFile = pvar->PCreateFile;
-		*hooks->PCloseFile = pvar->PCloseFile;
-		*hooks->PReadFile = pvar->PReadFile;
-		*hooks->PWriteFile = pvar->PWriteFile;
+		if (pvar->PCreateFile) {
+			*hooks->PCreateFile = pvar->PCreateFile;
+			pvar->PCreateFile = NULL;
+		}
+		if (pvar->PCreateFile) {
+			*hooks->PCloseFile = pvar->PCloseFile;
+			pvar->PCloseFile = NULL;
+		}
+		if (pvar->PReadFile) {
+			*hooks->PReadFile = pvar->PReadFile;
+			pvar->PReadFile = NULL;
+		}
+		if (pvar->PWriteFile) {
+			*hooks->PWriteFile = pvar->PWriteFile;
+			pvar->PWriteFile = NULL;
+		}
 	}
 }
 
@@ -531,6 +682,9 @@ static void PASCAL TTXSetCommandLine(TT_LPTSTR cmd, int cmdlen, PGetHNRec rec)
 	BEGIN_TTX_STR(cmd);
 	DBG_VIEW(__FUNCTIONT__, _T("cmd=%s\r\n  len=%d GetHNRec=%p"), cmdW, cmdlen, rec);
 	// TODO: convert format GetHNRec
+	if (pvar->flag & TEST_FLAG_GETHNREC)
+		dbg_gethnrec(rec);
+
 	//_tcscpy_s(cmd, cmdlen, cmdW);
 	END_TTX_STR(cmd);
 }
