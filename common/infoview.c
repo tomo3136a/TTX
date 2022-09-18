@@ -43,7 +43,7 @@ typedef struct
 
 } TInfoView;
 
-static TInfoView InsTInfoView;
+static TInfoView InstInfoView;
 static TInfoView *pvar;
 
 static HWND hInfoView = NULL;
@@ -52,18 +52,18 @@ static HWND hInfoView = NULL;
 
 VOID InitInfoView()
 {
-	memset(&InsTInfoView, 0, sizeof(InsTInfoView));
-	pvar = &InsTInfoView;
+	memset(&InstInfoView, 0, sizeof(InstInfoView));
+	pvar = &InstInfoView;
 
 	pvar->enable = TRUE;
 	pvar->active = FALSE;
-	pvar->win_size.x = 900;
-	pvar->win_size.y = 800;
+	pvar->win_size.x = 800;
+	pvar->win_size.y = 480;
 	pvar->win_pos = 0;
 
 	pvar->font[0] = 0;
 	pvar->font_size.x = 0;
-	pvar->font_size.y = 0;
+	pvar->font_size.y = 15;
 	pvar->font_charset = 0;
 
 	//pvar->title[0] = 0;
@@ -83,8 +83,8 @@ static LRESULT CALLBACK Infoview_proc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 	switch (msg)
 	{
 	case WM_INITDIALOG:
-		//SetDlgFont(hWnd, IDC_MSG, &hFont, pvar->font_size.y, pvar->font);
-		//SetDlgFont(hWnd, IDC_LOG, &hFont, pvar->font_size.y, pvar->font);
+		SetDlgFont(hWnd, IDC_MSG, &hFont, pvar->font_size.y, pvar->font);
+		SetDlgFont(hWnd, IDC_LOG, &hFont, pvar->font_size.y, pvar->font);
 		GetPointRB(hWnd, IDC_MSG, &ptMsg);
 		GetPointRB(hWnd, IDC_LOG, &ptLog);
 		GetPointRB(hWnd, IDOK, &ptBtn);
