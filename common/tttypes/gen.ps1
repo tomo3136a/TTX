@@ -1,11 +1,13 @@
 #!powershell -Sta -NonInteractive -NoProfile -NoLogo -ExecutionPolicy RemoteSigned %~dpn0.ps1 %*
 
 $default_define=@{"MAX_PATH"=260;"MAXPATHLEN"=256;"LF_FACESIZE"=32;"MAX_UIMSG"=1024;}
-$type_lst=@("tttset","TComVar")   #,"TGetHNRec","TKeyMap"
+$type_lst=@("tttset","TGetHNRec","TComVar")   #,"TKeyMap"
 $out_file="../ttxversion_db.h"
 $subst_lst=@("eterm_lookfeel_t","eterm_lookfeel2_t","cygterm_t","cygterm2_t")
 $struct1_lst=$subst_lst+@("tttset")
-$struct2_lst=@("TComVar")
+$struct2_lst=@("TGetHNRec")
+$struct3_lst=@("TComVar")
+
 $struct_lst=$subst_lst+$type_lst
 #$struct_lst=$subst_lst+@("tttset","TGetHNRec","TComVar")
 
@@ -89,7 +91,7 @@ filter Get-CStruct($types){begin{$old=$null}process{
     $d=$c|%{$_ -replace "sizeof\([^*]+\*\)","4"}|%{$_ -replace "TTTSet\*","tttset_${v}*"}
     $e=$types|%{$f=$_;$d|?{$_ -match "^${f}"}}
     $f=$a|Get-CDefine $default_define
-    $g=$e|Set-CDefine $f|%{$_ -replace "(enum|unsigned|struct)_","`$1 "}
+    $g=$e|Set-CDefine $f|%{$_ -replace "(const|enum|unsigned|struct)_","`$1 "}
     if (-not $old -or (Compare-Object $old $g)){@{v=$_.v;d=$g}}
     $old=$g
 }}
@@ -148,11 +150,12 @@ $file_lst=ls ./_source/v*.h
 $lst=$file_lst|%{$_.fullname}|Get-SourceVersion|sort -Unique|Get-SourceSet "./_source"
 $col1=$lst|Get-CStruct $struct1_lst
 $col2=$lst|Get-CStruct $struct2_lst
-$src=($col1|Get-CStructCode)+($col2|Get-CStructCode)
+$col3=$lst|Get-CStruct $struct3_lst
+$src=($col1|Get-CStructCode)+($col2|Get-CStructCode)+($col3|Get-CStructCode)
 make_source($src)|Out-File $out_file
 
 ##add version checker
-$m=@{};($col1+$col2)|sort {$_.v} -Descending|%{$v=$_.v;$_.d|%{
+$m=@{};($col1+$col2+$col3)|sort {$_.v} -Descending|%{$v=$_.v;$_.d|%{
     $ss=$_ -split " "
     $t=$ss[0].ToUpper()
     $n=$ss[-1] -replace "\[.*\]"
