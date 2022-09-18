@@ -83,8 +83,8 @@ static LRESULT CALLBACK Infoview_proc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 	switch (msg)
 	{
 	case WM_INITDIALOG:
-		SetDlgFont(hWnd, IDC_MSG, &hFont, pvar->font_size.y, pvar->font);
-		SetDlgFont(hWnd, IDC_LOG, &hFont, pvar->font_size.y, pvar->font);
+		//SetDlgFont(hWnd, IDC_MSG, &hFont, pvar->font_size.y, pvar->font);
+		//SetDlgFont(hWnd, IDC_LOG, &hFont, pvar->font_size.y, pvar->font);
 		GetPointRB(hWnd, IDC_MSG, &ptMsg);
 		GetPointRB(hWnd, IDC_LOG, &ptLog);
 		GetPointRB(hWnd, IDOK, &ptBtn);
@@ -196,10 +196,15 @@ static void SetInfoViewText(LPTSTR szText, DWORD dwSize)
 {
 	HWND hWnd = GetDlgItem(hInfoView, IDC_LOG);
 	int end = GetWindowTextLength(hWnd);
-	if (end > 65536)
+	int rpt = 1024;
+	if (end > 30000 - rpt)
 	{
-		SetDlgItemText(hInfoView, IDC_LOG, szText);
-		return;
+		int n = 30000 + 1;
+		LPTSTR buf = (LPTSTR)malloc(sizeof(TCHAR) * n);
+		GetWindowText(hWnd, buf, n);
+		SetWindowText(hWnd, &buf[rpt]);
+		free(buf);
+		end = GetWindowTextLength(hWnd);
 	}
 	SendMessage(hWnd, EM_SETSEL, end, end);
 	SendMessage(hWnd, EM_REPLACESEL, 0, (LPARAM)szText);
