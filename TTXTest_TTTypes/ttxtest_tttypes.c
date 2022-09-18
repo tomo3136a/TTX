@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <tchar.h>
 
+#include "ttxcommon.h"
 #include "ttxversion.h"
 
 #define ORDER 6000
@@ -186,7 +187,7 @@ BOOL __declspec(dllexport) PASCAL FAR TTXBind(WORD Version, TTXExports *exports)
 	if(!TEST_TS(LogDefaultName)) return FALSE;				/* test 1 entry */
 	if(!TEST_TS(UILanguageFile_ini)) return FALSE;			/* test 1 entry */
 
-	if (TTXIgnore(ORDER, _T(INISECTION), 0))
+	if (TTXIgnore(ORDER, _T(INISECTION), Version))
 		return TRUE;
 
 	if (size > exports->size)

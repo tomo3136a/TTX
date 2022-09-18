@@ -24,6 +24,7 @@
 
 static int _menu_offset = 0;
 WORD tt_version = 0;
+extern BOOL TTXInitVersion(WORD version);
 
 BOOL TTXIgnore(int order, LPCTSTR name, WORD version)
 {
@@ -39,7 +40,7 @@ BOOL TTXIgnore(int order, LPCTSTR name, WORD version)
 		return TRUE;
 	p = _tcschr(buf, _T(','));
 	_menu_offset = (NULL == p) ? 0 : _ttoi(1 + p);
-	return FALSE;
+	return !TTXInitVersion(version);
 }
 
 // get offset based Menu ID
@@ -128,10 +129,9 @@ LPTSTR TTXGetModuleFileName(HMODULE hModule)
 	return buf;
 }
 
-LPTSTR TTXGetPath(PTTSet ts, UINT uid)
+static LPSTR TTXGetPath_v4(PTTSet ts, UINT uid)
 {
-	LPTSTR s = NULL;
-#ifdef TT4
+	LPSTR s = NULL;
 	//not use wide character
 	switch(uid)
 	{
@@ -157,7 +157,7 @@ LPTSTR TTXGetPath(PTTSet ts, UINT uid)
 			s = ts->UILanguageFile_ini;
 			break;
         case ID_EXEDIR:
-			s = RemoveFileName(TTXGetModuleFileName(0));
+			s = NULL; //RemoveFileName(TTXGetModuleFileName(0));
 			break;
         case ID_LOGDIR:
 			s = ts->HomeDir;
@@ -166,13 +166,18 @@ LPTSTR TTXGetPath(PTTSet ts, UINT uid)
 			s = ts->FileDir;
 			break;
         case ID_LOGDEFAULTPATH:
-			s = ts->LogDefaultPath;
+			s = NULL;
 			break;
 		default:
 			s = NULL;
 			break;
 	}
-#else
+	return s;
+}
+
+static LPTSTR TTXGetPath_v5(PTTSet ts, UINT uid)
+{
+	LPTSTR s = NULL;
 	switch(uid)
 	{
 		case ID_HOMEDIR:
@@ -212,13 +217,27 @@ LPTSTR TTXGetPath(PTTSet ts, UINT uid)
 			s = NULL;
 			break;
 	}
+	return s;
+}
+
+LPTSTR TTXGetPath(PTTSet ts, UINT uid)
+{
+	LPTSTR s = NULL;
+#ifdef TT4
+	s = TTXGetPath_v4(ts, uid);
+#else
+	if (IS_TT4())
+	{
+		LPSTR p = TTXGetPath_v4(ts, uid);
+		return (p) ? (p[0]) ? toTC(p) : NULL : NULL;
+	}
+	s = TTXGetPath_v5(ts, uid);
 #endif /* TT4 */
 	return (s) ? (s[0]) ? _tcsdup(s) : NULL : NULL;
 }
 
-BOOL TTXSetPath(PTTSet ts, UINT uid, LPTSTR s)
+static BOOL TTXSetPath_v4(PTTSet ts, UINT uid, LPSTR s)
 {
-#ifdef TT4
 	//not use wide character
 	switch(uid)
 	{
@@ -251,12 +270,15 @@ BOOL TTXSetPath(PTTSet ts, UINT uid, LPTSTR s)
 			strncpy_s(ts->FileDir, sizeof(ts->FileDir), s, _TRUNCATE);
 			break;
         case ID_LOGDEFAULTPATH:
-			strncpy_s(ts->LogDefaultPath, sizeof(ts->LogDefaultPath), s, _TRUNCATE);
-			break;
+			return FALSE;
 		default:
 			return FALSE;
 	}
-#else
+	return TRUE;
+}
+
+static BOOL TTXSetPath_v5(PTTSet ts, UINT uid, LPTSTR s)
+{
 	LPSTR p;
 	switch(uid)
 	{
@@ -334,6 +356,22 @@ BOOL TTXSetPath(PTTSet ts, UINT uid, LPTSTR s)
 		default:
 			return FALSE;
 	}
+	return TRUE;
+}
+
+BOOL TTXSetPath(PTTSet ts, UINT uid, LPTSTR s)
+{
+#ifdef TT4
+	return TTXSetPath_v4(ts, uid, s);
+#else
+	if (IS_TT4())
+	{
+		LPSTR p = toMB(s);
+		BOOL b = TTXSetPath_v4(ts, uid, p);
+		TTXFree(&p);
+		return b;
+	}
+	return TTXSetPath_v5(ts, uid, s);
 #endif /* TT4 */
 	return TRUE;
 }

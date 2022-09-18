@@ -301,7 +301,7 @@ BOOL __declspec(dllexport) PASCAL FAR TTXBind(WORD Version, TTXExports *exports)
 	/* do version checking if necessary */
 	/* if (Version!=TTVERSION) return FALSE; */
 
-	if (TTXIgnore(ORDER, _T(INISECTION), 0))
+	if (TTXIgnore(ORDER, _T(INISECTION), Version))
 		return TRUE;
 
 	TTXInitVersion(0);

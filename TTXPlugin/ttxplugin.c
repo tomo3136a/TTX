@@ -16,6 +16,7 @@
 #include <tchar.h>
 
 #include "ttxcommon.h"
+#include "ttxversion.h"
 #include "ttxcmn_util.h"
 #include "ttxcmn_ui.h"
 #include "resource.h"
@@ -47,12 +48,29 @@ static TInstVar InstVar;
 
 ///////////////////////////////////////////////////////////////
 
+static void SaveIniSects(LPCTSTR fn)
+{
+	int buf_sz = 64;
+	LPTSTR buf = (LPTSTR)malloc(sizeof(TCHAR) * buf_sz);
+	DWORD sz = GetPrivateProfileSection(_T(INISECTION), buf, 16, fn);
+	free(buf);
+
+	if (sz == 0)
+	{
+		WritePrivateProfileString(_T(INISECTION), _T("TTXPlugin"), _T("-"), fn);
+		WritePrivateProfileString(_T(INISECTION), _T("ttxssh"), _T("-"), fn);
+		WritePrivateProfileString(_T(INISECTION), _T("TTXProxy"), _T("-"), fn);
+		WritePrivateProfileString(_T(INISECTION), _T("ttxkanjimenu"), _T("-"), fn);
+	}
+}
+
 static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 {
 	pvar->ts = ts;
 	pvar->cv = cv;
 
 	pvar->SetupFName = TTXGetPath(ts, ID_SETUPFNAME);
+	SaveIniSects(pvar->SetupFName);
 }
 
 ///////////////////////////////////////////////////////////////
@@ -373,9 +391,9 @@ void UpdateListView(HWND dlg, UINT uid, int idx)
 }
 
 //
-// SettingProc setting dialog callback
+// ListViewProc listview dialog callback
 //
-static LRESULT CALLBACK SettingProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK ListViewProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	static POINT ptListView, ptBtn;
 	static BOOL bUpdate = FALSE;
@@ -465,7 +483,7 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 	{
 	case ID_MENUITEM:
 		switch (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_PLUGIN),
-							   hWin, SettingProc, (LPARAM)NULL))
+							   hWin, ListViewProc, (LPARAM)NULL))
 		{
 		case IDOK:
 			MessageBox(hWin, _T("Please exit Tera Term."), _T("Tera Term"),
@@ -525,9 +543,10 @@ BOOL __declspec(dllexport) PASCAL FAR TTXBind(WORD Version, TTXExports *exports)
 	int size = sizeof(Exports) - sizeof(exports->size);
 	/* do version checking if necessary */
 	/* if (Version!=TTVERSION) return FALSE; */
+	TTXInitVersion(Version);
 
-	if (TTXIgnore(ORDER, _T(INISECTION), 0))
-		return TRUE;
+	//if (TTXIgnore(ORDER, _T(INISECTION), Version))
+	//	return TRUE;
 
 	if (size > exports->size)
 	{

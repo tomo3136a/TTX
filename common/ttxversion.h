@@ -44,7 +44,7 @@ extern "C"
 #endif
 
 	extern WORD tt_version;
-	void TTXInitVersion(WORD version);
+	extern BOOL TTXInitVersion(WORD version);
 
 #ifdef __cplusplus
 }

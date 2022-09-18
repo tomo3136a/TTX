@@ -53,7 +53,7 @@ static WORD TTRunningVersion()
 	return major * 1000 + minor;
 }
 
-void TTXInitVersion(WORD version)
+BOOL TTXInitVersion(WORD version)
 {
 	if (version < 100) {
 		tt_version = TTRunningVersion();
@@ -64,4 +64,5 @@ void TTXInitVersion(WORD version)
 	else {
 		tt_version = version;
 	}
+	return TRUE;
 }
