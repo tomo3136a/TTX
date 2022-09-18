@@ -94,7 +94,7 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 	pvar->ts = ts;
 	pvar->cv = cv;
 
-	pvar->flag = TEST_FLAG_GETHNREC | TEST_FLAG_COMM;
+	pvar->flag = 0; //TEST_FLAG_GETHNREC | TEST_FLAG_COMM;
 
 	pvar->PCreateFile = NULL;
 	pvar->PCloseFile = NULL;
@@ -164,7 +164,7 @@ static BOOL PASCAL TTXGetHostName(HWND WndParent, PGetHNRec GetHNRec)
 	DBG_VIEW(__FUNCTIONT__, _T("hwnd=%p GetHNRec=%p"), WndParent, GetHNRec);
 	//TODO: convert format of GetHNRec
 
-	GetHNRec->HostName[0] = 0;
+	//GetHNRec->HostName[0] = 0;
 	dbg_gethnrec(GetHNRec);
 	BOOL res = pvar->GetHostName(WndParent, GetHNRec);
 	if (res)
@@ -560,11 +560,11 @@ static BOOL PASCAL TTXTWriteFile(HANDLE FHandle, LPCVOID Buff, DWORD WriteSize, 
 static HANDLE PASCAL TTXTCreateFile(LPCTSTR FName, DWORD AcMode, DWORD ShMode, LPSECURITY_ATTRIBUTES SecAttr,
 									DWORD CreateDisposition, DWORD FileAttr, HANDLE Template)
 {
-	DBG_VIEW(__FUNCTIONT__, _T("FName=%s FNameA=%hs\r\n")
+	DBG_VIEW(__FUNCTIONT__, _T("FName=%hs\r\n")
 		_T("  AcMode=%08x ShMode=%08x SecAttr=%p CreateDisposition=%d\r\n")
 		_T("  FileAttr=%08x Template=%p\r\n")
 		_T("  (pvar->PCreateFile=%p [CreateFileA=%p CreateFileW=%p])"),
-		FName, (char*)FName,
+		(char*)FName,
 		AcMode, ShMode, SecAttr, CreateDisposition, FileAttr, Template,
 		pvar->PCreateFile, CreateFileA , CreateFileW);
 	HANDLE FHandle = pvar->PCreateFile(FName, AcMode, ShMode, SecAttr, CreateDisposition, FileAttr, Template);
@@ -722,7 +722,7 @@ BOOL __declspec(dllexport) PASCAL FAR TTXBind(WORD Version, TTXExports *exports)
 	if (TTXIgnore(ORDER, _T(INISECTION), Version))
 		return TRUE;
 
-	TTXInitVersion(Version);
+	//TTXInitVersion(Version);
 #if 0
 	{
 		TCHAR buf[256];
