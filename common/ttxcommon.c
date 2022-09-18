@@ -33,6 +33,8 @@ BOOL TTXIgnore(int order, LPCTSTR name, WORD version)
 
 	GetPrivateProfileString(_T(TTX_SECTION), name, _T(""), 
 		buf, sizeof(buf) / sizeof(buf[0]), _T(INI_FILE));
+	if (buf[0] == 0)
+		return TRUE;
 	if (_tcsnicmp(_T("off"), buf, 3) == 0)
 		return TRUE;
 	p = _tcschr(buf, _T(','));

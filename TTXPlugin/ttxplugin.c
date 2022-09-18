@@ -297,7 +297,7 @@ void LoadListView(HWND dlg, UINT uid, LPTSTR fn)
 				item.iSubItem = 2;
 				ListView_SetItem(hWnd, &item);
 			}
-			p = (_tcsnicmp(name, _T(INISECTION), sizeof(INISECTION)) == 0) ? _T("-") : _T("on");
+			p = (_tcsnicmp(name, _T(INISECTION), sizeof(INISECTION)) == 0) ? _T("-") : 0;
 			GetPrivateProfileString(_T(INISECTION), name, p, buf, sizeof(buf)/sizeof(TCHAR), fn);
 			p = _tcschr(buf, _T(','));
 			if (NULL != p)
@@ -320,31 +320,36 @@ void LoadListView(HWND dlg, UINT uid, LPTSTR fn)
 void SaveListView(HWND dlg, UINT uid, LPCTSTR fn)
 {
 	HWND hWnd;
-	TCHAR buf1[16];
-	TCHAR buf2[64];
+	int buf_sz = 64;
+	LPTSTR buf1 = (LPTSTR)malloc(sizeof(TCHAR) * buf_sz);
+	LPTSTR buf2 = (LPTSTR)malloc(sizeof(TCHAR) * buf_sz);
 	int i, cnt;
 
 	hWnd = GetDlgItem(dlg, uid);
 	cnt = ListView_GetItemCount(hWnd);
 	for (i = 0; i < cnt; i++)
 	{
-		ListView_GetItemText(hWnd, i, 3, buf1, sizeof(buf1)/sizeof(buf1[0]));
-		ListView_GetItemText(hWnd, i, 4, buf2, sizeof(buf2)/sizeof(buf2[0]));
+		ListView_GetItemText(hWnd, i, 3, buf1, buf_sz);
+		ListView_GetItemText(hWnd, i, 4, buf2, buf_sz);
 		if (buf2[0] && (buf2[0] != _T('0')))
 		{
 			_tcscat_s(buf1, sizeof(buf1), _T(","));
 			_tcscat_s(buf1, sizeof(buf1), buf2);
 		}
-		ListView_GetItemText(hWnd, i, 0, buf2, sizeof(buf2)/sizeof(buf2[0]));
-		WritePrivateProfileString(_T(INISECTION), buf2, buf1, fn);
+		ListView_GetItemText(hWnd, i, 0, buf2, buf_sz);
+		if (buf1[0])
+			WritePrivateProfileString(_T(INISECTION), buf2, buf1, fn);
 	}
+	free(buf2);
+	free(buf1);
 }
 
 void UpdateListView(HWND dlg, UINT uid, int idx)
 {
 	HWND hwnd;
 	LVITEM item;
-	TCHAR buf[64];
+	int buf_sz = 64;
+	LPTSTR buf = (LPTSTR)malloc(sizeof(TCHAR) * buf_sz);
 	int i;
 
 	hwnd = GetDlgItem(dlg, uid);
@@ -357,13 +362,14 @@ void UpdateListView(HWND dlg, UINT uid, int idx)
 
 	for (i = 0; i < 5; i++)
 	{
-		ListView_GetItemText(hwnd, idx, i, buf, sizeof(buf) / sizeof(buf[0]));
+		ListView_GetItemText(hwnd, idx, i, buf, buf_sz);
 		item.iSubItem = i;
 		item.pszText = buf;
-		if ((3 == i) && (_T('o') == buf[0]))
+		if ((3 == i) && (_T('-') != buf[0]))
 			item.pszText = (0 == _tcsnicmp(buf, _T("on"), 2)) ? _T("off") : _T("on");
 		ListView_SetItem(hwnd, &item);
 	}
+	free(buf);
 }
 
 //
