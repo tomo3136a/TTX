@@ -23,6 +23,8 @@
 #define IDC_NAME                        2036
 #define IDC_OPTS                        2037
 
+#define IDC_HELP2                       2039
+
 #ifndef IDC_STATIC
 #define IDC_STATIC (-1)
 #endif

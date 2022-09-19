@@ -7,6 +7,7 @@
 #include "tttypes.h"
 #include "ttplugin.h"
 #include "tt_res.h"
+#include "helpid.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -466,6 +467,10 @@ static LRESULT CALLBACK ShortcutProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM l
 
 		case IDCANCEL:
 			EndDialog(dlg, IDCANCEL);
+			return TRUE;
+
+		case IDC_HELP2:
+			PostMessage(GetParent(dlg), WM_USER_DLGHELP2, HlpCmdlineTeraterm, 0);
 			return TRUE;
 		}
 		break;
