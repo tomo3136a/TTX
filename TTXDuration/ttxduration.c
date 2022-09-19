@@ -133,7 +133,7 @@ static void DrawTextToMenuBarRight(HWND hwnd, LPCTSTR text, int decoration)
 		// oldFont = (HFONT)SelectObject(hDC, hFont);
 		GetWindowRect(hwnd, &rect);
 		rect.right = mbi.rcBar.right - rect.left - 30;
-		rect.left = mbi.rcBar.right - rect.left - 80;
+		rect.left = rect.right - 50;
 		rect.bottom = mbi.rcBar.bottom - rect.top;
 		rect.top = mbi.rcBar.top - rect.top;
 		DrawText(hDC, _T("               "), 15, &rect, DT_RIGHT);
@@ -433,8 +433,8 @@ static void PASCAL TTXModifyMenu(HMENU menu)
 	AppendMenu(pvar->DurationMenu, flag, TTXMenuID(ID_MENUITEM2), s);
 	s = (lang == 2) ? _T("タイマリセット開始(&R)") : _T("&Reset start timer");
 	AppendMenu(pvar->DurationMenu, flag, TTXMenuID(ID_MENUITEM3), s);
-	s = (lang == 2) ? _T("時刻表示(&M)") : _T("Now time &mode");
-	AppendMenu(pvar->DurationMenu, flag, TTXMenuID(ID_MENUITEM4), s);
+	// s = (lang == 2) ? _T("時刻表示(&M)") : _T("Now time &mode");
+	// AppendMenu(pvar->DurationMenu, flag, TTXMenuID(ID_MENUITEM4), s);
 	s = (lang == 2) ? _T("開始/停止メニュー(&O)") : _T("&On/Off Menu");
 	AppendMenu(pvar->DurationMenu, flag, TTXMenuID(ID_MENUITEM5), s);
 	AppendMenu(pvar->DurationMenu, MF_SEPARATOR, 0, NULL);
