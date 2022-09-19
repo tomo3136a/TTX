@@ -175,6 +175,7 @@ static LPSTR TTXGetPath_v4(PTTSet ts, UINT uid)
 	return s;
 }
 
+#ifndef TT4
 static LPTSTR TTXGetPath_v5(PTTSet ts, UINT uid)
 {
 	LPTSTR s = NULL;
@@ -219,6 +220,7 @@ static LPTSTR TTXGetPath_v5(PTTSet ts, UINT uid)
 	}
 	return s;
 }
+#endif /* TT4 */
 
 LPTSTR TTXGetPath(PTTSet ts, UINT uid)
 {
@@ -277,6 +279,7 @@ static BOOL TTXSetPath_v4(PTTSet ts, UINT uid, LPSTR s)
 	return TRUE;
 }
 
+#ifndef TT4
 static BOOL TTXSetPath_v5(PTTSet ts, UINT uid, LPTSTR s)
 {
 	LPSTR p;
@@ -358,6 +361,7 @@ static BOOL TTXSetPath_v5(PTTSet ts, UINT uid, LPTSTR s)
 	}
 	return TRUE;
 }
+#endif /* TT4 */
 
 BOOL TTXSetPath(PTTSet ts, UINT uid, LPTSTR s)
 {

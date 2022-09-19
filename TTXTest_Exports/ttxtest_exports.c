@@ -143,6 +143,7 @@ VOID dbg_gethnrec(PGetHNRec GetHNRec)
 	{
 		if (GetHNRec)
 		{
+#ifndef TT4
 			DBG_VIEW(_T("  GetHNRec"), _T("setupfn=%hs\r\n")
 				_T("    setupfnw=%s\r\n")
 				_T("    MaxComPort=%d ComPort=%d HostName=%s\r\n")
@@ -152,6 +153,7 @@ VOID dbg_gethnrec(PGetHNRec GetHNRec)
 				GetHNRec->MaxComPort, GetHNRec->ComPort, GetHNRec->HostName, 
 				GetHNRec->ProtocolFamily, GetHNRec->PortType, GetHNRec->TCPPort, 
 				GetHNRec->Telnet, GetHNRec->TelPort);
+#endif /* TT4 */
 		}
 		else
 		{
