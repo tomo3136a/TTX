@@ -48,6 +48,12 @@ static TInstVar InstVar;
 
 ///////////////////////////////////////////////////////////////
 
+const LPTSTR always_on_plugins[] = {
+	_T("TTXPlugin"),
+	_T("ttxssh"),
+	_T("TTXProxy")
+};
+
 static void SaveIniSects(LPCTSTR fn)
 {
 	int buf_sz = 64;
@@ -57,10 +63,10 @@ static void SaveIniSects(LPCTSTR fn)
 
 	if (sz == 0)
 	{
-		WritePrivateProfileString(_T(INISECTION), _T("TTXPlugin"), _T("-"), fn);
-		WritePrivateProfileString(_T(INISECTION), _T("ttxssh"), _T("-"), fn);
-		WritePrivateProfileString(_T(INISECTION), _T("TTXProxy"), _T("-"), fn);
-		WritePrivateProfileString(_T(INISECTION), _T("ttxkanjimenu"), _T("-"), fn);
+		for (int i = 0; i < _countof(always_on_plugins); i ++)
+		{
+			WritePrivateProfileString(_T(INISECTION), always_on_plugins[i], _T("-"), fn);
+		}
 	}
 }
 
