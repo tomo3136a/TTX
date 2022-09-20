@@ -14,7 +14,7 @@ rem goto L1
 find /C " TTX)" ..\TTXAdditional\CMakeLists.txt 2>NUL >NUL
 if not @%ERRORLEVEL%@==@1@ goto L1
 echo ¡¡¡¡ update TTXAdditional\CMakeLists.txt ¡¡¡¡
-type plugins.txt >> ..\TTXAdditional\CMakeLists.txt
+type plugins.cmake >> ..\TTXAdditional\CMakeLists.txt
 echo.
 :L1
 cd ..

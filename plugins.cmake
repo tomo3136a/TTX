@@ -1,10 +1,7 @@
-project(TTX VERSION 2.0.0)
+project(TTX VERSION 1.1.0)
 
 add_subdirectory(../TTX/common TTXCommon)
 set_target_properties(TTXCommon PROPERTIES FOLDER TTX)
-
-add_subdirectory(../TTX/sample TTXSample)
-set_target_properties(TTXSample PROPERTIES FOLDER TTX)
 
 add_subdirectory(../TTX/TTXPlugin TTXPlugin)
 set_target_properties(TTXPlugin PROPERTIES FOLDER TTX)
