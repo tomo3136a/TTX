@@ -6,7 +6,7 @@
 #include "teraterm.h"
 #include "tttypes.h"
 #include "ttplugin.h"
-#include "tt_res.h"
+#include "tt_res.h"		/* ID_CONTROL_MACRO */
 
 #include <stdlib.h>
 #include <stdio.h>
