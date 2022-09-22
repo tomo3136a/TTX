@@ -1,0 +1,53 @@
+--- teraterm/teraterm/ttplug.c.org	Wed Oct 27 21:48:50 2021
++++ teraterm/teraterm/ttplug.c	Fri Sep 23 05:51:37 2022
+@@ -141,6 +141,38 @@
+ 	}
+ }
+ 
++/* test ignore extension */
++/* dwFlag= */
++/*   0x0001: force off */
++/*   0x0002: force on */
++/*   0x0004: initialize when empty */
++/*   0x0008: unknown on */
++static BOOL IgnoreExtensionW(wchar_t *filename, DWORD dwFlag, wchar_t *fn)
++{
++	const wchar_t *on_plugins[] = { L"TTXPlugin", L"ttxssh", L"TTXProxy" };
++	const wchar_t *sect = L"TTXPlugin";
++	wchar_t buf[16];
++	wchar_t *p0, *p1;
++	int i;
++	if (dwFlag & 0x0001) return TRUE;
++	if (dwFlag & 0x0002) return FALSE;
++	if (dwFlag & 0x0004)
++	{
++		if (GetPrivateProfileSectionW(sect, buf, _countof(buf), fn) == 0)
++		{
++			for (i = 0; i < _countof(on_plugins); i ++)
++				WritePrivateProfileStringW(sect, on_plugins[i], L"-", fn);
++		}
++	}
++	p0 = (dwFlag & 0x0008) ? L"" : L"off";
++	p1 = _wcsdup(filename);
++	if (!p1) return TRUE;
++	*wcschr(p1, L'.') = 0;
++	GetPrivateProfileStringW(sect, p1, p0, buf, _countof(buf), fn);
++	free(p1);
++    return (_wcsnicmp(L"off", buf, 3) == 0);
++}
++
+ static void LoadExtensions(PTTSet ts_)
+ {
+ 	wchar_t *load_mask;
+@@ -154,6 +186,11 @@
+ 	if (hFind != INVALID_HANDLE_VALUE) {
+ 		do {
+ 			wchar_t *filename;
++			DWORD flag;
++			filename = ts_->SetupFNameW;
++			flag = GetPrivateProfileIntW(L"TTX", L"flag", 0, filename);
++			if (IgnoreExtensionW(fd.cFileName, flag, filename))
++				continue;
+ 			aswprintf(&filename, L"%s\\%s", ExeDirW, fd.cFileName);
+ 			loadExtension(filename, ts_->UILanguageFileW);
+ 			free(filename);

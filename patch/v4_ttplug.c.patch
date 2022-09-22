@@ -1,0 +1,21 @@
+--- teraterm/teraterm/ttplug.c.org	Mon May 24 00:35:59 2021
++++ teraterm/teraterm/ttplug.c	Mon May 24 06:43:54 2021
+@@ -68,6 +68,18 @@
+   char buf[1024];
+   DWORD err;
+   char uimsg[MAX_UIMSG];
++  char *p1;
++  char *p2;
++
++  p1 = strrchr(fileName, '\\');
++  if (NULL != p1) {
++    p2 = strchr(++p1, '.');
++    if (NULL != p2) {
++      strncpy_s(buf, 1024, p1, (p2 - p1)/sizeof(char));
++      GetPrivateProfileString("TTXPlugin", buf, "", buf, sizeof(buf), ts.SetupFName);
++      if (_strnicmp("off", buf, 3) == 0) return;
++    }
++  }
+ 
+   if (NumExtensions>=MAXNUMEXTENSIONS) return;
+   LibHandle[NumExtensions] = LoadLibrary(fileName);
