@@ -170,10 +170,11 @@ static int PASCAL TTXProcessCommand(HWND hWin, WORD cmd)
 
 ///////////////////////////////////////////////////////////////
 
-// static void PASCAL TTXEnd(void)
-// {
-// 	 printf("TTXEnd %d\n", ORDER);
-// }
+static void PASCAL TTXEnd(void)
+{
+	//  printf("TTXEnd %d\n", ORDER);
+	TTXFree(&pvar->SetupFName);
+}
 
 // static void PASCAL TTXSetCommandLine(TT_LPTSTR cmd, int cmdlen, PGetHNRec rec)
 // {
@@ -198,7 +199,7 @@ static TTXExports Exports = {
 	TTXModifyMenu,
 	NULL, //TTXModifyPopupMenu,
 	TTXProcessCommand,
-	NULL, //TTXEnd,
+	TTXEnd,
 	NULL, //TTXSetCommandLine,
 	NULL, //TTXOpenFile,
 	NULL, //TTXCloseFile,
