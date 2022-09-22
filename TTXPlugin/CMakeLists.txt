@@ -11,6 +11,7 @@ add_definitions(-DUNICODE -D_UNICODE)
 endif()
 
 set(SRC
+  pluginlistdlg.c
   ttxplugin.c
   ttxplugin.rc
   )
