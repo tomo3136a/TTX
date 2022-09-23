@@ -12,14 +12,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <commctrl.h>
 #include <tchar.h>
 
 #include "ttxcommon.h"
 #include "ttxversion.h"
-#include "ttxcmn_util.h"
-#include "ttxcmn_ui.h"
-#include "resource.h"
 
 #include "pluginlistdlg.h"
 
@@ -50,25 +46,16 @@ static TInstVar InstVar;
 
 ///////////////////////////////////////////////////////////////
 
-const LPTSTR always_on_plugins[] = {
-	_T("TTXPlugin"),
-	_T("ttxssh"),
-	_T("TTXProxy")
-};
-
-static void SaveIniSects(LPCTSTR fn)
+static VOID SaveIniSects(LPCTSTR fn)
 {
-	int buf_sz = 64;
-	LPTSTR buf = (LPTSTR)malloc(sizeof(TCHAR) * buf_sz);
-	DWORD sz = GetPrivateProfileSection(_T(INISECTION), buf, 16, fn);
-	free(buf);
-
-	if (sz == 0)
+	LPCTSTR on_plugins[] = { L"TTXPlugin", L"ttxssh", L"TTXProxy" };
+	LPCTSTR sect = _T(INISECTION);
+	TCHAR buf[16];
+	UINT i;
+	if (GetPrivateProfileSection(sect, buf, _countof(buf), fn) == 0)
 	{
-		for (int i = 0; i < _countof(always_on_plugins); i ++)
-		{
-			WritePrivateProfileString(_T(INISECTION), always_on_plugins[i], _T("-"), fn);
-		}
+		for (i = 0; i < _countof(on_plugins); i ++)
+			WritePrivateProfileString(sect, on_plugins[i], _T("-"), fn);
 	}
 }
 
@@ -93,8 +80,6 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 // 	printf("TTXGetSetupHooks %d\n", ORDER);
 // }
 
-///////////////////////////////////////////////////////////////
-
 // static void PASCAL TTXOpenTCP(TTXSockHooks *hooks)
 // {
 // 	 printf("TTXOpenTCP %d\n", ORDER);
@@ -114,8 +99,6 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 // {
 //   printf("TTXCloseFile %d\n", ORDER);
 // }
-
-///////////////////////////////////////////////////////////////
 
 // static void PASCAL TTXSetWinSize(int rows, int cols)
 // {
