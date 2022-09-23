@@ -10,16 +10,16 @@
 +/*   0x0002: force on */
 +/*   0x0004: initialize when empty */
 +/*   0x0008: unknown on */
-+static BOOL IgnoreExtensionW(wchar_t *filename, DWORD dwFlag, wchar_t *fn)
++static BOOL IgnoreExtensionW(const wchar_t *filename, DWORD dwFlag, const wchar_t *fn)
 +{
 +	const wchar_t *on_plugins[] = { L"TTXPlugin", L"ttxssh", L"TTXProxy" };
-+	const wchar_t *sect = L"TTXPlugin";
++	const wchar_t *sect = &on_plugins[0];
 +	wchar_t buf[16];
 +	wchar_t *p0, *p1;
 +	int i;
 +	if (dwFlag & 0x0001) return TRUE;
 +	if (dwFlag & 0x0002) return FALSE;
-+	if (dwFlag & 0x0004)
++	if (~dwFlag & 0x0004)
 +	{
 +		if (GetPrivateProfileSectionW(sect, buf, _countof(buf), fn) == 0)
 +		{
