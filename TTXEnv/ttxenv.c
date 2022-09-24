@@ -68,6 +68,22 @@ static TInstVar InstVar;
 
 ///////////////////////////////////////////////////////////////
 
+LPTSTR TTXGetModuleFileName(HMODULE hModule)
+{
+	DWORD buf_sz;
+	LPTSTR buf;
+
+	buf_sz = MAX_PATH + 1;
+	buf = (LPTSTR)malloc(buf_sz*sizeof(TCHAR));
+	while (buf && (GetModuleFileName(hModule, buf, buf_sz) >= buf_sz))
+	{
+		free(buf);
+		buf_sz += buf_sz;
+		buf = (LPTSTR)malloc(buf_sz*sizeof(TCHAR));
+	}
+	return buf;
+}
+
 static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 {
 	pvar->ts = ts;

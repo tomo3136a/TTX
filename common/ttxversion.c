@@ -12,6 +12,8 @@
 
 #include "ttxversion.h"
 
+WORD tt_version = 0;
+
 //same function with ttset::RunningVersion
 static WORD TTRunningVersion()
 {

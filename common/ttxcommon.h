@@ -18,7 +18,7 @@
 #define TT_LPCTSTR const wchar_t *
 #endif /* TT4 */
 
-#define IS_TT4() (tt_version<5000)
+#define IS_TT4() (ttx_api_version<500)
 
 #define BEGIN_TTX_STR(m) LPTSTR m##W = (IS_TT4()) ? toTC((PCHAR)m) : m;
 #define END_TTX_STR(m) if (IS_TT4()) { TTXFree(&m##W); }
@@ -30,21 +30,25 @@ extern "C" {
 #endif
 
 /* ttx support */
+/// TTX API version
+///   0: unknown
+///   23: Teraterm v2.3 or v4.x API
+///   500: Teraterm5 API
+extern WORD ttx_api_version;
+
 /// TTX load test
-extern WORD tt_version;
 BOOL TTXIgnore(int order, LPCTSTR name, WORD version);
 
 // token command line parameter
 LPTSTR TTXGetParam(LPTSTR buf, size_t sz, LPTSTR param);
 
-// get UI language ID(1=English, 2=Japanese)
+/// get UI language ID(1=English, 2=Japanese)
+/// TODO: numbering
 UINT UILang(LPSTR lang);
 
 /// get Menu ID offset
 UINT TTXMenuID(UINT uid);
 UINT TTXMenuOrgID(UINT uid);
-
-LPTSTR TTXGetModuleFileName(HMODULE hModule);
 
 /// memory allocate
 LPVOID TTXAlloc(size_t sz);
@@ -69,7 +73,7 @@ enum {
 LPTSTR TTXGetPath(PTTSet ts, UINT uid);
 BOOL TTXSetPath(PTTSet ts, UINT uid, LPTSTR s);
 
-/* string */
+/* string convert */
 LPSTR WC2MB(UINT cp, LPWSTR pwzSrc);
 inline LPSTR WC2ACP(LPWSTR pwzSrc)
 {

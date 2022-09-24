@@ -23,8 +23,7 @@
 ///////////////////////////////////////////////////////////////////////////
 
 static int _menu_offset = 0;
-WORD tt_version = 0;
-extern BOOL TTXInitVersion(WORD version);
+WORD ttx_api_version = 0;
 
 BOOL TTXIgnore(int order, LPCTSTR name, WORD version)
 {
@@ -40,7 +39,8 @@ BOOL TTXIgnore(int order, LPCTSTR name, WORD version)
 		return TRUE;
 	p = _tcschr(buf, _T(','));
 	_menu_offset = (NULL == p) ? 0 : _ttoi(1 + p);
-	return !TTXInitVersion(version);
+	ttx_api_version = version;
+	return FALSE;
 }
 
 // get offset based Menu ID
@@ -113,22 +113,6 @@ UINT UILang(LPSTR lang)
 								 : 1;
 }
 
-LPTSTR TTXGetModuleFileName(HMODULE hModule)
-{
-	DWORD buf_sz;
-	LPTSTR buf;
-
-	buf_sz = MAX_PATH + 1;
-	buf = (LPTSTR)malloc(buf_sz*sizeof(TCHAR));
-	while (buf && (GetModuleFileName(hModule, buf, buf_sz) >= buf_sz))
-	{
-		free(buf);
-		buf_sz += buf_sz;
-		buf = (LPTSTR)malloc(buf_sz*sizeof(TCHAR));
-	}
-	return buf;
-}
-
 static LPSTR TTXGetPath_v4(PTTSet ts, UINT uid)
 {
 	LPSTR s = NULL;
@@ -157,7 +141,7 @@ static LPSTR TTXGetPath_v4(PTTSet ts, UINT uid)
 			s = ts->UILanguageFile_ini;
 			break;
         case ID_EXEDIR:
-			s = NULL; //RemoveFileName(TTXGetModuleFileName(0));
+			s = ts->HomeDir;
 			break;
         case ID_LOGDIR:
 			s = ts->HomeDir;

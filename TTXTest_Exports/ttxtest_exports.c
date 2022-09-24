@@ -247,7 +247,7 @@ static void PASCAL TTXGetUIHooks(TTXUIHooks *hooks)
 	{
 		TCHAR title[64];
 		_sntprintf_s(title, 64, 64, _T("build=%d.%d running=%d"), 
-			TT_VERSION_MAJOR, TT_VERSION_MINOR, tt_version);
+			TT_VERSION_MAJOR, TT_VERSION_MINOR, ttx_api_version);
 		OpenInfoView(hInst, hWnd, title);
 	}
 }
@@ -732,8 +732,8 @@ BOOL __declspec(dllexport) PASCAL FAR TTXBind(WORD Version, TTXExports *exports)
 					 _T("Build version=%d.%d\n")
 					 _T("TTVERSION=%d\n")
 					 _T("TTXBind().Version=%d\n")
-					 _T("TTXCommon.tt_version=%d\n"),
-					 TT_VERSION_MAJOR, TT_VERSION_MINOR, TTVERSION, Version, tt_version);
+					 _T("TTXCommon.ttx_api_version=%d\n"),
+					 TT_VERSION_MAJOR, TT_VERSION_MINOR, TTVERSION, Version, ttx_api_version);
 		MessageBox(0, buf, _T(INISECTION) _T(" ") __FUNCTIONT__ _T("()"), MB_OK | MB_ICONINFORMATION);
 	}
 #endif
