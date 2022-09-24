@@ -1,7 +1,7 @@
 /*
  * Tera Term Plugin List Dialog
  * (C) 2022 tomo3136a
- * TTX(Tera Term Extension) list view
+ * TTX プラグインリスト表示
  */
 
 #include "teraterm.h"
@@ -15,7 +15,6 @@
 
 #include "ttxcommon.h"
 #include "ttxversion.h"
-#include "ttxcmn_util.h"
 #include "ttxcmn_ui.h"
 #include "resource.h"
 
@@ -355,6 +354,10 @@ static LRESULT CALLBACK OnPluginListDlgProc(HWND dlg, UINT msg, WPARAM wParam, L
 		GetPointRB(dlg, IDC_LISTVIEW, &ptListView);
 		GetPointRB(dlg, IDOK, &ptBtn);
 		bUpdate = FALSE;
+		{
+			HWND hWndList = GetDlgItem(dlg, IDC_LISTVIEW);
+			ListView_SetExtendedListViewStyleEx(hWndList, LVS_EX_FULLROWSELECT, LVS_EX_FULLROWSELECT);
+		}
 		LoadListView(dlg, IDC_LISTVIEW, dlg_data.SetupFName, dlg_data.uLang);
 		MoveParentCenter(dlg);
 		return TRUE;
@@ -378,6 +381,18 @@ static LRESULT CALLBACK OnPluginListDlgProc(HWND dlg, UINT msg, WPARAM wParam, L
 				{
 					UpdateListView(dlg, IDC_LISTVIEW, lvinfo.iItem);
 					bUpdate = TRUE;
+				}
+				break;
+			case LVN_KEYDOWN:
+				if (((LPNMLVKEYDOWN)lParam)->wVKey == VK_SPACE)
+				{
+					HWND hWnd = GetDlgItem(dlg, IDC_LISTVIEW);
+					int pos = ListView_GetNextItem(hWnd, -1, LVNI_SELECTED);
+					if (pos >= 0)
+					{
+						UpdateListView(dlg, IDC_LISTVIEW, pos);
+						bUpdate = TRUE;
+					}
 				}
 				break;
 			}
