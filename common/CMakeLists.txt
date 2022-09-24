@@ -12,8 +12,8 @@ endif()
 
 set(SRC
   ttxcommon.c
-  ttxcmn_util.c
   ttxcmn_ui.c
+  ttxcmn_string.c
   ttxversion.c
   stringlist.c
   infoview.c

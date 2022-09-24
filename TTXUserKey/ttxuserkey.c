@@ -18,8 +18,8 @@
 #include <tchar.h>
 
 #include "ttxcommon.h"
-#include "ttxcmn_util.h"
 #include "ttxcmn_ui.h"
+#include "ttxcmn_string.h"
 #include "resource.h"
 
 #define ORDER 6020

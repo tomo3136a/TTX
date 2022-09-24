@@ -6,18 +6,15 @@
 #include "teraterm.h"
 #include "tttypes.h"
 #include "ttplugin.h"
-#include "tt_res.h"
+//#include "tt_res.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-//#include <time.h>
-//#include <commctrl.h>
 #include <tchar.h>
 
 #include "ttxcommon.h"
 #include "ttxversion.h"
-//#include "stringlist.h"
 #include "resource.h"
 
 #define ORDER 6068

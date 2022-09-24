@@ -8,7 +8,7 @@
 #include <string.h>
 #include <tchar.h>
 
-#include "ttxcmn_util.h"
+#include "ttxcmn_string.h"
 
 ///////////////////////////////////////////////////////////////////////////
 
