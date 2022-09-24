@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.8)
 
-set(PACKAGE_NAME "TTXSample")
+set(PACKAGE_NAME "ttxtest")
 
 project(${PACKAGE_NAME})
 
@@ -11,8 +11,8 @@ add_definitions(-DUNICODE -D_UNICODE)
 endif()
 
 set(SRC
-  ttxsample.c
-  ttxsample.rc
+  ttxtest.c
+  ttxtest.rc
   )
 
 add_library(

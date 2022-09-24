@@ -27,6 +27,9 @@ set_target_properties(TTXPackage PROPERTIES FOLDER TTX)
 add_subdirectory(../TTX/TTXReport TTXReport)
 set_target_properties(TTXReport PROPERTIES FOLDER TTX)
 
+add_subdirectory(../TTX/ttxtest ttxtest)
+set_target_properties(ttxtest PROPERTIES FOLDER TTX)
+
 add_subdirectory(../TTX/TTXTest_Exports TTXTest_Exports)
 set_target_properties(TTXTest_Exports PROPERTIES FOLDER TTX)
 
