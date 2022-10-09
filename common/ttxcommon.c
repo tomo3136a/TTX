@@ -25,22 +25,21 @@
 static int _menu_offset = 0;
 WORD ttx_api_version = 0;
 
+// test ignore extension
 BOOL TTXIgnore(int order, LPCTSTR name, WORD version)
 {
-	// TODO: test order, test version
-	TCHAR buf[32];
+	LPCTSTR on_plugins[] = { _T("TTXPlugin"), _T("ttxssh"), _T("TTXProxy") };
+	LPCTSTR sect = on_plugins[0];
+	LPCTSTR fn = _T(INI_FILE);
+	TCHAR buf[16];
 	LPTSTR p;
-
-	GetPrivateProfileString(_T(TTX_SECTION), name, _T("off"), 
-		buf, sizeof(buf) / sizeof(buf[0]), _T(INI_FILE));
-	if (buf[0] == 0)
-		return TRUE;
-	if (_tcsnicmp(_T("off"), buf, 3) == 0)
-		return TRUE;
-	p = _tcschr(buf, _T(','));
-	_menu_offset = (NULL == p) ? 0 : _ttoi(1 + p);
-	ttx_api_version = version;
-	return FALSE;
+	int i;
+	for (i = 0; i < _countof(on_plugins); i ++)
+		if (_tcsnicmp(on_plugins[i], name, _TRUNCATE) == 0) break;
+	p = (i == _countof(on_plugins)) ? L"" : L"-";
+	GetPrivateProfileString(sect, name, p, buf, _countof(buf), fn);
+ 	ttx_api_version = version;
+    return (_tcsnicmp(L"off", buf, 3) == 0);
 }
 
 // get offset based Menu ID

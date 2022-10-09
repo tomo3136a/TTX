@@ -15,7 +15,6 @@
 #include <tchar.h>
 
 #include "ttxcommon.h"
-#include "ttxversion.h"
 
 #include "pluginlistdlg.h"
 
@@ -48,8 +47,8 @@ static TInstVar InstVar;
 
 static VOID SaveIniSects(LPCTSTR fn)
 {
-	LPCTSTR on_plugins[] = { L"TTXPlugin", L"ttxssh", L"TTXProxy" };
-	LPCTSTR sect = _T(INISECTION);
+	LPCTSTR on_plugins[] = { _T(INISECTION), _T("ttxssh"), _T("TTXProxy") };
+	LPCTSTR sect = on_plugins[0];
 	TCHAR buf[16];
 	UINT i;
 	if (GetPrivateProfileSection(sect, buf, _countof(buf), fn) == 0)
@@ -61,11 +60,15 @@ static VOID SaveIniSects(LPCTSTR fn)
 
 static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 {
+	//DWORD flag;
+
 	pvar->ts = ts;
 	pvar->cv = cv;
 
 	pvar->SetupFName = TTXGetPath(ts, ID_SETUPFNAME);
-	SaveIniSects(pvar->SetupFName);
+	//flag = GetPrivateProfileInt(_T("TTX"), _T("flag"), 0, pvar->SetupFName);
+	//if (~flag & 0x0008)
+	//	SaveIniSects(pvar->SetupFName);
 }
 
 ///////////////////////////////////////////////////////////////
@@ -193,8 +196,8 @@ BOOL __declspec(dllexport) PASCAL FAR TTXBind(WORD Version, TTXExports *exports)
 	int size = sizeof(Exports) - sizeof(exports->size);
 	/* do version checking if necessary */
 	/* if (Version!=TTVERSION) return FALSE; */
-	TTXInitVersion(Version);
 
+	TTXIgnore(ORDER, _T(INISECTION), Version);
 	//if (TTXIgnore(ORDER, _T(INISECTION), Version))
 	//	return TRUE;
 
