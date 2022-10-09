@@ -14,7 +14,6 @@
 #include <tchar.h>
 
 #include "ttxcommon.h"
-#include "ttxversion.h"
 #include "ttxcmn_ui.h"
 #include "resource.h"
 
@@ -28,39 +27,6 @@ typedef struct
 	UINT uLang;
 
 } dlg_data_t;
-
-///////////////////////////////////////////////////////////////
-
-// const LPTSTR always_on_plugins[] = {
-// 	_T("TTXPlugin"),
-// 	_T("ttxssh"),
-// 	_T("TTXProxy")
-// };
-
-// static void SaveIniSects(LPCTSTR fn)
-// {
-// 	int buf_sz = 64;
-// 	LPTSTR buf = (LPTSTR)malloc(sizeof(TCHAR) * buf_sz);
-// 	DWORD sz = GetPrivateProfileSection(_T(INISECTION), buf, 16, fn);
-// 	free(buf);
-
-// 	if (sz == 0)
-// 	{
-// 		for (int i = 0; i < _countof(always_on_plugins); i ++)
-// 		{
-// 			WritePrivateProfileString(_T(INISECTION), always_on_plugins[i], _T("-"), fn);
-// 		}
-// 	}
-// }
-
-// static void PASCAL TTXInit(PTTSet ts, PComVar cv)
-// {
-// 	pvar->ts = ts;
-// 	pvar->cv = cv;
-
-// 	pvar->SetupFName = TTXGetPath(ts, ID_SETUPFNAME);
-// 	SaveIniSects(pvar->SetupFName);
-// }
 
 ///////////////////////////////////////////////////////////////
 
@@ -97,11 +63,11 @@ static BOOL GetModuleVersion(LPTSTR buf, int sz, LPTSTR fn)
 
 	dwSize = GetFileVersionInfoSize(fn, &dwHandle);
 	if (dwSize == 0)
-	{
 		return FALSE;
-	}
 
 	lpBuf = malloc((dwSize + 2)*sizeof(TCHAR));
+	if (lpBuf == NULL)
+		return FALSE;
 	memset(lpBuf, 0, (dwSize + 2)*sizeof(TCHAR));
 	if (!GetFileVersionInfo(fn, dwHandle, dwSize, lpBuf))
 	{
@@ -140,15 +106,11 @@ static BOOL GetModuleDescription(LPTSTR buf, int sz, LPCTSTR fn)
 
 	dwSize = GetFileVersionInfoSize(fn, &dwHandle);
 	if (dwSize == 0)
-	{
 		return FALSE;
-	}
 
 	lpBuf = (LPTSTR)malloc((dwSize + 2) * sizeof(TCHAR));
-	if (!lpBuf)
-	{
+	if (lpBuf == NULL)
 		return FALSE;
-	}
 	memset(lpBuf, 0, (dwSize + 2) * sizeof(TCHAR));
 	if (!GetFileVersionInfo(fn, dwHandle, dwSize, lpBuf))
 	{
@@ -183,6 +145,19 @@ static BOOL GetModuleDescription(LPTSTR buf, int sz, LPCTSTR fn)
 	return TRUE;
 }
 
+static BOOL GetModuleProfile(LPCTSTR name, LPTSTR buf, UINT sz, LPCTSTR fn)
+{
+	LPCTSTR on_plugins[] = { _T("TTXPlugin"), _T("ttxssh"), _T("TTXProxy") };
+	LPCTSTR sect = on_plugins[0];
+	LPTSTR p;
+	int i;
+	for (i = 0; i < _countof(on_plugins); i ++)
+		if (_tcsnicmp(on_plugins[i], name, _TRUNCATE) == 0) break;
+	p = (i == _countof(on_plugins)) ? _T("") : _T("-");
+	GetPrivateProfileString(sect, name, p, buf, sz, fn);
+    return (_tcsnicmp(L"off", buf, 3) != 0);
+}
+
 void LoadListView(HWND dlg, UINT uid, LPTSTR fn, UINT lang)
 {
 	HWND hWnd;
@@ -191,7 +166,6 @@ void LoadListView(HWND dlg, UINT uid, LPTSTR fn, UINT lang)
 	WIN32_FIND_DATA win32fd;
 	HANDLE hFind;
 	TCHAR name[64];
-	// TCHAR ent[70];
 	TCHAR buf[512];
 	int i;
 	TCHAR path[MAX_PATH];
@@ -225,9 +199,9 @@ void LoadListView(HWND dlg, UINT uid, LPTSTR fn, UINT lang)
 	ListView_InsertColumn(hWnd, 4, &lvcol);
 
 	memset(path, 0, sizeof(path));
-	GetModuleFileName(NULL, path, sizeof(path)/sizeof(path[0]) - 1);
+	GetModuleFileName(NULL, path, _countof(path) - 1);
     RemoveFileName(path);
-	CombinePath(path, sizeof(path)/sizeof(path[0]), _T("TTX*.DLL"));
+	CombinePath(path, _countof(path), _T("TTX*.DLL"));
 
 	hFind = FindFirstFile(path, &win32fd);
 	if (INVALID_HANDLE_VALUE != hFind)
@@ -237,7 +211,7 @@ void LoadListView(HWND dlg, UINT uid, LPTSTR fn, UINT lang)
 		{
 			if (FILE_ATTRIBUTE_DIRECTORY & win32fd.dwFileAttributes)
 				continue;
-			_tcscpy_s(name, sizeof(name)/sizeof(name[0]), win32fd.cFileName);
+			_tcscpy_s(name, _countof(name), win32fd.cFileName);
 			RemoveFileExt(name);
 			memset(&item, 0, sizeof(LVITEM));
 			item.mask = LVIF_TEXT;
@@ -245,23 +219,21 @@ void LoadListView(HWND dlg, UINT uid, LPTSTR fn, UINT lang)
 			item.pszText = name;
 			item.iSubItem = 0;
 			ListView_InsertItem(hWnd, &item);
-			//_sntprintf_s(ent, sizeof(ent), _TRUNCATE, _T(".\\%s"), win32fd.cFileName);
 		    RemoveFileName(path);
-			CombinePath(path, sizeof(path)/sizeof(path[0]), win32fd.cFileName);
-			if (GetModuleVersion(buf, sizeof(buf)/sizeof(buf[0]), path))
+			CombinePath(path, _countof(path), win32fd.cFileName);
+			if (GetModuleVersion(buf, _countof(buf), path))
 			{
 				item.pszText = buf;
 				item.iSubItem = 1;
 				ListView_SetItem(hWnd, &item);
 			}
-			if (GetModuleDescription(buf, sizeof(buf)/sizeof(buf[0]), path))
+			if (GetModuleDescription(buf, _countof(buf), path))
 			{
 				item.pszText = buf;
 				item.iSubItem = 2;
 				ListView_SetItem(hWnd, &item);
 			}
-			p = (_tcsnicmp(name, _T(INISECTION), sizeof(INISECTION)) == 0) ? _T("-") : 0;
-			GetPrivateProfileString(_T(INISECTION), name, p, buf, sizeof(buf)/sizeof(TCHAR), fn);
+			GetModuleProfile(name, buf, _countof(buf), fn);
 			p = _tcschr(buf, _T(','));
 			if (NULL != p)
 				*p = 0;
@@ -270,10 +242,12 @@ void LoadListView(HWND dlg, UINT uid, LPTSTR fn, UINT lang)
 			ListView_SetItem(hWnd, &item);
 			if (NULL != p)
 			{
-				item.pszText = p + 1;
-				item.iSubItem = 4;
-				ListView_SetItem(hWnd, &item);
+				if (*p)
+					p ++;
 			}
+			item.pszText = p;
+			item.iSubItem = 4;
+			ListView_SetItem(hWnd, &item);
 			i++;
 		} while (FindNextFile(hFind, &win32fd));
 	}
@@ -307,7 +281,7 @@ void SaveListView(HWND dlg, UINT uid, LPCTSTR fn)
 	free(buf1);
 }
 
-void UpdateListView(HWND dlg, UINT uid, int idx)
+void ToggleListViewOnOff(HWND dlg, UINT uid, int idx)
 {
 	HWND hwnd;
 	LVITEM item;
@@ -354,10 +328,7 @@ static LRESULT CALLBACK OnPluginListDlgProc(HWND dlg, UINT msg, WPARAM wParam, L
 		GetPointRB(dlg, IDC_LISTVIEW, &ptListView);
 		GetPointRB(dlg, IDOK, &ptBtn);
 		bUpdate = FALSE;
-		{
-			HWND hWndList = GetDlgItem(dlg, IDC_LISTVIEW);
-			ListView_SetExtendedListViewStyleEx(hWndList, LVS_EX_FULLROWSELECT, LVS_EX_FULLROWSELECT);
-		}
+		ListView_SetExtendedListViewStyleEx(GetDlgItem(dlg, IDC_LISTVIEW), LVS_EX_FULLROWSELECT, LVS_EX_FULLROWSELECT);
 		LoadListView(dlg, IDC_LISTVIEW, dlg_data.SetupFName, dlg_data.uLang);
 		MoveParentCenter(dlg);
 		return TRUE;
@@ -379,7 +350,7 @@ static LRESULT CALLBACK OnPluginListDlgProc(HWND dlg, UINT msg, WPARAM wParam, L
 				ListView_HitTest(((LPNMLISTVIEW)lParam)->hdr.hwndFrom, &lvinfo);
 				if (lvinfo.flags & LVHT_ONITEM)
 				{
-					UpdateListView(dlg, IDC_LISTVIEW, lvinfo.iItem);
+					ToggleListViewOnOff(dlg, IDC_LISTVIEW, lvinfo.iItem);
 					bUpdate = TRUE;
 				}
 				break;
@@ -390,7 +361,7 @@ static LRESULT CALLBACK OnPluginListDlgProc(HWND dlg, UINT msg, WPARAM wParam, L
 					int pos = ListView_GetNextItem(hWnd, -1, LVNI_SELECTED);
 					if (pos >= 0)
 					{
-						UpdateListView(dlg, IDC_LISTVIEW, pos);
+						ToggleListViewOnOff(dlg, IDC_LISTVIEW, pos);
 						bUpdate = TRUE;
 					}
 				}

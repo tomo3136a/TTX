@@ -47,6 +47,7 @@ LPTSTR TTXGetParam(LPTSTR buf, size_t sz, LPTSTR param);
 UINT UILang(LPSTR lang);
 
 /// get Menu ID offset
+UINT TTXSetupMenuID(UINT uSize);
 UINT TTXMenuID(UINT uid);
 UINT TTXMenuOrgID(UINT uid);
 

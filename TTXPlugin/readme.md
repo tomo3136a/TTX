@@ -20,7 +20,7 @@ TTX は細かい制御を提供できるため有用ですが、常に必要になるというわけではありませ
 
 以下のバージョンで動作を確認
 
-  Tera Term v4.98, v4.105
+  Tera Term v4.98, v4.105, v5.0alpha
 
 ## 使い方
 
@@ -36,30 +36,32 @@ TTX は細かい制御を提供できるため有用ですが、常に必要になるというわけではありませ
 
 ## 設定ファイル
 
-ttermpro.exe と同じディレクトリににある TERATERM.INI を使用します。
+TTX の設定は、 TERATERM.INI に設定します。
 
-[TTXPlugin] セクションに TTX ファイルの名前と設定として 「on」 「off」 「-」 を登録します。
-「off」 を設定すると TTX を無効にします。
-「-」 を設定すると設定画面から TTX を無効に設定はできなくなります。
-省略も含めてその他の場合は 「on」 として認識し TTX 有効になります。
+[TTXPlugin] セクションに TTX ファイルの名前と設定として 「on」 「off」 「-」 を登録します。  
+「on」 を設定すると TTX を有効にします。  
+「off」 を設定すると TTX を無効にします。  
+「-」 設定すると TTX を有効にします。また、設定画面から TTX を無効に設定はできなくなります。  
+値を省略した場合や、登録のない TTX は 「off」 として認識し TTX を無効にします。
 
 また、拡張プラグインのDLLファイルが対応しいている必要がありますが、
-2つめのパラメータにメニューID のオフセットを指定できます。
+2つ目のパラメータにメニューID のオフセットを指定できます。
 
-次の例では、「TTXProxy」 「TTXResizeMenu」 「TTXttyplay」 「TTXttyrec」
-の拡張プラグインを無効にしています。
-また、「TTXPlugin」拡張プラグインは、無効への設定を禁止(「-」)、なおかつメニューの MenuID にオフセット値 100 を追加します。
+次の例では、
+「TTXPlugin」 「ttxssh」 「TTXProxy」 の TTX は無効にできない。  
+「TTXShortcut」 「TTXUserKey」 の TTX は有効にします。  
+「TTXDuration」 や登録のない「TTXTest_Exports」のTTX は無効にします。  
 
 TERATERM.INI:
 
 ``` INI
 [TTXPlugin]
-TTXProxy=off
-TTXResizeMenu=off
-ttxssh=on
-TTXttyplay=off
-TTXttyrec=off
-TTXPlugin=-,100
+TTXPlugin=-
+ttxssh=-
+TTXProxy=-
+TTXShortcut=on
+TTXUserKey=on
+TTXDuration=off
 ```
 
 ## ビルド
@@ -80,8 +82,8 @@ Tera Term にパッチを当ててビルドすることにより、すべての拡張プラグインの on/off 
 パッチ：
 
 ``` C
---- C:/work/tt/4-stable/teraterm/teraterm/ttplug.c	Mon May 24 00:35:59 2021
-+++ C:/work/tt/dev/teraterm/teraterm/ttplug.c	Mon May 24 06:43:54 2021
+--- teraterm/teraterm/ttplug.c.org	Mon May 24 00:35:59 2021
++++ teraterm/teraterm/ttplug.c	Mon May 24 06:43:54 2021
 @@ -68,6 +68,18 @@
    char buf[1024];
    DWORD err;
@@ -94,7 +96,7 @@ Tera Term にパッチを当ててビルドすることにより、すべての拡張プラグインの on/off 
 +    p2 = strchr(++p1, '.');
 +    if (NULL != p2) {
 +      strncpy_s(buf, 1024, p1, (p2 - p1)/sizeof(char));
-+      GetPrivateProfileString("TTXPlugin", buf, "", buf, sizeof(buf), ts.SetupFName);
++      GetPrivateProfileString("TTXPlugin", buf, "off", buf, sizeof(buf), ts.SetupFName);
 +      if (_strnicmp("off", buf, 3) == 0) return;
 +    }
 +  }
@@ -113,11 +115,6 @@ TTXIgnore() 関数追加：
 
 ``` C
 BOOL TTXIgnore(int order, PCHAR name, DWORD version)
-{
-    char buf[8];
-    GetPrivateProfileString("TTXPlugin", INISECTION, "", buf, sizeof(buf), ".\\TERATERM.INI");
-    return (_strnicmp("off", buf, 3) == 0);
-}
 ```
 
 TTXBind() 関数に呼び出し文を追加：
@@ -129,8 +126,8 @@ BOOL __declspec(dllexport) PASCAL FAR TTXBind(WORD Version, TTXExports *exports)
     /* do version checking if necessary */
     /* if (Version!=TTVERSION) return FALSE; */
 
-    if (TTXIgnore(ORDER, INISECTION, 0))     //<= 追加
-        return TRUE;     　　　　　　　　　　　//<= 追加
+    if (TTXIgnore(ORDER, INISECTION, Version))    //<= 追加
+        return TRUE;     　　　　　　　　　　　     //<= 追加
 
     if (size > exports->size)
     {

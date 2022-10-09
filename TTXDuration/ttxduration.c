@@ -272,7 +272,7 @@ static void PASCAL TTXCloseTCP(TTXSockHooks *hooks)
 }
 
 static HANDLE PASCAL TTXCreateFile(
-	LPCTSTR FName, DWORD AcMode, DWORD ShMode, LPSECURITY_ATTRIBUTES SecAttr,
+	LPCSTR FName, DWORD AcMode, DWORD ShMode, LPSECURITY_ATTRIBUTES SecAttr,
 	DWORD CreateDisposition, DWORD FileAttr, HANDLE Template)
 {
 	HANDLE ret;
