@@ -559,14 +559,14 @@ static BOOL PASCAL TTXTWriteFile(HANDLE FHandle, LPCVOID Buff, DWORD WriteSize, 
 	return pvar->PWriteFile(FHandle, Buff, WriteSize, WriteBytes, WriteOverLap);
 }
 
-static HANDLE PASCAL TTXTCreateFile(LPCTSTR FName, DWORD AcMode, DWORD ShMode, LPSECURITY_ATTRIBUTES SecAttr,
+static HANDLE PASCAL TTXTCreateFile(LPCSTR FName, DWORD AcMode, DWORD ShMode, LPSECURITY_ATTRIBUTES SecAttr,
 									DWORD CreateDisposition, DWORD FileAttr, HANDLE Template)
 {
 	DBG_VIEW(__FUNCTIONT__, _T("FName=%hs\r\n")
 		_T("  AcMode=%08x ShMode=%08x SecAttr=%p CreateDisposition=%d\r\n")
 		_T("  FileAttr=%08x Template=%p\r\n")
 		_T("  (pvar->PCreateFile=%p [CreateFileA=%p CreateFileW=%p])"),
-		(char*)FName,
+		FName,
 		AcMode, ShMode, SecAttr, CreateDisposition, FileAttr, Template,
 		pvar->PCreateFile, CreateFileA , CreateFileW);
 	HANDLE FHandle = pvar->PCreateFile(FName, AcMode, ShMode, SecAttr, CreateDisposition, FileAttr, Template);
