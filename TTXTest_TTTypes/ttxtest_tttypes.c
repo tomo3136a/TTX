@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <tchar.h>
 
+#include "tt_res.h"
+#include "tt-version.h"		// for TT_VERSION_MAJOR, TT_VERSION_MINOR
 #include "ttxcommon.h"
 #include "ttxversion.h"
 
@@ -73,9 +75,9 @@ static void test_tttypes_2(WORD mjr, WORD mnr)
 	char *logA1;
 	char *logA2;
 
-	logA1 = pvar->ts->LogDefaultName;
+	logA1 = pvar->ts->reserve_LogDefaultName;
 	logA2 = TS(pvar->ts,LogDefaultName);
-	langA1 = pvar->ts->UILanguageFile_ini;
+	langA1 = pvar->ts->reserve_UILanguageFile_ini;
 	langA2 = TS(pvar->ts,UILanguageFile_ini);
 	_snprintf_s(
 		titleA, sizeof(titleA)/sizeof(titleA[0]), _TRUNCATE, 
@@ -110,7 +112,7 @@ static void test_tttypes_3(WORD mjr, WORD mnr)
 #ifdef TT4
 		langW2 = u"";
 #else /* TT4 */
-		langW2 = pvar->ts->UILanguageFileW_ini;
+		langW2 = pvar->ts->reserve_UILanguageFileW_ini;
 #endif /* TT4 */
 		_snwprintf_s(
 			bufW, sizeof(bufW)/sizeof(bufW[0]), _TRUNCATE, 

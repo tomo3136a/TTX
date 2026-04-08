@@ -5,10 +5,10 @@
 #include "verinfo.h"
 
 /////////////////////////////////////////////////////////////////////////////
-// Åg??{?? (Åg??{) resources
+// Êó•Êú¨Ë™û (Êó•Êú¨) resources
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
-#pragma code_page(932)
+#pragma code_page(65001)
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -20,11 +20,11 @@ STYLE DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_THICKFRAME
 CAPTION "Sets"
 FONT 9, "Tahoma", 400, 0, 0x0
 BEGIN
-    LTEXT           "ÉoÅ[ÉWÉáÉìÅF",IDC_STATIC,6,6,34,8
+    LTEXT           "„Éê„Éº„Ç∏„Éß„É≥Ôºö",IDC_STATIC,6,6,34,8
     COMBOBOX        IDC_COMBO_VER,47,5,46,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "ÉNÉâÉXÅF",IDC_STATIC,116,6,34,8
+    LTEXT           "„ÇØ„É©„ÇπÔºö",IDC_STATIC,116,6,34,8
     COMBOBOX        IDC_COMBO_TYPE,147,5,46,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "çXêV",IDC_UPDATE,292,5,50,14
+    PUSHBUTTON      "Êõ¥Êñ∞",IDC_UPDATE,292,5,50,14
     CONTROL         "",IDC_LISTVIEW,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,6,24,336,230
     DEFPUSHBUTTON   "OK",IDOK,292,261,50,14
 END
