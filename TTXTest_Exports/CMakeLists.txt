@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.8)
+﻿cmake_minimum_required(VERSION 3.11)
 
 set(PACKAGE_NAME "TTXTest_Exports")
 
@@ -19,6 +19,7 @@ set(SRC
 add_library(
   ${PACKAGE_NAME} SHARED
   ${SRC}
+  ${CMAKE_CURRENT_BINARY_DIR}/../../teraterm/common/svnversion.h
   )
 
 set_target_properties(
