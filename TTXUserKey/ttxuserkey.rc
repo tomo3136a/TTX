@@ -5,9 +5,10 @@
 #include "verinfo.h"
 
 /////////////////////////////////////////////////////////////////////////////
-// ì˙ñ{åÍ (ì˙ñ{) resources
+// Êó•Êú¨Ë™û (Êó•Êú¨) resources
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+#pragma code_page(65001)
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -19,20 +20,20 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSME
 CAPTION "Custom UserKey"
 FONT 9, "Tahoma", 400, 0, 0x0
 BEGIN
-    LTEXT           "ÉtÉ@ÉCÉãÅF",IDC_STATIC,6,6,24,8
+    LTEXT           "„Éï„Ç°„Ç§„É´Ôºö",IDC_STATIC,6,6,24,8
     LTEXT           "---",IDC_PATH,37,6,216,8
     CONTROL         "",IDC_KEYLIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,6,25,256,155
-    LTEXT           "ÉLÅ[ÅF",IDC_STATIC,6,190,24,8
+    LTEXT           "„Ç≠„ÉºÔºö",IDC_STATIC,6,190,24,8
     COMBOBOX        IDC_COMBO_KEY,37,188,36,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "É^ÉCÉvÅF",IDC_STATIC,80,190,24,8
+    LTEXT           "„Çø„Ç§„ÉóÔºö",IDC_STATIC,80,190,24,8
     COMBOBOX        IDC_COMBO_TYPE,103,188,51,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "ÉRÉ}ÉìÉhÅF",IDC_STATIC,161,190,24,8
+    LTEXT           "„Ç≥„Éû„É≥„ÉâÔºö",IDC_STATIC,161,190,24,8
     COMBOBOX        IDC_COMBO_CMD,194,188,68,30,CBS_DROPDOWN | CBS_SORT | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "ï∂éöóÒÅF",IDC_STATIC,6,211,25,8
+    LTEXT           "ÊñáÂ≠óÂàóÔºö",IDC_STATIC,6,211,25,8
     EDITTEXT        IDC_EDIT_STR,37,208,200,14,ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON      "...",IDC_BUTTON_SEL,242,208,20,14,WS_DISABLED 
-    DEFPUSHBUTTON   "í«â¡/ïœçX",IDC_BUTTON_ADD,34,231,50,14
-    PUSHBUTTON      "çÌèú",IDC_BUTTON_DEL,89,231,50,14
+    DEFPUSHBUTTON   "ËøΩÂä†/Â§âÊõ¥",IDC_BUTTON_ADD,34,231,50,14
+    PUSHBUTTON      "ÂâäÈô§",IDC_BUTTON_DEL,89,231,50,14
     PUSHBUTTON      "OK",IDOK,157,231,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,212,231,50,14
 END

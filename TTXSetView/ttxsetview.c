@@ -151,7 +151,7 @@ static void PASCAL TTXInit(PTTSet ts, PComVar cv)
 // }
 
 ///////////////////////////////////////////////////////////////
-//表示領域
+//陦ｨ遉ｺ鬆伜沺
 
 //LPCTSTR type_name[] = {_T("eterm_lookfeel_t"),_T("cygterm_t"),_T("tttset"),_T("TGetHNRec"),_T("TComVar")};
 LPCTSTR type_name[] = {_T("tttset"),_T("TComVar")};
@@ -164,7 +164,7 @@ void InitView(HWND hWnd, LPCTSTR fn)
 	UINT lang;
 	//HFILE hfile;
 
-	lang = UILang(pvar->ts->UILanguageFile);
+	lang = UILang(pvar->ts->reserve_UILanguageFile);
 	//userkeytype = (lang == 2) ? userkeytype_ja : userkeytype_en;
 
 	hCombo = GetDlgItem(hWnd, IDC_COMBO_TYPE);
@@ -273,7 +273,7 @@ void InitView(HWND hWnd, LPCTSTR fn)
 
 
 ///////////////////////////////////////////////////////////////
-//View ダイアログ
+//View 繝繧､繧｢繝ｭ繧ｰ
 
 static LRESULT CALLBACK view_dlg_proc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
@@ -382,12 +382,12 @@ static void PASCAL TTXModifyMenu(HMENU menu)
 	LPTSTR s;
 	int idx;
 
-	lang = UILang(pvar->ts->UILanguageFile);
+	lang = UILang(pvar->ts->reserve_UILanguageFile);
 
 	idx = GetMenuItemCount(menu) - 1;
 	pvar->HelpMenu = GetSubMenu(menu, idx);
 
-	s = (lang == 2) ? _T("Set 一覧(&L)") : _T("TTX Set View");
+	s = (lang == 2) ? _T("Set 荳隕ｧ(&L)") : _T("TTX Set View");
 	InsertMenu(pvar->HelpMenu, 2, MF_BYPOSITION, TTXMenuID(ID_MENUITEM), s);
 }
 

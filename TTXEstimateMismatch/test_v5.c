@@ -14,6 +14,7 @@
 #include <tchar.h>
 
 #include "ttxcommon.h"
+#include "tt-version.h"		// for TT_VERSION_MAJOR, TT_VERSION_MINOR
 
 #define BUF_SZ 65536
 #define LINE(buf, nm, s)        \

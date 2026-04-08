@@ -12,6 +12,8 @@
 #include <string.h>
 #include <tchar.h>
 
+#include "tt_res.h"
+#include "tt-version.h"		// for TT_VERSION_MAJOR, TT_VERSION_MINOR
 #include "ttxcommon.h"
 #include "ttxversion.h"
 #include "ttxdebug.h"

@@ -133,7 +133,7 @@ void DisplayReconnect()
 	UINT lang;
 	LPSTR s;
 
-	lang = UILang(pvar->ts->UILanguageFile);
+	lang = UILang(pvar->ts->reserve_UILanguageFile);
 
 	buf[0] = 0;
 	switch (pvar->ts->PortType)
@@ -153,7 +153,7 @@ void DisplayReconnect()
 	case IdNamedPipe:
 		_snprintf_s(buf, sizeof(buf), _TRUNCATE, "%s", pvar->ts->HostName);
 	}
-	s = (lang == 2) ? "�Đڑ�" : "reconnect";
+	s = (lang == 2) ? "再接続" : "reconnect";
 	MessageBoxA(pvar->cv->HWin, buf, s, MB_OK);
 }
 
@@ -223,11 +223,11 @@ static void PASCAL TTXModifyMenu(HMENU menu)
 	UINT lang;
 	LPTSTR s;
 
-	lang = UILang(pvar->ts->UILanguageFile);
+	lang = UILang(pvar->ts->reserve_UILanguageFile);
 
 	pvar->FileMenu = GetSubMenu(menu, ID_FILE);
 
-	s = (lang == 2) ? _T("�Đڑ�(&F)...") : _T("reconnect...");
+	s = (lang == 2) ? _T("再接続(&F)...") : _T("reconnect...");
 	InsertMenu(pvar->FileMenu, 3, MF_BYPOSITION, TTXMenuID(ID_MENUITEM), s);
 }
 
