@@ -17,7 +17,7 @@ set(SRC
 add_library(
   ${PACKAGE_NAME} SHARED
   ${SRC}
-  ${CMAKE_CURRENT_BINARY_DIR}/../../teraterm/common/svnversion.h
+#  ${CMAKE_CURRENT_BINARY_DIR}/../../teraterm/common/svnversion.h
  )
 
 set_target_properties(
@@ -33,6 +33,7 @@ target_include_directories(
   ../../teraterm/teraterm
   ../../teraterm/common
   ../common
+  ${CMAKE_CURRENT_BINARY_DIR}/../../teraterm/common
   )
 
 target_link_libraries(
