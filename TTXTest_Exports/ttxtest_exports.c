@@ -47,7 +47,7 @@ typedef struct {
 	PChooseFontDlg ChooseFontDlg;
 	PSetupGeneral SetupGeneral;
 	PWindowWindow WindowWindow;
-	PTTDLGSetUILanguageFile TTDLGSetUILanguageFile;
+	//PTTDLGSetUILanguageFile TTDLGSetUILanguageFile;
 
 	/* ttsetup */
 	PReadIniFile ReadIniFile;

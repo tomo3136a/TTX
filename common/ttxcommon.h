@@ -20,7 +20,7 @@
 
 #define IS_TT4() (ttx_api_version<500)
 
-#define BEGIN_TTX_STR(m) LPTSTR m##W = (IS_TT4()) ? toTC((PCHAR)m) : m;
+#define BEGIN_TTX_STR(m) LPCTSTR m##W = (IS_TT4()) ? (LPCTSTR)toTC((PCHAR)m) : m;
 #define END_TTX_STR(m) if (IS_TT4()) { TTXFree(&m##W); }
 #define BEGIN_TTX_STR2(m1,m2) BEGIN_TTX_STR(m1) BEGIN_TTX_STR(m2)
 #define END_TTX_STR2(m1,m2) END_TTX_STR(m1) END_TTX_STR(m2)
