@@ -36,6 +36,7 @@ target_include_directories(
   ../../teraterm/common
   ../common
   ${CMAKE_CURRENT_BINARY_DIR}/../../teraterm/common
+  ${CMAKE_CURRENT_BINARY_DIR}/../../../build/teraterm/common
   )
 
 target_link_libraries(

@@ -12,13 +12,14 @@ endif()
 
 set(SRC
   ttxtest_tttypes.c
+  ../common/common.rc
   )
 
 add_library(
   ${PACKAGE_NAME} SHARED
   ${SRC}
 #  ${CMAKE_CURRENT_BINARY_DIR}/../../teraterm/common/svnversion.h
- )
+  )
 
 set_target_properties(
   ${PACKAGE_NAME}
@@ -34,6 +35,7 @@ target_include_directories(
   ../../teraterm/common
   ../common
   ${CMAKE_CURRENT_BINARY_DIR}/../../teraterm/common
+  ${CMAKE_CURRENT_BINARY_DIR}/../../../build/teraterm/common
   )
 
 target_link_libraries(
