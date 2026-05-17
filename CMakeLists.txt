@@ -2,6 +2,7 @@
 
 project(TTX)
 
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 include(plugins.cmake)
 
 configure_file(
