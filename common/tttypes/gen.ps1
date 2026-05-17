@@ -172,7 +172,7 @@ $col1=$lst|Get-CStruct $struct1_lst
 $col2=$lst|Get-CStruct $struct2_lst
 $col3=$lst|Get-CStruct $struct3_lst
 $src=($col1|Get-CStructCode)+($col2|Get-CStructCode)+($col3|Get-CStructCode)
-make_source($src)|Out-File $out_file
+make_source($src)|Out-File $out_file -Encoding utf8
 Exit-PSHostProcess
 
 ##add version checker

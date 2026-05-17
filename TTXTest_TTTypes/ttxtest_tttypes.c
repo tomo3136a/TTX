@@ -76,9 +76,9 @@ static void test_tttypes_2(WORD mjr, WORD mnr)
 	char *logA2;
 
 	logA1 = pvar->ts->reserve_LogDefaultName;
-	logA2 = TS(pvar->ts,LogDefaultName);
+	logA2 = TTXGetPath(pvar->ts, ID_LOGDEFAULTPATH);
 	langA1 = pvar->ts->reserve_UILanguageFile_ini;
-	langA2 = TS(pvar->ts,UILanguageFile_ini);
+	langA2 = TTXGetPath(pvar->ts, ID_UILANGUAGEFILE);
 	_snprintf_s(
 		titleA, sizeof(titleA)/sizeof(titleA[0]), _TRUNCATE, 
 		"Build:%d.%d, Running:%d.%d", 
@@ -89,6 +89,8 @@ static void test_tttypes_2(WORD mjr, WORD mnr)
 		"[UILanguageFile_ini]\n  ->:   %s\n  TS(): %s", 
 		logA1, logA2, langA1, langA2);
 	MessageBoxA(0, bufA, titleA, MB_OK | MB_ICONINFORMATION);
+	TTXFree(&logA2);
+	TTXFree(&langA2);
 }
 
 
@@ -108,7 +110,7 @@ static void test_tttypes_3(WORD mjr, WORD mnr)
 	TT_VERSION_MAJOR, TT_VERSION_MINOR, mjr, mnr);
 
 	if(TEST_TS(UILanguageFileW)){
-		langW1 = TS(pvar->ts,UILanguageFileW_ini);
+		langW1 = TTXGetPath(pvar->ts, ID_UILANGUAGEFILE);
 #ifdef TT4
 		langW2 = u"";
 #else /* TT4 */
@@ -125,6 +127,7 @@ static void test_tttypes_3(WORD mjr, WORD mnr)
 			u"UILanguageFileW_ini not support");
 	}
 	MessageBoxW(0, bufW, titleW, MB_OK | MB_ICONINFORMATION);
+	TTXFree(&langW1);
 }
 
 ///////////////////////////////////////////////////////////////
