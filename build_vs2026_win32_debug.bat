@@ -1,12 +1,14 @@
 @echo off
-rem build vs2026 x64
+rem build vs2026 Win32
 rem
 rem vs2026
 rem cmake 4.2.3
 
 set TOOL="Visual Studio 18 2026"
-rem set ARCH=Win32
-set ARCH=x64
+set ARCH=Win32
+rem set ARCH=x64
+rem set BUILD_TYPE=release
+set BUILD_TYPE=debug
 
 
 cd %~dp0
@@ -40,14 +42,14 @@ popd
 rem goto L4
 if not exist build goto L4
 pushd build
-echo ==== build release ====
-cmake.exe --build . --config release
+echo ==== %BUILD_TYPE% debug ====
+cmake.exe --build . --config %BUILD_TYPE%
 echo.
 popd
 :L4
 
 rem goto L5
-if not exist build goto L5
+if not exist build\release goto L5
 pushd build
 echo ==== install ====
 cmake -P cmake_install.cmake
